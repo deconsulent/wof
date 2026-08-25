@@ -210,9 +210,6 @@
     <!-- Main AR App -->
     <div id="ar-scene" class="ar-scene" style="display:none;">
         <div id="wall-field" class="wall-field" aria-hidden="true">
-            <div class="wall-field-label">
-                <span data-i18n="spatial_cms">SPATIAL DIRECTORY</span> · <span id="member-count">0</span> <span data-i18n="team_members">MEMBERS</span>
-            </div>
             <div class="wall-structure wall-structure-top"></div>
             <div class="wall-structure wall-structure-bottom"></div>
             
@@ -384,6 +381,7 @@
                     const el = document.createElement('div');
                     el.id = `person-${person.id || index}`;
                     el.className = `wall-person level-${person.level} is-revealed`;
+                    el.setAttribute('title', `Double click to open ${person.name}'s virtual card`);
                     
                     const orb = document.createElement('span');
                     orb.className = `wall-person-orb ${person.photo ? "has-photo" : ""}`;
@@ -407,23 +405,40 @@
                     el.appendChild(nameSpan);
                     el.appendChild(roleSpan);
 
-                    // Double-click (desktop) and double-tap (mobile) to open virtual card
-                    let lastTap = 0;
-                    el.addEventListener('dblclick', (e) => {
-                        e.stopPropagation();
+                    // Double click / Double tap to redirect to Virtual Card URL
+                    let lastTapTime = 0;
+                    let tapTimeout = null;
+
+                    const openVirtualCard = (e) => {
+                        if (e) e.stopPropagation();
                         const targetUrl = getPersonCardUrl(person);
                         window.location.href = targetUrl;
+                    };
+
+                    // Desktop double-click
+                    el.addEventListener('dblclick', (e) => {
+                        e.stopPropagation();
+                        openVirtualCard(e);
                     });
 
-                    el.addEventListener('touchend', (e) => {
+                    // Touch / Pointer double-tap support + single-tap aim focus
+                    el.addEventListener('pointerup', (e) => {
+                        if (dragDistance > 8) return;
                         const now = Date.now();
-                        if (now - lastTap < 350 && now - lastTap > 0) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const targetUrl = getPersonCardUrl(person);
-                            window.location.href = targetUrl;
+                        if (now - lastTapTime < 380) {
+                            // Double tap detected!
+                            clearTimeout(tapTimeout);
+                            lastTapTime = 0;
+                            openVirtualCard(e);
+                        } else {
+                            lastTapTime = now;
+                            tapTimeout = setTimeout(() => {
+                                // Single tap focuses/centers person smoothly
+                                aimRef = { x: person.x, y: person.y };
+                                aim = { ...aimRef };
+                                renderWall();
+                            }, 390);
                         }
-                        lastTap = now;
                     });
 
                     peopleContainer.appendChild(el);
