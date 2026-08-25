@@ -13,12 +13,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 
-// Initialize Supabase with robust sanitization
-const rawUrl = process.env.SUPABASE_URL || 'https://vbscjdjzisdyohurjsro.supabase.co';
-const rawKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZic2NqZGp6aXNkeW9odXJqc3JvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MjcwMjAsImV4cCI6MjEwMzIwMzAyMH0.c3iLIPXleuclBgy0B9Qe8U9kIyVHgOyNLLbbI_jpkr4';
+// Supabase credentials
+const DEFAULT_URL = 'https://vbscjdjzisdyohurjsro.supabase.co';
+const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZic2NqZGp6aXNkeW9odXJqc3JvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MjcwMjAsImV4cCI6MjEwMzIwMzAyMH0.c3iLIPXleuclBgy0B9Qe8U9kIyVHgOyNLLbbI_jpkr4';
 
-const supabaseUrl = rawUrl.trim().replace(/^["']|["']$/g, '');
-const supabaseKey = rawKey.trim().replace(/^["']|["']$/g, '');
+const envUrl = process.env.SUPABASE_URL ? process.env.SUPABASE_URL.trim().replace(/^["']|["']$/g, '') : '';
+const envKey = process.env.SUPABASE_ANON_KEY ? process.env.SUPABASE_ANON_KEY.trim().replace(/^["']|["']$/g, '') : '';
+
+const supabaseUrl = (envUrl && envUrl.startsWith('https://')) ? envUrl : DEFAULT_URL;
+// A valid JWT has 3 dot-separated segments
+const supabaseKey = (envKey && envKey.split('.').length === 3) ? envKey : DEFAULT_KEY;
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Memory storage for Multer (we will upload the buffer directly to Supabase)
