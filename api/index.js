@@ -11,7 +11,7 @@ const DB_FILE = path.join(__dirname, 'database.json');
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, '../')));
 
 // Initialize Supabase
 const supabaseUrl = process.env.SUPABASE_URL || 'https://vbscjdjzisdyohurjsro.supabase.co';
@@ -108,7 +108,7 @@ app.get('/view/:id', async (req, res) => {
     }
 
     const templateName = location.template || 'designfactory';
-    const templatePath = path.join(__dirname, 'templates', `${templateName}.html`);
+    const templatePath = path.join(__dirname, '../templates', `${templateName}.html`);
     
     if (!fs.existsSync(templatePath)) {
         return res.status(404).send("<h1>Template not found</h1>");
