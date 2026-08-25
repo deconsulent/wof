@@ -91,6 +91,9 @@
 
         @keyframes search-pulse { 50% { transform: scale(1.15); opacity: .42; } }
 
+        html, body { touch-action: none; overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+        .ar-scene, .wall-field { touch-action: none; -webkit-touch-callout: none; }
+        
         .wall-field { position: absolute; z-index: 1; inset: 0; overflow: hidden; pointer-events: none; isolation: isolate; }
         
         .wall-person {
@@ -101,10 +104,20 @@
             padding: 17px 12px; border: 1px solid rgba(255,255,255,.76); border-radius: 25px;
             background: rgba(241,244,252,.21); box-shadow: inset 0 1px 0 rgba(255,255,255,.82), 0 17px 40px rgba(7,9,18,.15);
             backdrop-filter: blur(21px) saturate(1.15); -webkit-backdrop-filter: blur(21px) saturate(1.15);
-            transform: translate(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 4.1px));
+            transform: translate3d(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 4.1px), 0);
+            -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 4.1px), 0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
             pointer-events: auto;
             cursor: pointer;
             user-select: none;
+        }
+        
+        /* Instant response without transition jitter during active touch/drag */
+        .wall-field.is-dragging .wall-person {
+            transition: none !important;
+            filter: none !important;
         }
         .wall-person::before { content: ''; position: absolute; top: -25px; left: 50%; width: 1px; height: 25px; background: rgba(255,255,255,.55); pointer-events: none; }
         .wall-person.level-root { width: min(20vw, 212px); min-height: 177px; border-color: color-mix(in srgb, var(--person-accent) 74%, white); box-shadow: 0 0 0 3px color-mix(in srgb, var(--person-accent) 56%, transparent), inset 0 1px 0 rgba(255,255,255,.9), 0 17px 46px color-mix(in srgb, var(--person-accent) 32%, transparent); }
@@ -132,24 +145,24 @@
         }
 
         .wall-person.is-revealed { opacity: calc(var(--proximity) * .85); }
-        .wall-person.is-nearest { opacity: 1; filter: none; z-index: 2; transform: translate(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 4.1px)) scale(1.025); }
+        .wall-person.is-nearest { opacity: 1; filter: none; z-index: 2; transform: translate3d(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 4.1px), 0) scale(1.025); -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 4.1px), 0) scale(1.025); }
         .wall-person.is-nearest .wall-person-orb { box-shadow: 0 0 0 1px white, 0 0 0 7px color-mix(in srgb, var(--person-accent) 18%, transparent), 0 0 28px color-mix(in srgb, var(--person-accent) 60%, transparent); }
         .wall-person.is-focused .wall-person-orb { animation: target-lock 1.2s ease-in-out infinite; }
         .wall-person.is-focused .wall-person-name { color: white; }
 
         /* Responsive Breakpoints */
         @media (min-width: 761px) {
-            .wall-person { min-height: 264px; transform: translate(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 5.5px)); gap: 13px; }
+            .wall-person { min-height: 264px; transform: translate3d(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 5.5px), 0); -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 5.5px), 0); gap: 13px; }
             .wall-person.level-root { min-height: 354px; }
-            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 5.5px)) scale(1.025); }
+            .wall-person.is-nearest { transform: translate3d(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 5.5px), 0) scale(1.025); -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 5.5px), 0) scale(1.025); }
             .wall-person-name { font-size: 18px; line-height: 1.08; }
             .wall-person-role { font-size: 12px; line-height: 1.35; }
             .wall-person-orb { width: 64px; font-size: 20px; }
 
             /* Desktop Overview Mode */
-            .wall-field.is-overview .wall-person { width: min(14vw, 158px); min-height: 106px; gap: 7px; padding: 12px 9px; border-radius: 20px; transform: translate(calc(-50% + var(--wall-x) * 5.7px), calc(-50% + var(--wall-y) * 3.3px)); opacity: 1 !important; filter: none !important; }
+            .wall-field.is-overview .wall-person { width: min(14vw, 158px); min-height: 106px; gap: 7px; padding: 12px 9px; border-radius: 20px; transform: translate3d(calc(-50% + var(--wall-x) * 5.7px), calc(-50% + var(--wall-y) * 3.3px), 0); -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 5.7px), calc(-50% + var(--wall-y) * 3.3px), 0); opacity: 1 !important; filter: none !important; }
             .wall-field.is-overview .wall-person.level-root { width: min(15vw, 172px); min-height: 136px; }
-            .wall-field.is-overview .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 5.7px), calc(-50% + var(--wall-y) * 3.3px)) scale(1.025); }
+            .wall-field.is-overview .wall-person.is-nearest { transform: translate3d(calc(-50% + var(--wall-x) * 5.7px), calc(-50% + var(--wall-y) * 3.3px), 0) scale(1.025); -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 5.7px), calc(-50% + var(--wall-y) * 3.3px), 0) scale(1.025); }
             .wall-field.is-overview .wall-person::before { height: 17px; top: -17px; }
             .wall-field.is-overview .wall-person-name { font-size: 12px; }
             .wall-field.is-overview .wall-person-role { font-size: 8px; }
@@ -177,7 +190,8 @@
                 width: clamp(135px, 36vw, 165px);
                 min-height: clamp(190px, 25vh, 230px);
                 gap: 8px; padding: 14px 10px; border-radius: 22px;
-                transform: translate(calc(-50% + var(--wall-x) * 4.6px), calc(-50% + var(--wall-y) * 3.8px + 30px));
+                transform: translate3d(calc(-50% + var(--wall-x) * 4.6px), calc(-50% + var(--wall-y) * 3.8px + 30px), 0);
+                -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 4.6px), calc(-50% + var(--wall-y) * 3.8px + 30px), 0);
             }
             .wall-person.level-root {
                 width: clamp(150px, 40vw, 185px);
@@ -186,13 +200,19 @@
             .wall-person-name { font-size: clamp(13px, 3.5vw, 15px); line-height: 1.08; }
             .wall-person-role { font-size: clamp(8.5px, 2.3vw, 10px); line-height: 1.25; }
             .wall-person-orb { width: clamp(44px, 12vw, 54px); font-size: 16px; }
-            .wall-person, .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 4.6px), calc(-50% + var(--wall-y) * 3.8px + 30px)); }
-            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 4.6px), calc(-50% + var(--wall-y) * 3.8px + 30px)) scale(1.025); }
+            .wall-person, .wall-person.is-nearest {
+                transform: translate3d(calc(-50% + var(--wall-x) * 4.6px), calc(-50% + var(--wall-y) * 3.8px + 30px), 0);
+                -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 4.6px), calc(-50% + var(--wall-y) * 3.8px + 30px), 0);
+            }
+            .wall-person.is-nearest {
+                transform: translate3d(calc(-50% + var(--wall-x) * 4.6px), calc(-50% + var(--wall-y) * 3.8px + 30px), 0) scale(1.025);
+                -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 4.6px), calc(-50% + var(--wall-y) * 3.8px + 30px), 0) scale(1.025);
+            }
 
             /* Tablet/Mobile Overview Mode */
-            .wall-field.is-overview .wall-person { width: 76px; min-height: 68px; gap: 3px; padding: 7px 5px; border-radius: 14px; transform: translate(calc(-50% + var(--wall-x) * 2.4px), calc(-50% + var(--wall-y) * 2.05px)); opacity: 1 !important; filter: none !important; }
+            .wall-field.is-overview .wall-person { width: 76px; min-height: 68px; gap: 3px; padding: 7px 5px; border-radius: 14px; transform: translate3d(calc(-50% + var(--wall-x) * 2.4px), calc(-50% + var(--wall-y) * 2.05px), 0); -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 2.4px), calc(-50% + var(--wall-y) * 2.05px), 0); opacity: 1 !important; filter: none !important; }
             .wall-field.is-overview .wall-person.level-root { width: 94px; min-height: 86px; }
-            .wall-field.is-overview .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 2.4px), calc(-50% + var(--wall-y) * 2.05px)) scale(1.025); }
+            .wall-field.is-overview .wall-person.is-nearest { transform: translate3d(calc(-50% + var(--wall-x) * 2.4px), calc(-50% + var(--wall-y) * 2.05px), 0) scale(1.025); -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 2.4px), calc(-50% + var(--wall-y) * 2.05px), 0) scale(1.025); }
             .wall-field.is-overview .wall-person::before { height: 12px; top: -12px; }
             .wall-field.is-overview .wall-person-name { font-size: 7px; }
             .wall-field.is-overview .wall-person-role { display: none; }
@@ -203,20 +223,22 @@
             .wall-person {
                 width: clamp(128px, 35vw, 150px);
                 min-height: clamp(180px, 24vh, 215px);
-                transform: translate(calc(-50% + var(--wall-x) * 4.3px), calc(-50% + var(--wall-y) * 3.7px + 30px));
+                transform: translate3d(calc(-50% + var(--wall-x) * 4.3px), calc(-50% + var(--wall-y) * 3.7px + 30px), 0);
+                -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 4.3px), calc(-50% + var(--wall-y) * 3.7px + 30px), 0);
             }
             .wall-person.level-root {
                 width: clamp(142px, 39vw, 170px);
                 min-height: clamp(215px, 28vh, 260px);
             }
             .wall-person.is-nearest {
-                transform: translate(calc(-50% + var(--wall-x) * 4.3px), calc(-50% + var(--wall-y) * 3.7px + 30px)) scale(1.025);
+                transform: translate3d(calc(-50% + var(--wall-x) * 4.3px), calc(-50% + var(--wall-y) * 3.7px + 30px), 0) scale(1.025);
+                -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 4.3px), calc(-50% + var(--wall-y) * 3.7px + 30px), 0) scale(1.025);
             }
 
             /* Small Mobile Overview Mode */
-            .wall-field.is-overview .wall-person { width: 72px; transform: translate(calc(-50% + var(--wall-x) * 2.25px), calc(-50% + var(--wall-y) * 1.95px)); }
+            .wall-field.is-overview .wall-person { width: 72px; transform: translate3d(calc(-50% + var(--wall-x) * 2.25px), calc(-50% + var(--wall-y) * 1.95px), 0); -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 2.25px), calc(-50% + var(--wall-y) * 1.95px), 0); }
             .wall-field.is-overview .wall-person.level-root { width: 90px; }
-            .wall-field.is-overview .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 2.25px), calc(-50% + var(--wall-y) * 1.95px)) scale(1.025); }
+            .wall-field.is-overview .wall-person.is-nearest { transform: translate3d(calc(-50% + var(--wall-x) * 2.25px), calc(-50% + var(--wall-y) * 1.95px), 0) scale(1.025); -webkit-transform: translate3d(calc(-50% + var(--wall-x) * 2.25px), calc(-50% + var(--wall-y) * 1.95px), 0) scale(1.025); }
         }
     </style>
 </head>
@@ -550,10 +572,13 @@
         });
 
         // Interaction Logic
+        let dragRaf = null;
+
         const resetView = () => {
             aimRef = { x: 0, y: 0 };
             aim = { x: 0, y: 0 };
             overview = false;
+            wallField.classList.remove('is-dragging');
             renderWall();
         };
 
@@ -563,6 +588,7 @@
                 return;
             }
             dragDistance = 0;
+            wallField.classList.add('is-dragging');
             arScene.setPointerCapture(e.pointerId);
             dragRef = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY, aim: { ...aimRef } };
         };
@@ -578,11 +604,25 @@
                 y: clamp(dragRef.aim.y - (e.clientY - dragRef.y) * 0.34, -132, 154)
             };
             aim = { ...aimRef };
-            renderWall();
+            
+            if (!dragRaf) {
+                dragRaf = requestAnimationFrame(() => {
+                    renderWall();
+                    dragRaf = null;
+                });
+            }
         };
 
         const endDrag = (e) => {
-            if (dragRef && dragRef.pointerId === e.pointerId) dragRef = null;
+            if (dragRef && dragRef.pointerId === e.pointerId) {
+                dragRef = null;
+                wallField.classList.remove('is-dragging');
+                if (dragRaf) {
+                    cancelAnimationFrame(dragRaf);
+                    dragRaf = null;
+                }
+                renderWall();
+            }
         };
 
         arScene.addEventListener('pointerdown', startDrag);
