@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Central Hub - Admin Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -532,24 +533,38 @@
             fetchLocations();
         }
 
+        const supabaseUrl = 'https://vbscjdjzisdyohurjsro.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZic2NqZGp6aXNkeW9odXJqc3JvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MjcwMjAsImV4cCI6MjEwMzIwMzAyMH0.c3iLIPXleuclBgy0B9Qe8U9kIyVHgOyNLLbbI_jpkr4';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
         async function uploadImage(input, hiddenId) {
             const file = input.files[0];
             if (!file) return;
             
-            const formData = new FormData();
-            formData.append('image', file);
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}.${fileExt}`;
+            const filePath = `uploads/${fileName}`;
 
+            const preview = document.getElementById(hiddenId + '-preview');
+            preview.src = '';
+            preview.style.display = 'block';
+            
             try {
-                const res = await fetch('/api/upload', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.url) {
-                    document.getElementById(hiddenId).value = data.url;
-                    const preview = document.getElementById(hiddenId + '-preview');
-                    preview.src = data.url;
-                    preview.style.display = 'block';
+                const { data, error } = await supabase.storage
+                    .from('images')
+                    .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+                if (error) {
+                    alert("Supabase Upload Error: " + error.message);
+                    return;
                 }
+
+                const { data: publicUrlData } = supabase.storage.from('images').getPublicUrl(filePath);
+                
+                document.getElementById(hiddenId).value = publicUrlData.publicUrl;
+                preview.src = publicUrlData.publicUrl;
             } catch (err) {
-                alert('Upload failed.');
+                alert("Upload exception: " + err.message);
             }
         }
 

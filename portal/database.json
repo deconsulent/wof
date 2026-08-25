@@ -38,6 +38,15 @@
             "level": "lead",
             "accent": "#e3e3e3",
             "photo": "/uploads/1787634932296-409002653.jpg"
+          },
+          {
+            "id": "test-person",
+            "name": "Test Person",
+            "role": "Test Role",
+            "initials": "TE",
+            "level": "member",
+            "accent": "#9ec6ef",
+            "photo": "https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/1787639291355-385884177.jpg"
           }
         ]
       }
