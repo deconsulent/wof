@@ -535,7 +535,7 @@
 
         const supabaseUrl = 'https://vbscjdjzisdyohurjsro.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZic2NqZGp6aXNkeW9odXJqc3JvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MjcwMjAsImV4cCI6MjEwMzIwMzAyMH0.c3iLIPXleuclBgy0B9Qe8U9kIyVHgOyNLLbbI_jpkr4';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         async function uploadImage(input, hiddenId) {
             const file = input.files[0];
@@ -550,7 +550,7 @@
             preview.style.display = 'block';
             
             try {
-                const { data, error } = await supabase.storage
+                const { data, error } = await supabaseClient.storage
                     .from('images')
                     .upload(filePath, file, { cacheControl: '3600', upsert: false });
 
@@ -559,7 +559,7 @@
                     return;
                 }
 
-                const { data: publicUrlData } = supabase.storage.from('images').getPublicUrl(filePath);
+                const { data: publicUrlData } = supabaseClient.storage.from('images').getPublicUrl(filePath);
                 
                 document.getElementById(hiddenId).value = publicUrlData.publicUrl;
                 preview.src = publicUrlData.publicUrl;
