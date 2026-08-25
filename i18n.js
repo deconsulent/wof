@@ -311,19 +311,37 @@
         const isEn = currentLang === 'en';
         const isLv = currentLang === 'lv';
         return `
-            <div class="lang-switcher ${customClass}" role="group" aria-label="Language Selector">
-                <button type="button" class="lang-switcher-btn ${isEn ? 'active' : ''}" data-lang="en" onclick="i18n.setLanguage('en')">
-                    🇬🇧 EN
+            <div class="lang-switcher ${customClass}" role="group" aria-label="Language Selector" style="pointer-events: auto; z-index: 9999;">
+                <button type="button" class="lang-switcher-btn ${isEn ? 'active' : ''}" data-lang="en" onclick="event.stopPropagation(); window.i18n.setLanguage('en')" style="pointer-events: auto; cursor: pointer;">
+                    GB EN
                 </button>
-                <button type="button" class="lang-switcher-btn ${isLv ? 'active' : ''}" data-lang="lv" onclick="i18n.setLanguage('lv')">
-                    🇱🇻 LV
+                <button type="button" class="lang-switcher-btn ${isLv ? 'active' : ''}" data-lang="lv" onclick="event.stopPropagation(); window.i18n.setLanguage('lv')" style="pointer-events: auto; cursor: pointer;">
+                    LV LV
                 </button>
             </div>
         `;
     }
 
-    // Auto-initialize on DOMContentLoaded
+    // Capture-phase event delegation to prevent 3D drag capture from intercepting language clicks
     if (typeof document !== 'undefined') {
+        const handleSwitcherAction = (e) => {
+            const btn = e.target.closest && e.target.closest('.lang-switcher-btn');
+            if (btn) {
+                e.stopPropagation();
+                if (e.type === 'click') {
+                    const targetLang = btn.getAttribute('data-lang');
+                    if (targetLang && (targetLang === 'en' || targetLang === 'lv')) {
+                        setLanguage(targetLang);
+                    }
+                }
+            }
+        };
+
+        document.addEventListener('pointerdown', handleSwitcherAction, true);
+        document.addEventListener('mousedown', handleSwitcherAction, true);
+        document.addEventListener('touchstart', handleSwitcherAction, true);
+        document.addEventListener('click', handleSwitcherAction, true);
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 document.documentElement.lang = currentLang;
@@ -335,7 +353,7 @@
         }
     }
 
-    return {
+    const instance = {
         getLanguage,
         setLanguage,
         t,
@@ -345,4 +363,10 @@
         createSwitcherHTML,
         dictionaries: DICTIONARIES
     };
+
+    if (typeof window !== 'undefined') {
+        window.i18n = instance;
+    }
+
+    return instance;
 }));

@@ -501,6 +501,9 @@
 
         const startDrag = (e) => {
             if (e.pointerType === "mouse" && e.button !== 0) return;
+            if (e.target.closest('button, .lang-switcher, .lang-switcher-btn, .header-controls, .footer-actions, .wall-person, .permission-card, a')) {
+                return;
+            }
             dragDistance = 0;
             arScene.setPointerCapture(e.pointerId);
             dragRef = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY, aim: { ...aimRef } };
