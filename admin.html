@@ -6,6 +6,7 @@
     <title>Central Hub - Admin Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="i18n.js"></script>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -17,13 +18,46 @@
         }
         
         .navbar {
-            padding: 20px 32px; border-bottom: 1px solid rgba(160, 244, 255, .3);
+            padding: 16px 32px; border-bottom: 1px solid rgba(160, 244, 255, .3);
             display: flex; justify-content: space-between; align-items: center;
             background: rgba(8,42,57,.28); backdrop-filter: blur(28px);
+            position: sticky; top: 0; z-index: 50;
         }
+        .navbar-brand { display: flex; align-items: center; gap: 12px; }
         .navbar h1 { margin: 0; font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 12px; }
         .badge { background: #b9faff; color: #06222d; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; }
         
+        /* Language Switcher */
+        .lang-switcher {
+            display: inline-flex;
+            background: rgba(4, 25, 36, 0.6);
+            border: 1px solid rgba(160, 244, 255, 0.35);
+            border-radius: 999px;
+            padding: 3px;
+            gap: 4px;
+        }
+        .lang-switcher-btn {
+            background: transparent;
+            border: none;
+            color: #a9eff7;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .lang-switcher-btn:hover {
+            color: #ffffff;
+            background: rgba(160, 244, 255, 0.15);
+        }
+        .lang-switcher-btn.active {
+            background: #b9faff;
+            color: #06222d;
+            box-shadow: 0 0 16px rgba(185, 250, 255, 0.4);
+        }
+
         .container { max-width: 1400px; margin: 0 auto; padding: 32px; display: grid; grid-template-columns: 280px 1fr; gap: 32px; }
         
         /* Glass Card */
@@ -70,15 +104,28 @@
         
         .actions { display: flex; gap: 12px; }
 
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
         .form-group { display: flex; flex-direction: column; gap: 8px; }
         .form-group.full { grid-column: span 2; }
-        .form-group label { font-size: 11px; font-family: 'DM Mono', monospace; color: #a9eff7; letter-spacing: 0.1em; }
+        
+        .form-group label { 
+            font-size: 11px; font-family: 'DM Mono', monospace; color: #a9eff7; letter-spacing: 0.1em;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .lang-tag {
+            font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: bold;
+            background: rgba(160,244,255,0.15); color: #a6faff; border: 1px solid rgba(160,244,255,0.3);
+        }
+        .lang-tag.lv {
+            background: rgba(245,158,11,0.15); color: #fcd34d; border-color: rgba(245,158,11,0.3);
+        }
+
         .form-group input, .form-group textarea, .form-group select {
             background: rgba(0,0,0,0.3); border: 1px solid rgba(160,244,255,.2); color: white; padding: 14px; border-radius: 12px; font-family: inherit; font-size: 14px; outline: none; transition: 0.2s;
         }
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: #a6faff; box-shadow: 0 0 15px rgba(166,250,255,.1); }
-        
+        .form-group input::placeholder, .form-group textarea::placeholder { color: rgba(160,244,255,0.35); font-style: italic; }
+
         /* Section Headers */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin: 32px 0 16px; padding-top: 24px; border-top: 1px solid rgba(160,244,255,.2); }
         .section-header h3 { margin: 0; font-size: 18px; font-weight: 700; color: #c9fcff; }
@@ -99,9 +146,10 @@
         }
         .list-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .list-info h4 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
-        .list-info p { margin: 0; color: #9fc8d2; font-size: 12px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .list-info p { margin: 0; color: #9fc8d2; font-size: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .list-info span { background: rgba(16,90,111,.4); padding: 4px 8px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 10px; }
-        
+        .list-info .sub-lv { color: #fcd34d; font-size: 11px; font-style: italic; }
+
         /* Image Upload */
         .image-upload-wrapper { display: flex; gap: 16px; align-items: center; }
         .image-preview-box { width: 80px; height: 80px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px dashed rgba(160,244,255,.3); overflow: hidden; display: grid; place-items: center; color: #a9eff7; font-size: 24px; position: relative; }
@@ -111,7 +159,7 @@
         /* Modal */
         .modal-overlay { position: fixed; inset: 0; background: rgba(2, 7, 13, 0.85); backdrop-filter: blur(8px); display: none; place-items: center; z-index: 100; }
         .modal-overlay.visible { display: grid; }
-        .modal { width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; }
+        .modal { width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; }
         .modal h3 { margin: 0 0 24px; font-size: 22px; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(160,244,255,.2); }
     </style>
@@ -119,71 +167,112 @@
 <body>
 
     <nav class="navbar">
-        <h1>Wall of Fame <span class="badge">Spatial CMS</span></h1>
+        <div class="navbar-brand">
+            <h1 data-i18n="app_title">Wall of Fame <span class="badge" data-i18n="spatial_cms">Spatial CMS</span></h1>
+        </div>
+        <div id="navbar-lang-container">
+            <!-- Language Switcher injected by i18n -->
+        </div>
     </nav>
 
     <div class="container">
         <!-- Sidebar -->
         <aside class="sidebar glass-card">
-            <h2>Active Screens</h2>
+            <h2 data-i18n="active_screens">Active Screens</h2>
             <ul class="screen-list" id="screen-list"></ul>
-            <button class="btn btn-new" onclick="createNewScreen()">+ Create New Screen</button>
+            <button class="btn btn-new" onclick="createNewScreen()" data-i18n="create_new_screen">+ Create New Screen</button>
         </aside>
 
         <!-- Main Editor -->
         <main class="editor glass-card" id="editor">
             <div class="editor-header">
                 <div>
-                    <h2 id="edit-header-title">Select a screen</h2>
-                    <p>LOCATION ID: <span id="edit-header-id">-</span></p>
+                    <h2 id="edit-header-title" data-i18n="select_screen">Select a screen</h2>
+                    <p><span data-i18n="location_id">LOCATION ID:</span> <span id="edit-header-id">-</span></p>
                 </div>
                 <div class="actions">
-                    <a href="#" target="_blank" class="btn btn-secondary" id="btn-view">Test View ↗</a>
-                    <button class="btn" onclick="saveLocation()">Save Changes</button>
-                    <button class="btn btn-danger" onclick="deleteLocation()">Delete</button>
+                    <a href="#" target="_blank" class="btn btn-secondary" id="btn-view" data-i18n="test_view">Test View ↗</a>
+                    <button class="btn" onclick="saveLocation()" id="btn-save" data-i18n="save_changes">Save Changes</button>
+                    <button class="btn btn-danger" onclick="deleteLocation()" data-i18n="delete_screen">Delete</button>
                 </div>
             </div>
 
             <!-- Core Fields (All Templates) -->
             <div class="form-grid">
                 <div class="form-group">
-                    <label>INTERNAL NAME</label>
-                    <input type="text" id="loc-name">
+                    <label data-i18n="internal_name">INTERNAL NAME</label>
+                    <input type="text" id="loc-name" placeholder="e.g. Design Factory Main Hall">
                 </div>
                 <div class="form-group">
-                    <label>TEMPLATE ENGINE</label>
+                    <label data-i18n="display_template">DISPLAY TEMPLATE / AR ENGINE</label>
                     <select id="loc-template" onchange="onTemplateChange()">
                         <option value="designfactory">V4: Hierarchy Tree (DesignFactory)</option>
                         <option value="swup">V5: Team Profile (SWUP)</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>LATITUDE</label>
-                    <input type="number" id="loc-lat" step="any">
+                    <label data-i18n="latitude">LATITUDE (GPS)</label>
+                    <input type="number" id="loc-lat" step="any" placeholder="56.95">
                 </div>
                 <div class="form-group">
-                    <label>LONGITUDE</label>
-                    <input type="number" id="loc-lng" step="any">
+                    <label data-i18n="longitude">LONGITUDE (GPS)</label>
+                    <input type="number" id="loc-lng" step="any" placeholder="24.10">
+                </div>
+
+                <!-- Localized Titles -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="display_title_en">DISPLAY TITLE (EN)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <input type="text" id="loc-title" placeholder="e.g. Design Factory">
                 </div>
                 <div class="form-group">
-                    <label>DISPLAY TITLE</label>
-                    <input type="text" id="loc-title">
+                    <label>
+                        <span data-i18n="display_title_lv">DISPLAY TITLE (LV)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <input type="text" id="loc-title-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                </div>
+
+                <!-- Localized Subtitles -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="display_subtitle_en">DISPLAY SUBTITLE (EN)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <input type="text" id="loc-subtitle" placeholder="e.g. Where Creativity Meets Innovation">
                 </div>
                 <div class="form-group">
-                    <label>DISPLAY SUBTITLE</label>
-                    <input type="text" id="loc-subtitle">
+                    <label>
+                        <span data-i18n="display_subtitle_lv">DISPLAY SUBTITLE (LV)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <input type="text" id="loc-subtitle-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
                 </div>
-                <div class="form-group full">
-                    <label>DESCRIPTION</label>
-                    <textarea id="loc-desc" rows="2"></textarea>
+
+                <!-- Localized Description -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="description_en">DESCRIPTION (EN)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <textarea id="loc-desc" rows="2" placeholder="e.g. Design Factory Family"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="description_lv">DESCRIPTION (LV)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <textarea id="loc-desc-lv" rows="2" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint"></textarea>
                 </div>
             </div>
 
             <!-- Dynamic Template Section: V4 Hierarchy (DesignFactory) -->
             <div id="section-designfactory" class="template-section">
                 <div class="section-header">
-                    <h3>Hierarchy Tree Data</h3>
-                    <button class="btn btn-secondary" onclick="openV4Modal()">+ Add Person</button>
+                    <h3 data-i18n="template_df_title">Hierarchy Tree Data (Design Factory)</h3>
+                    <button class="btn btn-secondary" onclick="openV4Modal()" data-i18n="add_person">+ Add Person</button>
                 </div>
                 <div class="list-container" id="v4-list"></div>
             </div>
@@ -191,19 +280,39 @@
             <!-- Dynamic Template Section: V5 Team Profile (SWUP) -->
             <div id="section-swup" class="template-section">
                 <div class="section-header">
-                    <h3>Team Details</h3>
+                    <h3 data-i18n="template_swup_title">Team Profile Projection Data (SWUP)</h3>
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>TEAM NAME</label>
+                        <label>
+                            <span data-i18n="team_name_en">TEAM NAME (EN)</span>
+                            <span class="lang-tag">EN</span>
+                        </label>
                         <input type="text" id="v5-teamName" placeholder="e.g. TEAM SWUP">
                     </div>
                     <div class="form-group">
-                        <label>DESTINATION URL</label>
-                        <input type="text" id="v5-teamUrl" placeholder="Redirect link on click">
+                        <label>
+                            <span data-i18n="team_name_lv">TEAM NAME (LV)</span>
+                            <span class="lang-tag lv">LV</span>
+                        </label>
+                        <input type="text" id="v5-teamName-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <span data-i18n="team_subhead_en">DESTINATION / SUBHEAD (EN)</span>
+                            <span class="lang-tag">EN</span>
+                        </label>
+                        <input type="text" id="v5-teamUrl" placeholder="e.g. Swup the problem">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <span data-i18n="team_subhead_lv">DESTINATION / SUBHEAD (LV)</span>
+                            <span class="lang-tag lv">LV</span>
+                        </label>
+                        <input type="text" id="v5-teamUrl-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
                     </div>
                     <div class="form-group full">
-                        <label>TEAM PHOTO</label>
+                        <label data-i18n="team_hero_photo">TEAM HERO PHOTO</label>
                         <div class="image-upload-wrapper">
                             <div class="image-preview-box">
                                 <img id="v5-teamPhoto-preview">
@@ -211,14 +320,14 @@
                                 <span style="position:absolute;z-index:-1">+</span>
                             </div>
                             <input type="hidden" id="v5-teamPhoto">
-                            <small style="color:var(--text-muted)">Click box to upload (Local storage for now)</small>
+                            <small style="color:var(--text-muted)">Click box to upload photo</small>
                         </div>
                     </div>
                 </div>
 
                 <div class="section-header">
-                    <h3>Team Members</h3>
-                    <button class="btn btn-secondary" onclick="openV5Modal()">+ Add Member</button>
+                    <h3 data-i18n="team_members">Team Members</h3>
+                    <button class="btn btn-secondary" onclick="openV5Modal()" data-i18n="add_member">+ Add Member</button>
                 </div>
                 <div class="list-container" id="v5-list"></div>
             </div>
@@ -229,27 +338,122 @@
     <!-- V4 Inductee Modal -->
     <div class="modal-overlay" id="v4-modal">
         <div class="glass-card modal">
-            <h3 id="v4-modal-title">Edit Person</h3>
+            <h3 id="v4-modal-title" data-i18n="modal_df_title">Hierarchy Inductee Profile</h3>
             <div class="form-grid">
                 <div class="form-group full">
-                    <label>PHOTO</label>
+                    <label data-i18n="photo_upload">PHOTO</label>
                     <div class="image-upload-wrapper">
-                        <div class="image-preview-box"><img id="v4-photo-preview"><input type="file" onchange="uploadImage(this, 'v4-photo')"><span style="position:absolute;z-index:-1">+</span></div>
+                        <div class="image-preview-box">
+                            <img id="v4-photo-preview">
+                            <input type="file" onchange="uploadImage(this, 'v4-photo')">
+                            <span style="position:absolute;z-index:-1">+</span>
+                        </div>
                         <input type="hidden" id="v4-photo">
                     </div>
                 </div>
-                <div class="form-group"><label>FULL NAME</label><input type="text" id="v4-name"></div>
-                <div class="form-group"><label>ROLE / TITLE</label><input type="text" id="v4-role"></div>
-                <div class="form-group">
-                    <label>LEVEL</label>
-                    <select id="v4-level"><option value="root">Root</option><option value="lead">Lead</option><option value="member">Member</option></select>
+                
+                <div class="form-group full">
+                    <label data-i18n="full_name">FULL NAME</label>
+                    <input type="text" id="v4-name" placeholder="e.g. Elina Mikelsone">
                 </div>
-                <div class="form-group"><label>ACCENT COLOR</label><input type="color" id="v4-accent" style="height:44px;width:100%;padding:2px;"></div>
+
+                <!-- Dual Role -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="role_en">ROLE / TITLE (EN)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <input type="text" id="v4-role" placeholder="e.g. Head of RTU Design Factory & Innovation">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="role_lv">ROLE / TITLE (LV)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <input type="text" id="v4-role-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="hierarchy_level">HIERARCHY LEVEL / GROUP</label>
+                    <select id="v4-level">
+                        <option value="root">Root (e.g. Head / Director)</option>
+                        <option value="lead">Lead (e.g. Team Lead / Manager)</option>
+                        <option value="member">Staff / Core Member</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="accent_color">ACCENT COLOR</label>
+                    <input type="color" id="v4-accent" style="height:48px;width:100%;padding:2px;">
+                </div>
+
+                <!-- Dual Superpower / Bio -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="superpower_en">SUPERPOWER / BIO (EN)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <textarea id="v4-superpower" rows="2" placeholder="e.g. Strategic vision and ecosystem development"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="superpower_lv">SUPERPOWER / BIO (LV)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <textarea id="v4-superpower-lv" rows="2" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint"></textarea>
+                </div>
+
+                <!-- Dual Current Project -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="current_project_en">CURRENT PROJECT (EN)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <input type="text" id="v4-project" placeholder="e.g. Innovation Ecosystem 2026">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="current_project_lv">CURRENT PROJECT (LV)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <input type="text" id="v4-project-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                </div>
+
+                <!-- Dual Skills -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="skills_en">SKILLS (EN - comma separated)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <input type="text" id="v4-skills" placeholder="Leadership, Innovation, Strategy">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="skills_lv">SKILLS (LV - comma separated)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <input type="text" id="v4-skills-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                </div>
+
+                <!-- Dual Certifications -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="certifications_en">CERTIFICATIONS (EN - comma separated)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <input type="text" id="v4-certifications" placeholder="Ph.D, PMP, Design Thinking">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="certifications_lv">CERTIFICATIONS (LV - comma separated)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <input type="text" id="v4-certifications-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                </div>
             </div>
             <input type="hidden" id="v4-index">
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="document.getElementById('v4-modal').classList.remove('visible')">Cancel</button>
-                <button class="btn" onclick="saveV4Person()">Save Person</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('v4-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
+                <button class="btn" onclick="saveV4Person()" data-i18n="save_inductee">Save Inductee</button>
             </div>
         </div>
     </div>
@@ -257,23 +461,102 @@
     <!-- V5 Member Modal -->
     <div class="modal-overlay" id="v5-modal">
         <div class="glass-card modal">
-            <h3 id="v5-modal-title">Edit Team Member</h3>
+            <h3 id="v5-modal-title" data-i18n="modal_swup_title">SWUP Team Member Profile</h3>
             <div class="form-grid">
                 <div class="form-group full">
-                    <label>PHOTO</label>
+                    <label data-i18n="photo_upload">PHOTO</label>
                     <div class="image-upload-wrapper">
-                        <div class="image-preview-box"><img id="v5-photo-preview"><input type="file" onchange="uploadImage(this, 'v5-photo')"><span style="position:absolute;z-index:-1">+</span></div>
+                        <div class="image-preview-box">
+                            <img id="v5-photo-preview">
+                            <input type="file" onchange="uploadImage(this, 'v5-photo')">
+                            <span style="position:absolute;z-index:-1">+</span>
+                        </div>
                         <input type="hidden" id="v5-photo">
                     </div>
                 </div>
-                <div class="form-group"><label>NAME</label><input type="text" id="v5-name"></div>
-                <div class="form-group"><label>ACCENT COLOR</label><input type="color" id="v5-accent" style="height:44px;width:100%;padding:2px;"></div>
-                <div class="form-group"><label>CROP (CSS object-position)</label><input type="text" id="v5-crop" placeholder="e.g. 50% 28%"></div>
+
+                <div class="form-group full">
+                    <label data-i18n="full_name">NAME</label>
+                    <input type="text" id="v5-name" placeholder="e.g. Daniels K.">
+                </div>
+
+                <!-- Dual Role -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="role_en">ROLE / TITLE (EN)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <input type="text" id="v5-role" placeholder="e.g. Lead Prototyper">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="role_lv">ROLE / TITLE (LV)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <input type="text" id="v5-role-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                </div>
+
+                <!-- Dual Specialty -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="specialty_en">SPECIALTY / STREAM (EN)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <input type="text" id="v5-specialty" placeholder="e.g. Robotics & Hardware">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="specialty_lv">SPECIALTY / STREAM (LV)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <input type="text" id="v5-specialty-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                </div>
+
+                <!-- Dual Project / Status -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="project_status_en">PROJECT / STATUS (EN)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <input type="text" id="v5-project" placeholder="e.g. Swup 01 Alpha">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="project_status_lv">PROJECT / STATUS (LV)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <input type="text" id="v5-project-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                </div>
+
+                <!-- Dual Skills -->
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="skills_en">SKILLS (EN - comma separated)</span>
+                        <span class="lang-tag">EN</span>
+                    </label>
+                    <input type="text" id="v5-skills" placeholder="CNC, PCB Design, Arduino">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <span data-i18n="skills_lv">SKILLS (LV - comma separated)</span>
+                        <span class="lang-tag lv">LV</span>
+                    </label>
+                    <input type="text" id="v5-skills-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                </div>
+
+                <div class="form-group">
+                    <label data-i18n="accent_color">ACCENT COLOR</label>
+                    <input type="color" id="v5-accent" style="height:48px;width:100%;padding:2px;">
+                </div>
+                <div class="form-group">
+                    <label>CROP (CSS object-position)</label>
+                    <input type="text" id="v5-crop" placeholder="e.g. 50% 28%">
+                </div>
             </div>
             <input type="hidden" id="v5-index">
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="document.getElementById('v5-modal').classList.remove('visible')">Cancel</button>
-                <button class="btn" onclick="saveV5Member()">Save Member</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('v5-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
+                <button class="btn" onclick="saveV5Member()" data-i18n="save_member">Save Member</button>
             </div>
         </div>
     </div>
@@ -282,6 +565,16 @@
         let locations = [];
         let currentLocation = null;
         let isEditing = false;
+
+        // Initialize Language Switcher in Navbar
+        document.getElementById('navbar-lang-container').innerHTML = i18n.createSwitcherHTML();
+        i18n.subscribe(() => {
+            renderSidebar();
+            if (currentLocation) {
+                renderV4List();
+                renderV5List();
+            }
+        });
 
         async function fetchLocations() {
             try {
@@ -293,7 +586,7 @@
                     console.error("API error loading screens:", data);
                     locations = [];
                     if (data && data.error) {
-                        alert("Warning: Backend reported error loading screens: " + data.error);
+                        alert(i18n.t('network_error', { error: data.error }));
                     }
                 }
             } catch (err) {
@@ -308,9 +601,10 @@
             list.innerHTML = '';
             if (!Array.isArray(locations)) locations = [];
             locations.forEach(loc => {
+                const displayName = i18n.getLocalized(loc, 'title') || loc.name || loc.id;
                 const li = document.createElement('li');
                 li.className = `screen-item ${currentLocation && currentLocation.id === loc.id ? 'active' : ''}`;
-                li.innerHTML = `<span>${loc.name}</span><small>${loc.id}</small>`;
+                li.innerHTML = `<span>${displayName}</span><small>${loc.id}</small>`;
                 li.onclick = () => selectLocation(loc.id);
                 list.appendChild(li);
             });
@@ -322,11 +616,11 @@
                 let data = await res.json();
                 
                 if (!res.ok) {
-                    alert("Error loading screen: " + (data.error || "Screen not found"));
+                    alert(i18n.t('network_error', { error: data.error || "Screen not found" }));
                     return;
                 }
                 
-                // Backwards compatibility migration for old locations without the .data wrapper
+                // Backwards compatibility migration
                 if (!data.data) {
                     data.data = { inductees: data.inductees || [] };
                     delete data.inductees;
@@ -338,25 +632,28 @@
                 populateEditor();
                 document.getElementById('editor').classList.add('visible');
             } catch (err) {
-                alert("Network error: " + err.message);
+                alert(i18n.t('network_error', { error: err.message }));
             }
         }
 
         function createNewScreen() {
-            const id = prompt("Enter a unique ID for the new screen (e.g. 'library'):");
+            const id = prompt(i18n.t('enter_screen_id_prompt'));
             if (!id) return;
             const cleanId = id.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-            if (!cleanId) return alert("Please enter a valid ID with letters or numbers.");
+            if (!cleanId) return alert(i18n.t('invalid_id_alert'));
             
             if (Array.isArray(locations) && locations.find(l => l.id && l.id.toLowerCase() === cleanId)) {
-                return alert("A screen with ID '" + cleanId + "' already exists!");
+                return alert(i18n.t('id_exists_alert', { id: cleanId }));
             }
             
             currentLocation = {
                 id: cleanId,
                 name: "New Screen",
                 template: "designfactory",
-                title: "", subtitle: "", description: "", lat: 0, lng: 0, radius: 50,
+                title: "", title_lv: "",
+                subtitle: "", subtitle_lv: "",
+                description: "", description_lv: "",
+                lat: 0, lng: 0, radius: 50,
                 data: { inductees: [] }
             };
             isEditing = false;
@@ -366,16 +663,25 @@
         }
 
         function populateEditor() {
-            document.getElementById('edit-header-title').textContent = currentLocation.name;
+            document.getElementById('edit-header-title').textContent = i18n.getLocalized(currentLocation, 'title') || currentLocation.name || currentLocation.id;
             document.getElementById('edit-header-id').textContent = currentLocation.id;
             
             document.getElementById('loc-name').value = currentLocation.name || '';
             document.getElementById('loc-template').value = currentLocation.template || 'designfactory';
             document.getElementById('loc-lat').value = currentLocation.lat || 0;
             document.getElementById('loc-lng').value = currentLocation.lng || 0;
+            
+            // Dual Title
             document.getElementById('loc-title').value = currentLocation.title || '';
+            document.getElementById('loc-title-lv').value = currentLocation.title_lv || '';
+
+            // Dual Subtitle
             document.getElementById('loc-subtitle').value = currentLocation.subtitle || '';
+            document.getElementById('loc-subtitle-lv').value = currentLocation.subtitle_lv || '';
+
+            // Dual Description
             document.getElementById('loc-desc').value = currentLocation.description || '';
+            document.getElementById('loc-desc-lv').value = currentLocation.description_lv || '';
 
             document.getElementById('btn-view').href = `/view/${currentLocation.id}`;
             onTemplateChange();
@@ -384,13 +690,9 @@
         function onTemplateChange() {
             const tmpl = document.getElementById('loc-template').value;
             
-            // Hide all
             document.querySelectorAll('.template-section').forEach(el => el.classList.remove('active'));
-            
-            // Migrate data if switching templates completely breaks schema
             if (!currentLocation.data) currentLocation.data = {};
 
-            // Show and render specific template fields
             if (tmpl === 'designfactory') {
                 if (!currentLocation.data.inductees) currentLocation.data.inductees = [];
                 document.getElementById('section-designfactory').classList.add('active');
@@ -400,7 +702,9 @@
                 document.getElementById('section-swup').classList.add('active');
                 
                 document.getElementById('v5-teamName').value = currentLocation.data.teamName || '';
+                document.getElementById('v5-teamName-lv').value = currentLocation.data.teamName_lv || '';
                 document.getElementById('v5-teamUrl').value = currentLocation.data.teamDestination || '';
+                document.getElementById('v5-teamUrl-lv').value = currentLocation.data.teamDestination_lv || '';
                 
                 const photoInput = document.getElementById('v5-teamPhoto');
                 const photoPreview = document.getElementById('v5-teamPhoto-preview');
@@ -416,34 +720,63 @@
             }
         }
 
-        // --- V4 Logic ---
+        // --- V4 Inductees Logic ---
         function renderV4List() {
             const list = document.getElementById('v4-list');
             list.innerHTML = '';
             const data = currentLocation.data.inductees;
-            if (!data || data.length === 0) return list.innerHTML = '<p>No people added yet.</p>';
+            if (!data || data.length === 0) return list.innerHTML = '<p style="color:#9fc8d2">No people added yet.</p>';
 
             data.forEach((ind, i) => {
+                const roleEn = ind.role || '';
+                const roleLv = ind.role_lv || '';
+                const currentRole = i18n.getLocalized(ind, 'role');
+
                 const el = document.createElement('div');
                 el.className = 'list-item';
                 el.innerHTML = `
                     <div class="list-avatar" style="border-color:${ind.accent}">${ind.photo ? `<img src="${ind.photo}">` : '👤'}</div>
-                    <div class="list-info"><h4>${ind.name}</h4><p>${ind.role} <span>LVL: ${ind.level}</span></p></div>
+                    <div class="list-info">
+                        <h4>${ind.name}</h4>
+                        <p>
+                            <strong>${currentRole}</strong>
+                            <span>LVL: ${ind.level}</span>
+                            ${roleLv && i18n.getLanguage() === 'en' ? `<span class="sub-lv">LV: ${roleLv}</span>` : ''}
+                            ${roleEn && i18n.getLanguage() === 'lv' ? `<span class="sub-lv">EN: ${roleEn}</span>` : ''}
+                        </p>
+                    </div>
                     <div class="actions">
-                        <button class="btn btn-secondary" onclick="openV4Modal(${i})" style="padding:8px 12px">Edit</button>
+                        <button class="btn btn-secondary" onclick="openV4Modal(${i})" style="padding:8px 12px">${i18n.t('edit')}</button>
                         <button class="btn btn-danger" onclick="deleteV4Person(${i})" style="padding:8px 12px">X</button>
                     </div>`;
                 list.appendChild(el);
             });
         }
+
         function openV4Modal(index = -1) {
-            const ind = index === -1 ? { name: '', role: '', level: 'member', accent: '#9ec6ef', photo: '' } : currentLocation.data.inductees[index];
+            const ind = index === -1 ? { 
+                name: '', role: '', role_lv: '', level: 'member', accent: '#9ec6ef', photo: '',
+                superpower: '', superpower_lv: '', current_project: '', current_project_lv: '',
+                skills: '', skills_lv: '', certifications: '', certifications_lv: ''
+            } : currentLocation.data.inductees[index];
+
             document.getElementById('v4-index').value = index;
             document.getElementById('v4-name').value = ind.name || '';
             document.getElementById('v4-role').value = ind.role || '';
+            document.getElementById('v4-role-lv').value = ind.role_lv || '';
             document.getElementById('v4-level').value = ind.level || 'member';
             document.getElementById('v4-accent').value = ind.accent || '#9ec6ef';
-            
+
+            document.getElementById('v4-superpower').value = ind.superpower || '';
+            document.getElementById('v4-superpower-lv').value = ind.superpower_lv || '';
+            document.getElementById('v4-project').value = ind.current_project || '';
+            document.getElementById('v4-project-lv').value = ind.current_project_lv || '';
+
+            document.getElementById('v4-skills').value = Array.isArray(ind.skills) ? ind.skills.join(', ') : (ind.skills || '');
+            document.getElementById('v4-skills-lv').value = Array.isArray(ind.skills_lv) ? ind.skills_lv.join(', ') : (ind.skills_lv || '');
+            document.getElementById('v4-certifications').value = Array.isArray(ind.certifications) ? ind.certifications.join(', ') : (ind.certifications || '');
+            document.getElementById('v4-certifications-lv').value = Array.isArray(ind.certifications_lv) ? ind.certifications_lv.join(', ') : (ind.certifications_lv || '');
+
             document.getElementById('v4-photo').value = ind.photo || '';
             const prev = document.getElementById('v4-photo-preview');
             prev.src = ind.photo || '';
@@ -451,52 +784,86 @@
             
             document.getElementById('v4-modal').classList.add('visible');
         }
+
         function saveV4Person() {
             const index = parseInt(document.getElementById('v4-index').value);
             const ind = {
                 id: document.getElementById('v4-name').value.toLowerCase().replace(/[^a-z0-9]/g, '-'),
                 name: document.getElementById('v4-name').value,
                 role: document.getElementById('v4-role').value,
+                role_lv: document.getElementById('v4-role-lv').value,
                 initials: document.getElementById('v4-name').value.substring(0,2).toUpperCase(),
                 level: document.getElementById('v4-level').value,
                 accent: document.getElementById('v4-accent').value,
+                superpower: document.getElementById('v4-superpower').value,
+                superpower_lv: document.getElementById('v4-superpower-lv').value,
+                current_project: document.getElementById('v4-project').value,
+                current_project_lv: document.getElementById('v4-project-lv').value,
+                skills: document.getElementById('v4-skills').value,
+                skills_lv: document.getElementById('v4-skills-lv').value,
+                certifications: document.getElementById('v4-certifications').value,
+                certifications_lv: document.getElementById('v4-certifications-lv').value,
                 photo: document.getElementById('v4-photo').value
             };
+
             if (index === -1) currentLocation.data.inductees.push(ind);
             else currentLocation.data.inductees[index] = ind;
+
             renderV4List();
             document.getElementById('v4-modal').classList.remove('visible');
         }
+
         function deleteV4Person(i) {
-            if(!confirm("Remove?")) return;
+            if (!confirm(i18n.t('confirm_delete_person'))) return;
             currentLocation.data.inductees.splice(i, 1);
             renderV4List();
         }
 
-        // --- V5 Logic ---
+        // --- V5 SWUP Members Logic ---
         function renderV5List() {
             const list = document.getElementById('v5-list');
             list.innerHTML = '';
             const data = currentLocation.data.members;
-            if (!data || data.length === 0) return list.innerHTML = '<p>No members added yet.</p>';
+            if (!data || data.length === 0) return list.innerHTML = '<p style="color:#9fc8d2">No members added yet.</p>';
 
             data.forEach((m, i) => {
+                const currentRole = i18n.getLocalized(m, 'role');
                 const el = document.createElement('div');
                 el.className = 'list-item';
                 el.innerHTML = `
                     <div class="list-avatar" style="border-color:${m.accent}">${m.photo ? `<img src="${m.photo}" style="object-position:${m.crop||'center'}">` : '👤'}</div>
-                    <div class="list-info"><h4>${m.name}</h4><p><span>CROP: ${m.crop || 'center'}</span></p></div>
+                    <div class="list-info">
+                        <h4>${m.name}</h4>
+                        <p>
+                            <strong>${currentRole}</strong>
+                            <span>CROP: ${m.crop || 'center'}</span>
+                        </p>
+                    </div>
                     <div class="actions">
-                        <button class="btn btn-secondary" onclick="openV5Modal(${i})" style="padding:8px 12px">Edit</button>
+                        <button class="btn btn-secondary" onclick="openV5Modal(${i})" style="padding:8px 12px">${i18n.t('edit')}</button>
                         <button class="btn btn-danger" onclick="deleteV5Member(${i})" style="padding:8px 12px">X</button>
                     </div>`;
                 list.appendChild(el);
             });
         }
+
         function openV5Modal(index = -1) {
-            const m = index === -1 ? { name: '', accent: '#b7f8ff', photo: '', crop: '50% 28%' } : currentLocation.data.members[index];
+            const m = index === -1 ? { 
+                name: '', role: '', role_lv: '', specialty: '', specialty_lv: '', project: '', project_lv: '',
+                skills: '', skills_lv: '', accent: '#b7f8ff', photo: '', crop: '50% 28%' 
+            } : currentLocation.data.members[index];
+
             document.getElementById('v5-index').value = index;
             document.getElementById('v5-name').value = m.name || '';
+            document.getElementById('v5-role').value = m.role || '';
+            document.getElementById('v5-role-lv').value = m.role_lv || '';
+            document.getElementById('v5-specialty').value = m.specialty || '';
+            document.getElementById('v5-specialty-lv').value = m.specialty_lv || '';
+            document.getElementById('v5-project').value = m.project || '';
+            document.getElementById('v5-project-lv').value = m.project_lv || '';
+            document.getElementById('v5-skills').value = Array.isArray(m.skills) ? m.skills.join(', ') : (m.skills || '');
+            document.getElementById('v5-skills-lv').value = Array.isArray(m.skills_lv) ? m.skills_lv.join(', ') : (m.skills_lv || '');
+
             document.getElementById('v5-accent').value = m.accent || '#b7f8ff';
             document.getElementById('v5-crop').value = m.crop || '';
             
@@ -507,39 +874,65 @@
             
             document.getElementById('v5-modal').classList.add('visible');
         }
+
         function saveV5Member() {
             const index = parseInt(document.getElementById('v5-index').value);
             const m = {
                 id: document.getElementById('v5-name').value.toLowerCase().replace(/[^a-z0-9]/g, '-'),
                 name: document.getElementById('v5-name').value,
+                role: document.getElementById('v5-role').value,
+                role_lv: document.getElementById('v5-role-lv').value,
+                specialty: document.getElementById('v5-specialty').value,
+                specialty_lv: document.getElementById('v5-specialty-lv').value,
+                project: document.getElementById('v5-project').value,
+                project_lv: document.getElementById('v5-project-lv').value,
+                skills: document.getElementById('v5-skills').value,
+                skills_lv: document.getElementById('v5-skills-lv').value,
                 accent: document.getElementById('v5-accent').value,
                 crop: document.getElementById('v5-crop').value,
                 photo: document.getElementById('v5-photo').value
             };
+
             if (index === -1) currentLocation.data.members.push(m);
             else currentLocation.data.members[index] = m;
+
             renderV5List();
             document.getElementById('v5-modal').classList.remove('visible');
         }
+
         function deleteV5Member(i) {
-            if(!confirm("Remove?")) return;
+            if (!confirm(i18n.t('confirm_delete_member'))) return;
             currentLocation.data.members.splice(i, 1);
             renderV5List();
         }
 
-        // --- Global Logic ---
+        // --- Global Save / Delete Logic ---
         async function saveLocation() {
+            const saveBtn = document.getElementById('btn-save');
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = i18n.t('saving');
+            saveBtn.disabled = true;
+
             currentLocation.name = document.getElementById('loc-name').value;
             currentLocation.template = document.getElementById('loc-template').value;
-            currentLocation.lat = parseFloat(document.getElementById('loc-lat').value);
-            currentLocation.lng = parseFloat(document.getElementById('loc-lng').value);
+            currentLocation.lat = parseFloat(document.getElementById('loc-lat').value) || 0;
+            currentLocation.lng = parseFloat(document.getElementById('loc-lng').value) || 0;
+
+            // Dual Core Fields
             currentLocation.title = document.getElementById('loc-title').value;
+            currentLocation.title_lv = document.getElementById('loc-title-lv').value;
+
             currentLocation.subtitle = document.getElementById('loc-subtitle').value;
+            currentLocation.subtitle_lv = document.getElementById('loc-subtitle-lv').value;
+
             currentLocation.description = document.getElementById('loc-desc').value;
+            currentLocation.description_lv = document.getElementById('loc-desc-lv').value;
 
             if (currentLocation.template === 'swup') {
                 currentLocation.data.teamName = document.getElementById('v5-teamName').value;
+                currentLocation.data.teamName_lv = document.getElementById('v5-teamName-lv').value;
                 currentLocation.data.teamDestination = document.getElementById('v5-teamUrl').value;
+                currentLocation.data.teamDestination_lv = document.getElementById('v5-teamUrl-lv').value;
                 currentLocation.data.teamPhoto = document.getElementById('v5-teamPhoto').value;
             }
 
@@ -547,23 +940,35 @@
             const url = isEditing ? `/api/locations/${currentLocation.id}` : `/api/locations`;
             
             try {
-                const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(currentLocation) });
+                const res = await fetch(url, { 
+                    method, 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(currentLocation) 
+                });
                 const data = await res.json();
                 
                 if (res.ok) {
-                    alert("Saved successfully!");
+                    alert(i18n.t('saved_successfully'));
+                    // Update currentLocation with auto-translated response if provided
+                    if (data && data.location) {
+                        currentLocation = data.location;
+                        populateEditor();
+                    }
                     fetchLocations();
                     if (!isEditing) selectLocation(currentLocation.id);
                 } else {
-                    alert("Failed to save: " + (data.error || "Unknown error"));
+                    alert(i18n.t('save_failed', { error: data.error || "Unknown error" }));
                 }
             } catch (err) {
-                alert("Network error: " + err.message);
+                alert(i18n.t('network_error', { error: err.message }));
+            } finally {
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
             }
         }
 
         async function deleteLocation() {
-            if (!confirm("Are you sure you want to delete this screen?")) return;
+            if (!confirm(i18n.t('confirm_delete_screen'))) return;
             await fetch(`/api/locations/${currentLocation.id}`, { method: 'DELETE' });
             currentLocation = null;
             document.getElementById('editor').classList.remove('visible');

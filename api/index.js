@@ -34,6 +34,8 @@ const upload = multer({ storage });
 const readDB = () => JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
 const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
 
+const { translateText, translateArray, autoTranslateScreenPayload } = require('./translate');
+
 // --- API ROUTES ---
 
 // 1. Get all screens (locations)
@@ -50,19 +52,30 @@ app.get('/api/locations/:id', async (req, res) => {
     res.json(data);
 });
 
-// 3. Create new screen
+// 3. Create new screen (with automatic English -> Latvian translation fallback)
 app.post('/api/locations', async (req, res) => {
-    const newLoc = { ...req.body };
-    const { data, error } = await supabase.from('locations').insert([newLoc]).select();
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true, location: data[0] });
+    try {
+        const translatedPayload = await autoTranslateScreenPayload(req.body);
+        const { data, error } = await supabase.from('locations').insert([translatedPayload]).select();
+        if (error) return res.status(500).json({ error: error.message });
+        res.json({ success: true, location: data[0] });
+    } catch (err) {
+        console.error("Error creating location:", err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// 4. Update specific screen
+// 4. Update specific screen (with automatic English -> Latvian translation fallback)
 app.put('/api/locations/:id', async (req, res) => {
-    const { data, error } = await supabase.from('locations').update(req.body).eq('id', req.params.id).select();
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true, location: data[0] });
+    try {
+        const translatedPayload = await autoTranslateScreenPayload(req.body);
+        const { data, error } = await supabase.from('locations').update(translatedPayload).eq('id', req.params.id).select();
+        if (error) return res.status(500).json({ error: error.message });
+        res.json({ success: true, location: data[0] });
+    } catch (err) {
+        console.error("Error updating location:", err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // 5. Delete specific screen
@@ -70,6 +83,24 @@ app.delete('/api/locations/:id', async (req, res) => {
     const { error } = await supabase.from('locations').delete().eq('id', req.params.id);
     if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
+});
+
+// 5b. On-demand translation endpoint
+app.post('/api/translate', async (req, res) => {
+    try {
+        const { text, arr, from = 'en', to = 'lv' } = req.body;
+        if (Array.isArray(arr)) {
+            const translatedArr = await translateArray(arr, from, to);
+            return res.json({ success: true, translated: translatedArr });
+        } else if (typeof text === 'string') {
+            const translated = await translateText(text, from, to);
+            return res.json({ success: true, translated });
+        }
+        res.status(400).json({ error: "Please provide 'text' string or 'arr' array to translate." });
+    } catch (err) {
+        console.error("Translate endpoint error:", err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // 6. Upload image directly to Supabase Storage
