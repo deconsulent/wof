@@ -85,12 +85,18 @@
         
         .wall-person {
             position: absolute; top: 50%; left: 50%; display: grid; justify-items: center; gap: 8px;
-            opacity: 0; transition: transform .28s cubic-bezier(.2,.7,.2,1), opacity .28s ease, filter .28s ease;
+            opacity: 0; transition: transform .28s cubic-bezier(.2,.7,.2,1), opacity .28s ease, filter .28s ease, box-shadow .2s ease;
             filter: blur(calc((1 - var(--proximity)) * 1.4px));
             z-index: 1; width: min(18vw, 205px); min-height: 132px; box-sizing: border-box; align-content: center;
             padding: 17px 12px; border: 1px solid rgba(255,255,255,.76); border-radius: 25px;
             background: rgba(241,244,252,.21); box-shadow: inset 0 1px 0 rgba(255,255,255,.82), 0 17px 40px rgba(7,9,18,.15);
             backdrop-filter: blur(24px);
+            pointer-events: auto;
+            cursor: pointer;
+            user-select: none;
+        }
+        .wall-person:hover {
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 20px 50px rgba(0,0,0,.35), 0 0 28px rgba(160,244,255,.35);
         }
         .wall-person-orb {
             display: grid; width: 48px; aspect-ratio: 1; place-items: center; color: rgba(255, 255, 255, .9);
@@ -110,6 +116,11 @@
             max-width: 170px; overflow: hidden; color: rgba(255, 255, 255, .78); font-size: 10px;
             font-weight: 500; text-align: center; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2;
         }
+        .wall-person-badge {
+            font-family: 'DM Mono', monospace; font-size: 8px; color: #a6faff; opacity: 0;
+            transition: opacity 0.2s ease; margin-top: 2px;
+        }
+        .wall-person:hover .wall-person-badge { opacity: 1; }
 
         .wall-person.is-revealed { opacity: calc(var(--proximity) * .85); }
         .wall-person.is-nearest { opacity: 1; filter: none; z-index: 2; transform: translate(calc(-50% + var(--wall-x) * 6.5px), calc(-50% + var(--wall-y) * 6.5px)) scale(1.04); }
@@ -271,6 +282,20 @@
         }
         fetchLocationData();
 
+        function getPersonCardUrl(person) {
+            if (person.cardUrl && person.cardUrl.trim()) {
+                return person.cardUrl.trim();
+            }
+            const name = (person.name || '').trim();
+            const slug = name
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+            return `https://df-virtual-cards.vercel.app/${slug}`;
+        }
+
         function renderWall(forceRedraw = false) {
             if (people.length === 0) return;
 
@@ -315,6 +340,7 @@
                     const el = document.createElement('div');
                     el.id = `person-${person.id || index}`;
                     el.className = `wall-person level-${person.level} is-revealed`;
+                    el.setAttribute('title', `Click to view ${person.name}'s virtual card`);
                     
                     const orb = document.createElement('span');
                     orb.className = `wall-person-orb ${person.photo ? "has-photo" : ""}`;
@@ -334,9 +360,22 @@
                     roleSpan.className = 'wall-person-role';
                     roleSpan.textContent = i18n.getLocalized(person, 'role') || person.role || '';
 
+                    const badgeSpan = document.createElement('span');
+                    badgeSpan.className = 'wall-person-badge';
+                    badgeSpan.textContent = 'CARD ↗';
+
                     el.appendChild(orb);
                     el.appendChild(nameSpan);
                     el.appendChild(roleSpan);
+                    el.appendChild(badgeSpan);
+
+                    // Click to redirect to virtual card
+                    el.addEventListener('click', (e) => {
+                        if (dragDistance > 8) return; // Prevent clicking while panning the camera
+                        const targetUrl = getPersonCardUrl(person);
+                        window.location.href = targetUrl;
+                    });
+
                     peopleContainer.appendChild(el);
                 });
             } else {
@@ -379,7 +418,7 @@
 
             if (focused) {
                 const role = i18n.getLocalized(focused, 'role') || focused.role || '';
-                footerStatus.textContent = `${focused.name} · ${role}`;
+                footerStatus.textContent = `${focused.name} · ${role} (Tap to open card)`;
             } else {
                 footerStatus.textContent = i18n.t('drag_to_explore');
             }
@@ -411,6 +450,8 @@
         });
 
         // Interaction Logic
+        let dragDistance = 0;
+
         const resetView = () => {
             aimRef = { x: 0, y: 0 };
             aim = { x: 0, y: 0 };
@@ -419,13 +460,15 @@
 
         const startDrag = (e) => {
             if (e.pointerType === "mouse" && e.button !== 0) return;
+            dragDistance = 0;
             arScene.setPointerCapture(e.pointerId);
-            dragRef = { pointerId: e.pointerId, x: e.clientX, y: e.clientY, aim: { ...aimRef } };
+            dragRef = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, x: e.clientX, y: e.clientY, aim: { ...aimRef } };
         };
 
         const moveDrag = (e) => {
             if (!dragRef || dragRef.pointerId !== e.pointerId) return;
-            if (overview && Math.hypot(e.clientX - dragRef.x, e.clientY - dragRef.y) > 4) {
+            dragDistance = Math.hypot(e.clientX - dragRef.startX, e.clientY - dragRef.startY);
+            if (overview && dragDistance > 4) {
                 overview = false;
             }
             aimRef = {

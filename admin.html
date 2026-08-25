@@ -386,68 +386,12 @@
                     <input type="color" id="v4-accent" style="height:48px;width:100%;padding:2px;">
                 </div>
 
-                <!-- Dual Superpower / Bio -->
-                <div class="form-group">
+                <div class="form-group full">
                     <label>
-                        <span data-i18n="superpower_en">SUPERPOWER / BIO (EN)</span>
-                        <span class="lang-tag">EN</span>
+                        <span>VIRTUAL CARD URL (Redirect on Click)</span>
+                        <span class="lang-tag">AUTO</span>
                     </label>
-                    <textarea id="v4-superpower" rows="2" placeholder="e.g. Strategic vision and ecosystem development"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <span data-i18n="superpower_lv">SUPERPOWER / BIO (LV)</span>
-                        <span class="lang-tag lv">LV</span>
-                    </label>
-                    <textarea id="v4-superpower-lv" rows="2" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint"></textarea>
-                </div>
-
-                <!-- Dual Current Project -->
-                <div class="form-group">
-                    <label>
-                        <span data-i18n="current_project_en">CURRENT PROJECT (EN)</span>
-                        <span class="lang-tag">EN</span>
-                    </label>
-                    <input type="text" id="v4-project" placeholder="e.g. Innovation Ecosystem 2026">
-                </div>
-                <div class="form-group">
-                    <label>
-                        <span data-i18n="current_project_lv">CURRENT PROJECT (LV)</span>
-                        <span class="lang-tag lv">LV</span>
-                    </label>
-                    <input type="text" id="v4-project-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
-                </div>
-
-                <!-- Dual Skills -->
-                <div class="form-group">
-                    <label>
-                        <span data-i18n="skills_en">SKILLS (EN - comma separated)</span>
-                        <span class="lang-tag">EN</span>
-                    </label>
-                    <input type="text" id="v4-skills" placeholder="Leadership, Innovation, Strategy">
-                </div>
-                <div class="form-group">
-                    <label>
-                        <span data-i18n="skills_lv">SKILLS (LV - comma separated)</span>
-                        <span class="lang-tag lv">LV</span>
-                    </label>
-                    <input type="text" id="v4-skills-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
-                </div>
-
-                <!-- Dual Certifications -->
-                <div class="form-group">
-                    <label>
-                        <span data-i18n="certifications_en">CERTIFICATIONS (EN - comma separated)</span>
-                        <span class="lang-tag">EN</span>
-                    </label>
-                    <input type="text" id="v4-certifications" placeholder="Ph.D, PMP, Design Thinking">
-                </div>
-                <div class="form-group">
-                    <label>
-                        <span data-i18n="certifications_lv">CERTIFICATIONS (LV - comma separated)</span>
-                        <span class="lang-tag lv">LV</span>
-                    </label>
-                    <input type="text" id="v4-certifications-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                    <input type="text" id="v4-cardUrl" placeholder="Defaults to https://df-virtual-cards.vercel.app/(firstname-lastname)">
                 </div>
             </div>
             <input type="hidden" id="v4-index">
@@ -755,9 +699,7 @@
 
         function openV4Modal(index = -1) {
             const ind = index === -1 ? { 
-                name: '', role: '', role_lv: '', level: 'member', accent: '#9ec6ef', photo: '',
-                superpower: '', superpower_lv: '', current_project: '', current_project_lv: '',
-                skills: '', skills_lv: '', certifications: '', certifications_lv: ''
+                name: '', role: '', role_lv: '', level: 'member', accent: '#9ec6ef', photo: '', cardUrl: ''
             } : currentLocation.data.inductees[index];
 
             document.getElementById('v4-index').value = index;
@@ -766,16 +708,7 @@
             document.getElementById('v4-role-lv').value = ind.role_lv || '';
             document.getElementById('v4-level').value = ind.level || 'member';
             document.getElementById('v4-accent').value = ind.accent || '#9ec6ef';
-
-            document.getElementById('v4-superpower').value = ind.superpower || '';
-            document.getElementById('v4-superpower-lv').value = ind.superpower_lv || '';
-            document.getElementById('v4-project').value = ind.current_project || '';
-            document.getElementById('v4-project-lv').value = ind.current_project_lv || '';
-
-            document.getElementById('v4-skills').value = Array.isArray(ind.skills) ? ind.skills.join(', ') : (ind.skills || '');
-            document.getElementById('v4-skills-lv').value = Array.isArray(ind.skills_lv) ? ind.skills_lv.join(', ') : (ind.skills_lv || '');
-            document.getElementById('v4-certifications').value = Array.isArray(ind.certifications) ? ind.certifications.join(', ') : (ind.certifications || '');
-            document.getElementById('v4-certifications-lv').value = Array.isArray(ind.certifications_lv) ? ind.certifications_lv.join(', ') : (ind.certifications_lv || '');
+            document.getElementById('v4-cardUrl').value = ind.cardUrl || '';
 
             document.getElementById('v4-photo').value = ind.photo || '';
             const prev = document.getElementById('v4-photo-preview');
@@ -795,14 +728,7 @@
                 initials: document.getElementById('v4-name').value.substring(0,2).toUpperCase(),
                 level: document.getElementById('v4-level').value,
                 accent: document.getElementById('v4-accent').value,
-                superpower: document.getElementById('v4-superpower').value,
-                superpower_lv: document.getElementById('v4-superpower-lv').value,
-                current_project: document.getElementById('v4-project').value,
-                current_project_lv: document.getElementById('v4-project-lv').value,
-                skills: document.getElementById('v4-skills').value,
-                skills_lv: document.getElementById('v4-skills-lv').value,
-                certifications: document.getElementById('v4-certifications').value,
-                certifications_lv: document.getElementById('v4-certifications-lv').value,
+                cardUrl: document.getElementById('v4-cardUrl').value.trim(),
                 photo: document.getElementById('v4-photo').value
             };
 
