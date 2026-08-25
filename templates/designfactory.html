@@ -384,7 +384,6 @@
                     const el = document.createElement('div');
                     el.id = `person-${person.id || index}`;
                     el.className = `wall-person level-${person.level} is-revealed`;
-                    el.setAttribute('title', `Click to view ${person.name}'s virtual card`);
                     
                     const orb = document.createElement('span');
                     orb.className = `wall-person-orb ${person.photo ? "has-photo" : ""}`;
@@ -408,11 +407,23 @@
                     el.appendChild(nameSpan);
                     el.appendChild(roleSpan);
 
-                    // Click to redirect to virtual card
-                    el.addEventListener('click', (e) => {
-                        if (dragDistance > 8) return; // Prevent clicking while panning
+                    // Double-click (desktop) and double-tap (mobile) to open virtual card
+                    let lastTap = 0;
+                    el.addEventListener('dblclick', (e) => {
+                        e.stopPropagation();
                         const targetUrl = getPersonCardUrl(person);
                         window.location.href = targetUrl;
+                    });
+
+                    el.addEventListener('touchend', (e) => {
+                        const now = Date.now();
+                        if (now - lastTap < 350 && now - lastTap > 0) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const targetUrl = getPersonCardUrl(person);
+                            window.location.href = targetUrl;
+                        }
+                        lastTap = now;
                     });
 
                     peopleContainer.appendChild(el);
