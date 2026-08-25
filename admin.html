@@ -284,14 +284,29 @@
         let isEditing = false;
 
         async function fetchLocations() {
-            const res = await fetch('/api/locations');
-            locations = await res.json();
+            try {
+                const res = await fetch('/api/locations');
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    locations = data;
+                } else {
+                    console.error("API error loading screens:", data);
+                    locations = [];
+                    if (data && data.error) {
+                        alert("Warning: Backend reported error loading screens: " + data.error);
+                    }
+                }
+            } catch (err) {
+                console.error("Network error loading screens:", err);
+                locations = [];
+            }
             renderSidebar();
         }
 
         function renderSidebar() {
             const list = document.getElementById('screen-list');
             list.innerHTML = '';
+            if (!Array.isArray(locations)) locations = [];
             locations.forEach(loc => {
                 const li = document.createElement('li');
                 li.className = `screen-item ${currentLocation && currentLocation.id === loc.id ? 'active' : ''}`;
@@ -302,29 +317,43 @@
         }
 
         async function selectLocation(id) {
-            const res = await fetch(`/api/locations/${id}`);
-            let data = await res.json();
-            
-            // Backwards compatibility migration for old locations without the .data wrapper
-            if (!data.data) {
-                data.data = { inductees: data.inductees || [] };
-                delete data.inductees;
-            }
+            try {
+                const res = await fetch(`/api/locations/${id}`);
+                let data = await res.json();
+                
+                if (!res.ok) {
+                    alert("Error loading screen: " + (data.error || "Screen not found"));
+                    return;
+                }
+                
+                // Backwards compatibility migration for old locations without the .data wrapper
+                if (!data.data) {
+                    data.data = { inductees: data.inductees || [] };
+                    delete data.inductees;
+                }
 
-            currentLocation = data;
-            isEditing = true;
-            renderSidebar();
-            populateEditor();
-            document.getElementById('editor').classList.add('visible');
+                currentLocation = data;
+                isEditing = true;
+                renderSidebar();
+                populateEditor();
+                document.getElementById('editor').classList.add('visible');
+            } catch (err) {
+                alert("Network error: " + err.message);
+            }
         }
 
         function createNewScreen() {
             const id = prompt("Enter a unique ID for the new screen (e.g. 'library'):");
             if (!id) return;
-            if (locations.find(l => l.id === id)) return alert("ID already exists!");
+            const cleanId = id.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+            if (!cleanId) return alert("Please enter a valid ID with letters or numbers.");
+            
+            if (Array.isArray(locations) && locations.find(l => l.id && l.id.toLowerCase() === cleanId)) {
+                return alert("A screen with ID '" + cleanId + "' already exists!");
+            }
             
             currentLocation = {
-                id: id.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+                id: cleanId,
                 name: "New Screen",
                 template: "designfactory",
                 title: "", subtitle: "", description: "", lat: 0, lng: 0, radius: 50,
