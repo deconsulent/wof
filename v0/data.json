@@ -1,0 +1,22 @@
+{
+  "zones": [
+    {
+      "id": "hackathons",
+      "name": "Hackathons",
+      "latitude": 56.944444,
+      "longitude": 24.1325,
+      "radius": 50,
+      "events": [
+        {
+          "year": "2026",
+          "title": "RTU Global Hackathon",
+          "winners": [
+            { "rank": 1, "team": "AeroVision", "award": "Grand Winner", "description": "Forest-aware UAV exploration and mapping.", "color": "#f0c54a" },
+            { "rank": 2, "team": "UrbanDine Sky", "award": "Best Pitch", "description": "Autonomous urban food-air delivery concept.", "color": "#d9dde5" },
+            { "rank": 3, "team": "VoltPath", "award": "Tech Excellence", "description": "Battery routing and telemetry optimization.", "color": "#d08b5b" }
+          ]
+        }
+      ]
+    }
+  ]
+}

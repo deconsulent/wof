@@ -1,0 +1,78 @@
+{
+  "locations": [
+    {
+      "id": "design-factory",
+      "name": "Design Factory",
+      "template": "designfactory",
+      "title": "Design Factory Accolades",
+      "subtitle": "Where Creativity Meets Engineering",
+      "description": "Showcasing the top performers who merge beautiful design with robust technology.",
+      "lat": 56.56,
+      "lng": 24.7,
+      "radius": 50,
+      "data": {
+        "inductees": [
+          {
+            "id": "el-na-mi-elsone",
+            "name": "Elīna Miķelsone",
+            "role": "Nodaļas vadītāja",
+            "initials": "EL",
+            "level": "root",
+            "accent": "#e386c7",
+            "photo": "/uploads/1787635254640-355043750.jpg"
+          },
+          {
+            "id": "daniela-hrap-ne",
+            "name": "Daniela Hrapāne",
+            "role": "SkyLab vadītāja",
+            "initials": "DA",
+            "level": "lead",
+            "accent": "#0069d1",
+            "photo": "/uploads/1787635246661-892771639.jpg"
+          },
+          {
+            "id": "gavriils-kniga",
+            "name": "Gavriils Kniga",
+            "role": "IdeaBox Coordinator",
+            "initials": "GA",
+            "level": "lead",
+            "accent": "#e3e3e3",
+            "photo": "/uploads/1787634932296-409002653.jpg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "team-swup",
+      "name": "Team SWUP (V5 Demo)",
+      "template": "swup",
+      "title": "One team.\nFull momentum.",
+      "subtitle": "WINNER SIGNAL / 01",
+      "description": "Team SWUP beamed into your room.",
+      "lat": 56.95,
+      "lng": 24.1,
+      "radius": 50,
+      "data": {
+        "teamName": "TEAM SWUP",
+        "teamDestination": "https://df-virtual-cards.vercel.app",
+        "teamPhoto": "",
+        "members": [
+          {
+            "id": "pranika",
+            "name": "Pranika",
+            "accent": "#b7f8ff",
+            "photo": "",
+            "crop": "50% 28%"
+          },
+          {
+            "id": "shiv",
+            "name": "Shiv",
+            "accent": "#79eaff",
+            "photo": "",
+            "crop": "50% 28%"
+          }
+        ]
+      }
+    }
+  ]
+}

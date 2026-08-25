@@ -1,0 +1,102 @@
+{
+  "locations": [
+    {
+      "id": "the-moon",
+      "name": "The Moon",
+      "title": "The Moon - Hall of Fame",
+      "subtitle": "Celebrating Lunar Excellence",
+      "description": "Recognizing those who shoot for the stars and land on The Moon.",
+      "lat": 56.9530555,
+      "lng": 24.0808333,
+      "inductees": [
+        {
+          "id": 1,
+          "name": "Dr. Elena Rostova",
+          "award": "Excellence in Research, 2025",
+          "bio": "Dr. Rostova has pioneered groundbreaking research.",
+          "image": "images/portrait_1.jpg"
+        },
+        {
+          "id": 2,
+          "name": "Prof. Marcus Vance",
+          "award": "Lifetime Achievement, 2024",
+          "bio": "A cornerstone of the faculty.",
+          "image": "images/portrait_2.jpg"
+        },
+        {
+          "id": 3,
+          "name": "Julian Sterling",
+          "award": "Alumni Innovator, 2026",
+          "bio": "Julian has revolutionized telemetry optimization.",
+          "image": "images/portrait_3.jpg"
+        },
+        {
+          "id": 4,
+          "name": "Sarah Jenkins",
+          "award": "Best Designer, 2023",
+          "bio": "Lead architect of the new campus.",
+          "image": "images/portrait_1.jpg"
+        },
+        {
+          "id": 5,
+          "name": "David Thorne",
+          "award": "Outstanding Service",
+          "bio": "20 years of dedication.",
+          "image": "images/portrait_2.jpg"
+        }
+      ]
+    },
+    {
+      "id": "skylab",
+      "name": "SkyLab",
+      "title": "SkyLab Wall of Fame",
+      "subtitle": "Innovators of the Sky",
+      "description": "The best minds pushing aerospace and drone technologies to new heights.",
+      "lat": 56.949600,
+      "lng": 24.105200,
+      "inductees": []
+    },
+    {
+      "id": "groundlab",
+      "name": "GroundLab",
+      "title": "GroundLab Wall of Fame",
+      "subtitle": "Foundational Engineering",
+      "description": "Honoring the builders, makers, and core engineers of our foundational projects.",
+      "lat": 56.948500,
+      "lng": 24.104000,
+      "inductees": []
+    },
+    {
+      "id": "design-factory",
+      "name": "Design Factory",
+      "title": "Design Factory Accolades",
+      "subtitle": "Where Creativity Meets Engineering",
+      "description": "Showcasing the top performers who merge beautiful design with robust technology.",
+      "lat": 56.954000,
+      "lng": 24.085000,
+      "inductees": [
+        {
+          "id": 1,
+          "name": "Dr. Elena Rostova",
+          "award": "Excellence in Research, 2025",
+          "bio": "Dr. Rostova has pioneered groundbreaking research in autonomous UAV exploration and mapping, leading to the development of the AeroVision framework.",
+          "image": "images/portrait_1.jpg"
+        },
+        {
+          "id": 2,
+          "name": "Prof. Marcus Vance",
+          "award": "Lifetime Achievement, 2024",
+          "bio": "A cornerstone of the faculty, Professor Vance has mentored thousands of students. His visionary approach to curriculum development has kept us at the bleeding edge.",
+          "image": "images/portrait_2.jpg"
+        },
+        {
+          "id": 3,
+          "name": "Julian Sterling",
+          "award": "Alumni Innovator, 2026",
+          "bio": "Julian has revolutionized telemetry optimization. He continues to give back by sponsoring the annual Global Hackathon.",
+          "image": "images/portrait_3.jpg"
+        }
+      ]
+    }
+  ]
+}

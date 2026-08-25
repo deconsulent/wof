@@ -1,0 +1,20 @@
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Mac/OS
+.DS_Store
+Thumbs.db
+
+# Large archives
+*.zip
+*.tar.gz
+*.rar
+
+# Uploads directory (user-uploaded images during local dev)
+portal/uploads/
+
+# Environment files
+.env
+.env.local

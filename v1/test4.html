@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>RTU Wall of Fame - V4 Spatial 2D HUD</title>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&family=Newsreader:opsz,wght@6..72,400..600&display=swap" rel="stylesheet">
+    <style>
+        html, body { min-height: 100%; margin: 0; }
+        body { background: #11131b; color: #f7f8fc; font-family: 'Instrument Sans', sans-serif; }
+        button { font: inherit; }
+
+        .ar-scene, .permission-screen { position: fixed; inset: 0; overflow: hidden; background: #181a21; }
+        .ar-scene { touch-action: none; cursor: grab; }
+        .ar-scene:active { cursor: grabbing; }
+        .camera-feed { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .65s ease; filter: saturate(.72) contrast(1.04) brightness(.82); }
+        .camera-feed.is-ready { opacity: 1; }
+        .camera-wash { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(26,31,47,.04) 0%, rgba(12,15,23,.22) 72%, rgba(4,6,12,.58) 100%), linear-gradient(180deg, rgba(4,6,14,.38), transparent 25%, transparent 72%, rgba(4,6,14,.48)); }
+        .grain { position: absolute; inset: 0; opacity: .14; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E"); mix-blend-mode: soft-light; }
+
+        .ar-header { position: absolute; z-index: 3; top: clamp(22px, 4vw, 44px); left: clamp(22px, 5vw, 66px); right: clamp(22px, 5vw, 66px); display: flex; justify-content: space-between; align-items: flex-start; }
+        .eyebrow { margin: 0 0 7px; color: rgba(255,255,255,.63); font-size: 10px; font-weight: 650; letter-spacing: .16em; text-transform: uppercase; }
+        .ar-header h1 { margin: 0; font-family: 'Newsreader', serif; font-size: clamp(31px, 4.3vw, 56px); line-height: .9; letter-spacing: -.055em; font-weight: 450; text-shadow: 0 2px 18px rgba(0,0,0,.25); }
+        .tracking-pill { display: flex; gap: 8px; align-items: center; margin-top: 5px; padding: 8px 11px; color: rgba(255,255,255,.84); font-size: 11px; font-weight: 600; border: 1px solid rgba(255,255,255,.29); border-radius: 999px; background: rgba(21,24,34,.25); backdrop-filter: blur(14px); }
+        .tracking-pill i, .aim-dot { width: 7px; height: 7px; border-radius: 50%; background: #f0bf79; box-shadow: 0 0 10px rgba(240,191,121,.6); }.tracking-pill i.is-tracking { background: #7cf0b0; box-shadow: 0 0 10px rgba(124,240,176,.7); }
+
+        .viewfinder { position: absolute; z-index: 2; inset: clamp(104px, 16vh, 142px) clamp(21px, 7.5vw, 128px) clamp(88px, 14vh, 118px); display: grid; place-items: center; pointer-events: none; }
+        .viewfinder-corner { position: absolute; width: 22px; height: 22px; opacity: .7; }.corner-tl { top: 0; left: 0; border-top: 1px solid white; border-left: 1px solid white; }.corner-tr { top: 0; right: 0; border-top: 1px solid white; border-right: 1px solid white; }.corner-bl { bottom: 0; left: 0; border-bottom: 1px solid white; border-left: 1px solid white; }.corner-br { right: 0; bottom: 0; border-bottom: 1px solid white; border-right: 1px solid white; }
+        .center-reticle { position: absolute; width: 40px; height: 40px; opacity: .42; }.center-reticle::before, .center-reticle::after { content: ''; position: absolute; background: rgba(255,255,255,.9); }.center-reticle::before { width: 100%; height: 1px; top: 50%; }.center-reticle::after { height: 100%; width: 1px; left: 50%; }.center-reticle span:first-child { position: absolute; inset: 12px; border: 1px solid rgba(255,255,255,.8); border-radius: 50%; }
+
+        .search-ring { width: 47px; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.65); border-radius: 50%; box-shadow: 0 0 0 10px rgba(255,255,255,.08), 0 0 0 21px rgba(255,255,255,.045); animation: search-pulse 2.4s ease-in-out infinite; }
+        .ar-footer { position: absolute; z-index: 3; left: clamp(22px, 5vw, 66px); right: clamp(22px, 5vw, 66px); bottom: clamp(22px, 4vw, 44px); display: flex; align-items: center; justify-content: space-between; color: rgba(255,255,255,.82); font-size: 11px; letter-spacing: .04em; }.ar-footer > div { display: flex; gap: 8px; align-items: center; }.recenter-button { padding: 9px 12px; color: white; border: 1px solid rgba(255,255,255,.34); border-radius: 999px; background: rgba(24,27,37,.28); backdrop-filter: blur(14px); cursor: pointer; pointer-events: auto; }.ar-footer p { margin: 0; color: rgba(255,255,255,.48); font-variant-numeric: tabular-nums; }
+
+        .permission-screen { display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 50% 20%, #66718f, #14151d 66%); z-index: 50; }
+        .permission-card { width: min(100%, 410px); padding: 32px; border: 1px solid rgba(255,255,255,.44); border-radius: 30px; background: rgba(255,255,255,.14); box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 24px 65px rgba(0,0,0,.22); backdrop-filter: blur(32px); text-align: center; }
+        .permission-orb { display: block; width: 56px; aspect-ratio: 1; margin: 2px auto 22px; border: 1px solid rgba(255,255,255,.7); border-radius: 50%; background: radial-gradient(circle at 33% 28%, white, #d7b6e5 26%, #32364d 72%); box-shadow: 0 12px 28px rgba(0,0,0,.24); }
+        .permission-card h1 { margin: 0; font-family: 'Newsreader', serif; font-size: 39px; font-weight: 450; letter-spacing: -.06em; }
+        .permission-copy, .permission-error { color: rgba(255,255,255,.73); font-size: 14px; line-height: 1.55; }
+        .permission-error { color: #ffd2c9; }
+        .glass-button { padding: 12px 18px; color: #222430; font-weight: 700; border: 1px solid rgba(255,255,255,.72); border-radius: 999px; background: rgba(255,255,255,.9); cursor: pointer; }
+
+        @keyframes search-pulse { 50% { transform: scale(1.15); opacity: .42; } }
+        @media (max-width: 620px) { .ar-header { top: 22px; }.ar-header h1 { font-size: 38px; }.viewfinder { inset: 116px 19px 100px; } .ar-footer p { display: none; }.tracking-pill { padding: 7px 10px; } }
+
+        .wall-field { position: absolute; z-index: 1; inset: 0; overflow: hidden; pointer-events: none; isolation: isolate; }
+        .wall-field-label { position: absolute; top: 50%; left: 50%; color: rgba(255, 255, 255, .24); font-size: 9px; font-weight: 650; letter-spacing: .2em; transform: translate(-50%, -50%); white-space: nowrap; }
+        .wall-structure { position: absolute; top: 50%; left: 50%; width: min(94vw, 840px); height: 1px; opacity: .32; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .35) 12%, rgba(255, 255, 255, .35) 88%, transparent); transform: translate(-50%, -50%); }
+        .wall-structure-top { margin-top: -220px; }
+        .wall-structure-bottom { margin-top: 220px; }
+        
+        .wall-person {
+            position: absolute; top: 50%; left: 50%; display: grid; justify-items: center; gap: 7px;
+            opacity: 0; transition: transform .28s cubic-bezier(.2,.7,.2,1), opacity .28s ease, filter .28s ease;
+            filter: blur(calc((1 - var(--proximity)) * 1.4px));
+        }
+        .wall-person-orb {
+            display: grid; width: 39px; aspect-ratio: 1; place-items: center; color: rgba(255, 255, 255, .9);
+            border: 1px solid color-mix(in srgb, var(--person-accent) 70%, white); border-radius: 50%;
+            background: color-mix(in srgb, var(--person-accent) 20%, rgba(19, 22, 35, .48));
+            box-shadow: 0 0 0 5px rgba(255, 255, 255, .035), 0 7px 20px color-mix(in srgb, var(--person-accent) 20%, transparent);
+            font-family: 'Newsreader', serif; font-size: 15px;
+        }
+        .wall-person-name {
+            max-width: 105px; overflow: hidden; color: rgba(255, 255, 255, .72); font-size: 9px;
+            font-weight: 600; letter-spacing: .03em; text-align: center; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .wall-person.is-revealed { opacity: calc(var(--proximity) * .72); }
+        .wall-person.is-nearest { opacity: 1; filter: none; z-index: 2; }
+        .wall-person.is-nearest .wall-person-orb { box-shadow: 0 0 0 1px var(--person-accent), 0 0 0 9px color-mix(in srgb, var(--person-accent) 16%, transparent), 0 0 32px color-mix(in srgb, var(--person-accent) 65%, transparent); }
+        .wall-person.is-focused .wall-person-orb { animation: target-lock 1.2s ease-in-out infinite; }
+        .wall-person.is-focused .wall-person-name { color: white; }
+
+        @keyframes target-lock { 50% { transform: scale(1.16); } }
+
+        @media (max-width: 620px) {
+            .wall-person { transform: translate(calc(-50% + var(--wall-x) * 2.75px), calc(-50% + var(--wall-y) * 2.75px)); }
+            .wall-person-name { display: none; }
+            .wall-structure-top { margin-top: -145px; }
+            .wall-structure-bottom { margin-top: 145px; }
+        }
+
+        .exploration-prompt {
+            display: grid; justify-items: center; gap: 13px; color: rgba(255,255,255,.82);
+            text-align: center; font-family: 'Newsreader', serif; font-size: 22px; line-height: 1;
+            text-shadow: 0 2px 16px rgba(0,0,0,.35); transition: opacity .25s ease, transform .25s ease;
+        }
+        .exploration-prompt p { margin: 0; white-space: pre-line; }
+        .exploration-prompt.is-focused { opacity: .55; transform: scale(.92); }
+        .exploration-prompt.is-focused .search-ring { animation: none; box-shadow: 0 0 0 10px rgba(255,255,255,.06), 0 0 22px rgba(255,255,255,.2); }
+
+        /* Organization-chart treatment */
+        .wall-field::before { display: none; }
+        .wall-field-label { top: 36px; left: 24px; transform: none; color: rgba(255,255,255,.62); }
+        .wall-structure { z-index: 0; width: min(89vw, 920px); opacity: .58; background: linear-gradient(90deg, transparent, rgba(255,255,255,.6) 9%, rgba(255,255,255,.6) 91%, transparent); }
+        .wall-structure-top { margin-top: -20px; }
+        .wall-structure-bottom { margin-top: 158px; }
+        .wall-person {
+            z-index: 1; width: min(18vw, 205px); min-height: 132px; box-sizing: border-box; align-content: center;
+            gap: 8px; padding: 17px 12px; border: 1px solid rgba(255,255,255,.76); border-radius: 25px;
+            background: rgba(241,244,252,.21); box-shadow: inset 0 1px 0 rgba(255,255,255,.82), 0 17px 40px rgba(7,9,18,.15);
+            backdrop-filter: blur(21px) saturate(1.15); -webkit-backdrop-filter: blur(21px) saturate(1.15);
+            transform: translate(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 4.1px));
+        }
+        .wall-person::before { content: ''; position: absolute; top: -25px; left: 50%; width: 1px; height: 25px; background: rgba(255,255,255,.55); }
+        .wall-person.level-root { width: min(20vw, 212px); min-height: 177px; border-color: color-mix(in srgb, var(--person-accent) 74%, white); box-shadow: 0 0 0 3px color-mix(in srgb, var(--person-accent) 56%, transparent), inset 0 1px 0 rgba(255,255,255,.9), 0 17px 46px color-mix(in srgb, var(--person-accent) 32%, transparent); }
+        .wall-person.level-root::before { display: none; }
+        .wall-person.level-member::before { height: 24px; top: -24px; }
+        .wall-person-name { max-width: 100%; color: rgba(255,255,255,.96); font-size: 13px; font-weight: 700; letter-spacing: -.03em; text-overflow: clip; white-space: normal; }
+        .wall-person-role { max-width: 100%; color: rgba(255,255,255,.72); font-size: 10px; line-height: 1.25; text-align: center; display: block; }
+        .wall-person-orb { width: 48px; font-size: 16px; background: color-mix(in srgb, var(--person-accent) 55%, rgba(255,255,255,.18)); box-shadow: inset 0 1px 0 rgba(255,255,255,.62), 0 5px 15px color-mix(in srgb, var(--person-accent) 26%, transparent); }
+        .wall-person.is-nearest { opacity: 1; transform: translate(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 4.1px)) scale(1.025); }
+        .wall-person.is-nearest .wall-person-orb { box-shadow: 0 0 0 1px white, 0 0 0 7px color-mix(in srgb, var(--person-accent) 18%, transparent), 0 0 28px color-mix(in srgb, var(--person-accent) 60%, transparent); }
+
+        @media (max-width: 760px) {
+            .wall-field-label, .wall-structure, .exploration-prompt { display: none; }
+            .wall-person { width: 102px; min-height: 86px; gap: 5px; padding: 10px 7px; border-radius: 19px; transform: translate(calc(-50% + var(--wall-x) * 4.25px), calc(-50% + var(--wall-y) * 2.8px)); }
+            .wall-person.level-root { width: 122px; min-height: 116px; border-radius: 23px; }
+            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 4.25px), calc(-50% + var(--wall-y) * 2.8px)) scale(1.025); }
+            .wall-person::before { height: 17px; top: -17px; }
+            .wall-person-name { font-size: 10px; line-height: 1.05; }
+            .wall-person-role { font-size: 7px; line-height: 1.15; }
+            .wall-person-orb { width: 32px; font-size: 12px; }
+        }
+
+        @media (max-width: 420px) {
+            .ar-header { left: 20px; right: 20px; }
+            .ar-header h1 { font-size: 36px; }
+            .tracking-pill { margin-top: 1px; padding: 7px 9px; font-size: 10px; }
+            .wall-person { width: 92px; min-height: 80px; transform: translate(calc(-50% + var(--wall-x) * 3.75px), calc(-50% + var(--wall-y) * 2.55px)); }
+            .wall-person.level-root { width: 112px; min-height: 106px; }
+            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 3.75px), calc(-50% + var(--wall-y) * 2.55px)) scale(1.025); }
+            .wall-person-name { font-size: 9px; }
+            .wall-person-role { font-size: 6.5px; }
+        }
+
+        .footer-actions { display: flex; align-items: center; gap: 8px; }
+        .overview-button::before { content: '⌗'; margin-right: 6px; font-size: 12px; }
+
+        @media (max-width: 760px) {
+            .wall-person { width: 145px; min-height: 116px; gap: 7px; padding: 13px 9px; border-radius: 22px; transform: translate(calc(-50% + var(--wall-x) * 5.1px), calc(-50% + var(--wall-y) * 3.25px)); }
+            .wall-person.level-root { width: 164px; min-height: 146px; border-radius: 27px; }
+            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 5.1px), calc(-50% + var(--wall-y) * 3.25px)) scale(1.025); }
+            .wall-person-name { font-size: 12px; }
+            .wall-person-role { font-size: 8px; }
+            .wall-person-orb { width: 39px; font-size: 14px; }
+            
+            .wall-field.is-overview .wall-person { width: 76px; min-height: 68px; gap: 3px; padding: 7px 5px; border-radius: 14px; transform: translate(calc(-50% + var(--wall-x) * 2.4px), calc(-50% + var(--wall-y) * 2.05px)); }
+            .wall-field.is-overview .wall-person.level-root { width: 94px; min-height: 86px; }
+            .wall-field.is-overview .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 2.4px), calc(-50% + var(--wall-y) * 2.05px)) scale(1.025); }
+            .wall-field.is-overview .wall-person::before { height: 12px; top: -12px; }
+            .wall-field.is-overview .wall-person-name { font-size: 7px; }
+            .wall-field.is-overview .wall-person-role { display: none; }
+            .wall-field.is-overview .wall-person-orb { width: 25px; font-size: 10px; }
+        }
+        @media (max-width: 420px) {
+            .wall-person { width: 136px; min-height: 108px; transform: translate(calc(-50% + var(--wall-x) * 4.8px), calc(-50% + var(--wall-y) * 3px)); }
+            .wall-person.level-root { width: 154px; min-height: 136px; }
+            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 4.8px), calc(-50% + var(--wall-y) * 3px)) scale(1.025); }
+            .wall-field.is-overview .wall-person { width: 72px; transform: translate(calc(-50% + var(--wall-x) * 2.25px), calc(-50% + var(--wall-y) * 1.95px)); }
+            .wall-field.is-overview .wall-person.level-root { width: 90px; }
+            .wall-field.is-overview .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 2.25px), calc(-50% + var(--wall-y) * 1.95px)) scale(1.025); }
+        }
+        @media (min-width: 761px) {
+            .wall-person { min-height: 264px; transform: translate(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 5.5px)); }
+            .wall-person.level-root { min-height: 354px; }
+            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 5.5px)) scale(1.025); }
+        }
+        @media (max-width: 760px) {
+            .wall-person { min-height: 232px; transform: translate(calc(-50% + var(--wall-x) * 5.1px), calc(-50% + var(--wall-y) * 5.5px)); }
+            .wall-person.level-root { min-height: 292px; }
+            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 5.1px), calc(-50% + var(--wall-y) * 5.5px)) scale(1.025); }
+        }
+        @media (max-width: 420px) {
+            .wall-person { min-height: 216px; transform: translate(calc(-50% + var(--wall-x) * 4.8px), calc(-50% + var(--wall-y) * 5.15px)); }
+            .wall-person.level-root { min-height: 272px; }
+            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 4.8px), calc(-50% + var(--wall-y) * 5.15px)) scale(1.025); }
+        }
+        .wall-person-name { overflow: visible; text-overflow: unset; }
+        .wall-person-orb.has-photo { overflow: hidden; background: rgba(255,255,255,.2); }
+        .wall-person-orb.has-photo img { width: 100%; height: 100%; object-fit: cover; }
+        @media (min-width: 761px) {
+            .wall-person { gap: 13px; }
+            .wall-person-name { font-size: 18px; line-height: 1.08; }
+            .wall-person-role { font-size: 12px; line-height: 1.35; }
+            .wall-person-orb { width: 64px; font-size: 20px; }
+        }
+        @media (max-width: 760px) {
+            .wall-person { gap: 10px; }
+            .wall-person-name { font-size: 14px; line-height: 1.08; }
+            .wall-person-role { font-size: 9px; line-height: 1.3; }
+            .wall-person-orb { width: 46px; font-size: 16px; }
+            .wall-field.is-overview .wall-person-name { font-size: 7px; }
+            .wall-person, .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 5.1px), calc(-50% + var(--wall-y) * 6.6px)); }
+            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 5.1px), calc(-50% + var(--wall-y) * 6.6px)) scale(1.025); }
+            .wall-person-name { display: block; color: #fff; font-size: 14px; font-weight: 750; text-shadow: 0 1px 10px rgba(0,0,0,.62); }
+            .wall-person-role { display: block; color: rgba(255,255,255,.86); text-shadow: 0 1px 8px rgba(0,0,0,.55); }
+            .wall-person { background: rgba(222,228,242,.29); }
+        }
+        @media (max-width: 420px) {
+            .wall-person { transform: translate(calc(-50% + var(--wall-x) * 4.8px), calc(-50% + var(--wall-y) * 6.2px)); }
+            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 4.8px), calc(-50% + var(--wall-y) * 6.2px)) scale(1.025); }
+        }
+        .exploration-prompt { display: none; }
+        @media (min-width: 761px) {
+            .wall-person { transform: translate(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 6.7px)); }
+            .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 7px), calc(-50% + var(--wall-y) * 6.7px)) scale(1.025); }
+            .wall-field.is-overview .wall-person { width: min(14vw, 158px); min-height: 106px; gap: 7px; padding: 12px 9px; border-radius: 20px; transform: translate(calc(-50% + var(--wall-x) * 5.7px), calc(-50% + var(--wall-y) * 3.3px)); }
+            .wall-field.is-overview .wall-person.level-root { width: min(15vw, 172px); min-height: 136px; }
+            .wall-field.is-overview .wall-person.is-nearest { transform: translate(calc(-50% + var(--wall-x) * 5.7px), calc(-50% + var(--wall-y) * 3.3px)) scale(1.025); }
+            .wall-field.is-overview .wall-person::before { height: 17px; top: -17px; }
+            .wall-field.is-overview .wall-person-name { font-size: 12px; }
+            .wall-field.is-overview .wall-person-role { font-size: 8px; }
+            .wall-field.is-overview .wall-person-orb { width: 39px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Permission Screen -->
+    <div id="permission-screen" class="permission-screen">
+        <section class="permission-card">
+            <span class="permission-orb" aria-hidden="true"></span>
+            <p class="eyebrow">Wall of Fame · spatial edition</p>
+            <h1>Open your space.</h1>
+            <p class="permission-copy">The Wall of Fame lives in your space. Drag across the camera view to explore the organization, one person at a time.</p>
+            <p id="permission-error" class="permission-error" style="display:none;"></p>
+            <button id="start-btn" class="glass-button">Enable camera</button>
+        </section>
+    </div>
+
+    <!-- Main AR App (Hidden initially) -->
+    <div id="ar-scene" class="ar-scene" style="display:none;">
+        <div id="wall-field" class="wall-field" aria-hidden="true">
+            <div class="wall-field-label">ORGANIZATION · <span id="member-count">0</span> MEMBERS</div>
+            <div class="wall-structure wall-structure-top"></div>
+            <div class="wall-structure wall-structure-bottom"></div>
+            
+            <!-- People dynamically inserted here -->
+            <div id="people-container"></div>
+        </div>
+
+        <video id="camera-feed" class="camera-feed" muted playsinline></video>
+        <div class="camera-wash"></div>
+        <div class="grain"></div>
+
+        <header class="ar-header">
+            <div><p class="eyebrow">Spatial directory</p><h1>Hall of Fame</h1></div>
+            <div class="tracking-pill"><i class="is-tracking"></i>Drag to explore</div>
+        </header>
+
+        <main class="viewfinder" aria-label="Spatial Hall of Fame viewfinder">
+            <div class="viewfinder-corner corner-tl"></div><div class="viewfinder-corner corner-tr"></div>
+            <div class="viewfinder-corner corner-bl"></div><div class="viewfinder-corner corner-br"></div>
+            <div class="center-reticle" aria-hidden="true"><span></span><span></span></div>
+            <div id="exploration-prompt" class="exploration-prompt">
+                <span class="search-ring"></span>
+                <p id="prompt-text">Drag through the<br>organization tree</p>
+            </div>
+        </main>
+
+        <footer class="ar-footer">
+            <div><span class="aim-dot"></span> <span id="footer-status">Drag to scan the organization</span></div>
+            <div class="footer-actions">
+                <button id="overview-btn" class="recenter-button overview-button">Overview</button>
+                <button id="reset-btn" class="recenter-button">Reset view</button>
+            </div>
+            <p><span id="footer-coords">0° · 0°</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Data and State
+        const people = [
+            { id: "elina", name: "Elīna Miķelsone", role: "Nodaļas vadītāja", initials: "EM", accent: "#e386c7", x: 0, y: -42, level: "root" },
+            { id: "daniela", name: "Daniela Hrapāne", role: "SkyLab vadītāja", initials: "DH", accent: "#9ec6ef", x: -55, y: 20, level: "lead" },
+            { id: "jevgenija", name: "Jevgēņija Losa", role: "Programmu administratore", initials: "JL", accent: "#f0a184", x: -18, y: 20, level: "lead" },
+            { id: "emils", name: "Emīls Erciņš", role: "VIP vadītājs", initials: "EE", accent: "#dbc265", x: 18, y: 20, level: "lead" },
+            { id: "liga", name: "Līga Veisa", role: "SIG un ECROS speciāliste", initials: "LV", accent: "#b8c0e3", x: 55, y: 20, level: "lead" },
+            { id: "anastasija", name: "Anastasija Bubļik", role: "Grāmatvedības vadītāja", initials: "AB", accent: "#e59aa6", x: -55, y: 64, level: "member" },
+            { id: "paula", name: "Paula Čukura", role: "RESIST projekta vadītāja", initials: "PČ", accent: "#dfb66c", x: -18, y: 64, level: "member" },
+            { id: "ivonna", name: "Ivonna Orlova", role: "SIG vadītāja", initials: "IO", accent: "#8eafd0", x: 18, y: 64, level: "member" },
+            { id: "gavriils", name: "Gavriils Kņiga", role: "Ideanblox koordinators", initials: "GK", accent: "#b39ed8", x: 55, y: 64, level: "member" },
+        ];
+
+        let aim = { x: 0, y: 0 };
+        let aimRef = { x: 0, y: 0 };
+        let overview = false;
+        let dragRef = null;
+
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+        // DOM Elements
+        const arScene = document.getElementById('ar-scene');
+        const permissionScreen = document.getElementById('permission-screen');
+        const startBtn = document.getElementById('start-btn');
+        const errorMsg = document.getElementById('permission-error');
+        const videoEl = document.getElementById('camera-feed');
+        
+        const peopleContainer = document.getElementById('people-container');
+        const wallField = document.getElementById('wall-field');
+        const memberCount = document.getElementById('member-count');
+        const promptEl = document.getElementById('exploration-prompt');
+        const promptText = document.getElementById('prompt-text');
+        const footerStatus = document.getElementById('footer-status');
+        const footerCoords = document.getElementById('footer-coords');
+        
+        const overviewBtn = document.getElementById('overview-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // Init UI
+        memberCount.textContent = people.length;
+
+        function renderWall() {
+            // Find nearest
+            let bestDist = Infinity;
+            let nearest = people[0];
+            for(let p of people) {
+                let d = Math.hypot(aim.x - p.x, aim.y - p.y);
+                if(d < bestDist) { bestDist = d; nearest = p; }
+            }
+            const focused = bestDist < 20 ? nearest : null;
+
+            // Render elements (optimizing by updating existing DOM nodes)
+            if (peopleContainer.children.length === 0) {
+                // Initial creation
+                people.forEach(person => {
+                    const el = document.createElement('div');
+                    el.id = `person-${person.id}`;
+                    el.className = `wall-person level-${person.level} is-revealed`;
+                    
+                    const orb = document.createElement('span');
+                    orb.className = `wall-person-orb ${person.photo ? "has-photo" : ""}`;
+                    if(person.photo) {
+                        const img = document.createElement('img');
+                        img.src = person.photo;
+                        orb.appendChild(img);
+                    } else {
+                        orb.textContent = person.initials;
+                    }
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'wall-person-name';
+                    nameSpan.textContent = person.name;
+                    
+                    const roleSpan = document.createElement('span');
+                    roleSpan.className = 'wall-person-role';
+                    roleSpan.textContent = person.role;
+
+                    el.appendChild(orb);
+                    el.appendChild(nameSpan);
+                    el.appendChild(roleSpan);
+                    peopleContainer.appendChild(el);
+                });
+            }
+
+            // Update styles and classes
+            people.forEach(person => {
+                const el = document.getElementById(`person-${person.id}`);
+                const relativeX = person.x - aim.x;
+                const relativeY = person.y - aim.y;
+                const dist = Math.hypot(relativeX, relativeY);
+                const proximity = clamp(1 - dist / 270, 0.18, 1);
+                
+                el.style.setProperty('--wall-x', relativeX);
+                el.style.setProperty('--wall-y', relativeY);
+                el.style.setProperty('--person-accent', person.accent);
+                el.style.setProperty('--proximity', proximity);
+
+                el.classList.toggle('is-nearest', person.id === nearest.id);
+                el.classList.toggle('is-focused', person.id === (focused && focused.id));
+            });
+
+            // Update UI State
+            if (overview) {
+                wallField.classList.add('is-overview');
+            } else {
+                wallField.classList.remove('is-overview');
+            }
+
+            if (focused) {
+                promptEl.classList.add('is-focused');
+                promptText.textContent = "Exploring the wall";
+                footerStatus.textContent = `${focused.name} · explored`;
+            } else {
+                promptEl.classList.remove('is-focused');
+                promptText.innerHTML = "Drag through the<br/>organization tree";
+                footerStatus.textContent = "Drag to scan the organization";
+            }
+            footerCoords.textContent = `${Math.round(aim.x)}° · ${Math.round(aim.y)}°`;
+        }
+
+        // Camera Logic
+        startBtn.addEventListener('click', async () => {
+            errorMsg.style.display = 'none';
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, 
+                    audio: false 
+                });
+                videoEl.srcObject = stream;
+                videoEl.onloadedmetadata = () => {
+                    videoEl.play();
+                    permissionScreen.style.display = 'none';
+                    arScene.style.display = 'block';
+                    renderWall();
+                    setTimeout(() => videoEl.classList.add('is-ready'), 140);
+                };
+            } catch (err) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = err.message.includes("denied") || err.message.includes("NotAllowed") 
+                    ? "Camera permission was denied. Allow access in your browser settings and retry." 
+                    : "The camera could not be opened. Please try again.";
+            }
+        });
+
+        // Interaction Logic
+        const resetView = () => {
+            aimRef = { x: 0, y: 0 };
+            aim = { x: 0, y: 0 };
+            renderWall();
+        };
+
+        const startDrag = (e) => {
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+            arScene.setPointerCapture(e.pointerId);
+            dragRef = { pointerId: e.pointerId, x: e.clientX, y: e.clientY, aim: { ...aimRef } };
+        };
+
+        const moveDrag = (e) => {
+            if (!dragRef || dragRef.pointerId !== e.pointerId) return;
+            if (overview && Math.hypot(e.clientX - dragRef.x, e.clientY - dragRef.y) > 4) {
+                overview = false;
+            }
+            aimRef = {
+                x: clamp(dragRef.aim.x - (e.clientX - dragRef.x) * 0.34, -205, 205),
+                y: clamp(dragRef.aim.y - (e.clientY - dragRef.y) * 0.34, -132, 154)
+            };
+            aim = { ...aimRef };
+            renderWall();
+        };
+
+        const endDrag = (e) => {
+            if (dragRef && dragRef.pointerId === e.pointerId) dragRef = null;
+        };
+
+        arScene.addEventListener('pointerdown', startDrag);
+        arScene.addEventListener('pointermove', moveDrag);
+        arScene.addEventListener('pointerup', endDrag);
+        arScene.addEventListener('pointercancel', endDrag);
+
+        overviewBtn.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            resetView();
+            overview = true;
+            renderWall();
+        });
+
+        resetBtn.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            resetView();
+        });
+
+    </script>
+</body>
+</html>

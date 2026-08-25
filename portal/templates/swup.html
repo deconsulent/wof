@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Team Profile Projection</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #a6faff;
+        }
+        html, body { min-height: 100%; margin: 0; } 
+        body { background: #020b13; color: #eaffff; font-family: 'Manrope', sans-serif; } 
+        button { font: inherit; border: none; padding: 0; outline: none; } 
+        ::selection { background: rgba(166,250,255,.28); color: white; } 
+
+        .permission-screen { min-height: 100vh; display: grid; place-items: center; padding: 24px; overflow: hidden; background: radial-gradient(circle at 50% 24%, #123a4b 0, #06121f 40%, #02070d 100%); z-index: 50; position: relative; }
+        .permission-card { position: relative; max-width: 440px; padding: 42px; overflow: hidden; text-align: center; border: 1px solid rgba(185,247,255,.45); border-radius: 30px; background: rgba(8,42,57,.28); box-shadow: inset 0 1px rgba(255,255,255,.48), 0 20px 90px rgba(0,0,0,.4), 0 0 80px rgba(59,221,255,.12); backdrop-filter: blur(28px); }
+        .permission-card::before { content: ''; position: absolute; inset: 0; opacity: .35; background: repeating-linear-gradient(0deg, transparent 0 4px, rgba(126,236,255,.12) 4px 5px); pointer-events: none; }
+        .permission-orb { position: relative; width: 74px; height: 74px; display: grid; place-items: center; margin: 0 auto 24px; border-radius: 50%; color: #c9fcff; font-size: 30px; background: radial-gradient(circle, rgba(181,250,255,.65), rgba(22,181,220,.13) 42%, transparent 70%); box-shadow: 0 0 45px #54e8ff; }
+        .eyebrow { margin: 0; color: #a9eff7; font: 500 10px/1.3 'DM Mono', monospace; letter-spacing: .14em; }
+        .permission-card h1 { position: relative; margin: 12px 0 14px; font: 700 clamp(28px,4vw,42px)/.98 'Montserrat',sans-serif; letter-spacing: -.075em; }
+        .permission-card p:not(.eyebrow) { position: relative; margin: 0 auto 25px; max-width: 330px; color: rgba(222,250,255,.73); font-size: 14px; line-height: 1.55; }
+        .permission-card button { position: relative; width: 100%; padding: 15px 18px; border: 1px solid #bcfaff; border-radius: 13px; color: #06222d; background: #b9faff; box-shadow: 0 0 28px rgba(111,240,255,.33); font-weight: 800; cursor: pointer; }
+
+        .ar-stage { position: relative; min-height: 100vh; overflow: hidden; background: #132a31; isolation: isolate; }
+        .camera-feed, .fallback-environment, .camera-grade, .global-scanlines, .scan-sweep { position: fixed; inset: 0; }
+        .camera-feed { z-index: -5; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .6s ease; }
+        .camera-feed.is-ready { opacity: 1; }
+        .fallback-environment { z-index: -6; background: linear-gradient(115deg, #274b51, #49676e 43%, #1c343f); }
+        .fallback-environment::after { content: ''; position: absolute; inset: 30% -20% -20%; background: repeating-linear-gradient(90deg, rgba(255,255,255,.06) 0 1px, transparent 1px 12vw); transform: perspective(300px) rotateX(52deg); }
+        .camera-grade { z-index: -2; pointer-events: none; background: radial-gradient(ellipse at 50% 55%, transparent 20%, rgba(0,12,22,.3) 100%), linear-gradient(120deg, rgba(0,36,58,.18), transparent 48%, rgba(4,31,52,.18)); }
+        .global-scanlines { z-index: 1; pointer-events: none; opacity: .22; background: repeating-linear-gradient(0deg, rgba(180,249,255,.1) 0 1px, transparent 1px 4px); mix-blend-mode: screen; }
+        .scan-sweep { z-index: 2; pointer-events: none; height: 17vh; opacity: .3; background: linear-gradient(transparent, rgba(116,243,255,.17), transparent); animation: scan-sweep 7s linear infinite; }
+        
+        .main-overlay { position: relative; z-index: 3; width: min(1240px,100%); min-height: 100vh; box-sizing: border-box; margin: auto; padding: 21px clamp(16px,4.5vw,58px) 25px; }
+        .top-hud, .victory-intro, .field-caption, .bottom-hud { display: flex; justify-content: space-between; gap: 24px; }
+        .top-hud { align-items: flex-start; }
+        .brand-lockup { display: flex; align-items: center; gap: 10px; }
+        .brand-mark { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid rgba(188,250,255,.7); color: #d9feff; font-size: 16px; box-shadow: 0 0 16px rgba(97,235,255,.6); }
+        .brand-lockup p { margin: 0 0 3px; color: rgba(187,244,250,.7); font: 500 8px/1 'DM Mono',monospace; letter-spacing: .16em; }
+        .brand-lockup h1 { margin: 0; font: 700 15px/1 'Montserrat',sans-serif; letter-spacing: -.05em; }
+        .live-status { display: flex; align-items: center; gap: 7px; color: rgba(218,253,255,.82); font: 500 9px/1 'DM Mono',monospace; letter-spacing: .09em; }
+        .live-status i { width: 6px; height: 6px; border-radius: 50%; background: #a8fdff; box-shadow: 0 0 10px #a8fdff; animation: blink 1.4s steps(2) infinite; }
+        .live-status span { color: #a9f8ff; }
+        
+        .victory-intro { align-items: flex-end; padding: clamp(48px,8vh,92px) 4px 22px; }
+        .victory-intro h2 { margin: 8px 0 0; color: #f0feff; font: 700 clamp(40px,5.4vw,72px)/.87 'Montserrat',sans-serif; letter-spacing: -.09em; text-shadow: 0 0 40px rgba(124,238,255,.33); }
+        .victory-intro em { color: #a9f7ff; font-style: italic; }
+        .intro-note { margin: 0 3px 6px; color: rgba(222,250,255,.76); text-align: right; font: 500 11px/1.5 'DM Mono',monospace; letter-spacing: .05em; }
+        
+        .projection-field { position: relative; min-height: 520px; padding: 20px clamp(16px,3vw,42px) 36px; overflow: hidden; border: 1px solid rgba(161,243,255,.35); border-radius: 28px; background: linear-gradient(135deg, rgba(4,46,62,.3), rgba(3,18,31,.18)); box-shadow: inset 0 1px rgba(237,255,255,.35), inset 0 0 65px rgba(23,220,250,.07), 0 22px 80px rgba(0,15,27,.24); backdrop-filter: blur(7px); }
+        .projection-field::before { content: ''; position: absolute; inset: 0; opacity: .38; background: radial-gradient(circle at 50% 76%, rgba(64,238,255,.22), transparent 28%), linear-gradient(90deg, transparent 49.8%, rgba(159,248,255,.25) 50%, transparent 50.2%); pointer-events: none; }
+        .field-caption { position: relative; z-index: 2; color: rgba(202,249,255,.68); font: 500 8px/1 'DM Mono',monospace; letter-spacing: .14em; }
+        
+        .team-constellation { position: relative; z-index: 1; display: flex; min-width: 720px; flex-direction: column; align-items: center; padding-top: 15px; }
+        .team-node, .member-node { position: relative; border: 1px solid color-mix(in srgb, var(--accent, #b9fbff) 65%, transparent); color: var(--accent, #b9fbff); background: rgba(7,43,60,.31); cursor: pointer; isolation: isolate; overflow: hidden; transition: transform .25s ease, background .25s ease; }
+        .team-node:hover, .member-node:hover { transform: translateY(-6px); background: rgba(16,90,111,.42); }
+        .team-node::after, .member-node::after { content: ''; position: absolute; inset: 0; z-index: -1; background: repeating-linear-gradient(0deg, transparent 0 4px, color-mix(in srgb, currentColor 22%, transparent) 4px 5px); opacity: .42; animation: hologram-flicker 4s infinite; }
+        .team-node { --accent: #c2fbff; width: 294px; min-height: 210px; padding: 14px; border-radius: 8px; box-shadow: 0 0 34px rgba(89,237,255,.25), inset 0 0 34px rgba(81,230,255,.12); }
+        
+        .team-beam, .projector-beam { position: absolute; z-index: -1; left: 50%; bottom: -35px; width: 65%; height: 58px; transform: translateX(-50%); clip-path: polygon(22% 0,78% 0,100% 100%,0 100%); background: linear-gradient(180deg, color-mix(in srgb, currentColor 35%, transparent), transparent); filter: blur(1px); }
+        .team-photo-wrap { position: relative; display: block; height: 120px; overflow: hidden; border: 1px solid rgba(198,252,255,.65); }
+        .team-photo-wrap img, .portrait-frame img { display: block; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.2) sepia(.3) hue-rotate(140deg) saturate(1.8) brightness(1.18); mix-blend-mode: screen; opacity: .88; }
+        .team-photo-scan, .portrait-scan { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(217,255,255,.2) 0 1px, transparent 1px 4px), linear-gradient(90deg, transparent, rgba(138,246,255,.28), transparent); }
+        .team-copy, .member-copy { display: flex; flex-direction: column; align-items: center; padding-top: 11px; }
+        .team-copy small, .member-copy small { color: currentColor; font: 500 8px/1 'DM Mono',monospace; letter-spacing: .12em; text-transform: uppercase; }
+        .team-copy strong { margin-top: 5px; color: #f2feff; font: 800 25px/.9 'Montserrat',sans-serif; letter-spacing: -.09em; text-transform: uppercase; }
+        .team-copy span:last-child { margin-top: 6px; color: rgba(219,252,255,.7); font-size: 9px; }
+        .team-status { position: absolute; right: 8px; bottom: 8px; color: rgba(210,251,255,.66); font: 500 7px/1 'DM Mono',monospace; letter-spacing: .05em; }
+        .team-status b { color: #c7fbff; font-size: 10px; }
+        
+        .constellation-link { position: relative; width: 72%; height: 66px; }
+        .constellation-link span { position: absolute; top: 0; left: 50%; width: 1px; height: 35px; background: linear-gradient(#c5fcff,rgba(179,248,255,.2)); box-shadow: 0 0 9px #74eaff; }
+        .constellation-link i { position: absolute; top: 35px; right: 0; left: 0; height: 1px; background: linear-gradient(90deg, transparent, #b5faff 18%,#b5faff 82%,transparent); box-shadow: 0 0 10px rgba(102,238,255,.9); }
+        .member-grid { display: grid; width: 100%; grid-template-columns: repeat(4,minmax(150px,1fr)); gap: 17px; }
+        .member-wrap { position: relative; padding-top: 26px; }
+        .member-stem { position: absolute; top: 0; left: 50%; width: 1px; height: 26px; background: linear-gradient(#b9faff,rgba(175,247,255,.1)); box-shadow: 0 0 7px #91f1ff; }
+        .member-node { width: 100%; min-height: 236px; padding: 10px 9px 22px; border-radius: 7px; box-shadow: inset 0 0 22px color-mix(in srgb, var(--accent) 14%, transparent), 0 0 18px color-mix(in srgb, var(--accent) 14%, transparent); }
+        .holo-corner { position: absolute; width: 14px; height: 14px; border-color: currentColor; }
+        .holo-corner-tl { top: 5px; left: 5px; border-top: 1px solid; border-left: 1px solid; }
+        .holo-corner-br { right: 5px; bottom: 5px; border-right: 1px solid; border-bottom: 1px solid; }
+        .portrait-frame { position: relative; display: block; height: 135px; overflow: hidden; border: 1px solid color-mix(in srgb, currentColor 72%, transparent); background: #0d4051; }
+        .member-copy { min-height: 49px; }
+        .member-copy strong { margin-top: 5px; color: #effeff; font: 700 14px/1 'Montserrat',sans-serif; letter-spacing: -.055em; text-transform: uppercase; }
+        .member-copy span { margin-top: 5px; color: rgba(217,250,255,.65); font-size: 9px; }
+        .project-label { position: absolute; right: 8px; bottom: 8px; color: rgba(214,252,255,.55); font: 400 7px/1 'DM Mono',monospace; letter-spacing: .04em; text-transform: uppercase; }
+        .is-selected { animation: card-pop .52s both; }
+        .bottom-hud { padding: 15px 4px 0; color: rgba(207,251,255,.68); font: 500 9px/1.4 'DM Mono',monospace; letter-spacing: .08em; } 
+
+        @keyframes scan-sweep { from { transform: translateY(-18vh); } to { transform: translateY(118vh); } } 
+        @keyframes blink { 50% { opacity: .25; box-shadow: none; } } 
+        @keyframes hologram-flicker { 0%,100% { opacity: .42; } 46% { opacity: .23; } 50% { opacity: .54; transform: translateX(1px); } } 
+        @keyframes card-pop { 0% { transform: scale(1); } 45% { transform: translateY(-11px) scale(1.07); } 100% { transform: translateY(-5px) scale(1.02); } }
+        
+        @media (max-width: 760px) { .main-overlay { padding: 16px 13px 18px; }.victory-intro { padding-top: 47px; }.victory-intro h2 { font-size: clamp(36px,12vw,54px); }.intro-note { display:none; }.projection-field { min-height: 0; padding: 18px 11px 28px; border-radius: 20px; }.team-constellation { min-width:0; }.team-node { width: min(250px,72vw); }.constellation-link { width: 66%; height: 50px; }.constellation-link span { height: 27px; }.constellation-link i { top: 27px; }.member-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 28px 11px; }.member-wrap { padding-top: 18px; }.member-stem { height: 18px; }.member-node { min-height: 218px; padding: 8px 7px 20px; }.portrait-frame { height: 118px; }.bottom-hud { font-size:7.5px; }.bottom-hud span:last-child,.live-status span { display:none; } }
+        @media (max-width:390px) { .brand-lockup h1 { font-size:12px; }.live-status { font-size:8px; }.member-grid { gap:22px 8px; }.member-copy strong { font-size:12px; }.project-label { display:none; } } 
+    </style>
+</head>
+<body>
+    
+    <div id="permission-screen" class="permission-screen">
+        <div class="permission-card">
+            <div class="permission-orb">✦</div>
+            <p class="eyebrow">AR / SWUP PROTOCOL</p>
+            <h1 id="loading-title">Open the stage<br />in your space.</h1>
+            <p id="permission-error">Enable your camera to place the holographic projection directly in your room.</p>
+            <button id="start-btn" style="display:none;">Enable camera <span>↗</span></button>
+        </div>
+    </div>
+
+    <div id="ar-stage" class="ar-stage" style="display:none;">
+        <video id="camera-feed" class="camera-feed" muted playsinline></video>
+        <div class="fallback-environment" aria-hidden="true"></div>
+        <div class="camera-grade" aria-hidden="true"></div>
+        <div class="global-scanlines" aria-hidden="true"></div>
+        <div class="scan-sweep" aria-hidden="true"></div>
+
+        <main class="main-overlay">
+            <header class="top-hud">
+                <div class="brand-lockup"><span class="brand-mark">✦</span><div><p>WALL OF FAME</p><h1 id="header-title">Loading...</h1></div></div>
+                <div class="live-status"><i></i> LIVE ROOM TRACKING <span>98.4%</span></div>
+            </header>
+
+            <section class="victory-intro">
+                <div><p class="eyebrow" id="header-subtitle">WINNER SIGNAL / 01</p><h2 id="header-desc">One team.<br /><em>Full momentum.</em></h2></div>
+                <p class="intro-note" id="header-note">Team beamed into your room.</p>
+            </section>
+
+            <section class="projection-field" aria-label="Holographic projection">
+                <div class="field-caption"><span>TEAM CONSTELLATION</span><span>FLOOR ANCHORED</span></div>
+                
+                <div class="team-constellation" id="constellation">
+                    <!-- JS Injected -->
+                </div>
+            </section>
+
+            <footer class="bottom-hud">
+                <span>SELECT A PROJECTION TO EXPLORE</span>
+                <span>⌖ HORIZONTAL PLANE LOCKED</span>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        let locData = {};
+        let teamDestination = "";
+
+        const permissionScreen = document.getElementById('permission-screen');
+        const startBtn = document.getElementById('start-btn');
+        const errorMsg = document.getElementById('permission-error');
+        const videoEl = document.getElementById('camera-feed');
+        const arStage = document.getElementById('ar-stage');
+
+        async function fetchLocationData() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                let locId = urlParams.get('id') || window.location.pathname.split('/').pop();
+
+                const res = await fetch(`/api/locations/${locId}`);
+                if (!res.ok) throw new Error("Location not found");
+                
+                locData = await res.json();
+                
+                document.getElementById('header-title').textContent = locData.title || locData.name;
+                document.getElementById('header-subtitle').innerHTML = (locData.subtitle || "").replace('\n', '<br>');
+                document.getElementById('header-desc').innerHTML = (locData.title || "Team").replace('\n', '<br/><em>') + '</em>';
+                document.getElementById('header-note').textContent = locData.description || "";
+                
+                teamDestination = locData.data?.teamDestination || "#";
+
+                renderConstellation();
+                startBtn.style.display = 'block';
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading-title').textContent = "Error";
+                errorMsg.textContent = err.message;
+            }
+        }
+
+        function project(id) {
+            document.querySelectorAll('.team-node, .member-node').forEach(el => el.classList.remove('is-selected'));
+            document.getElementById(`node-${id}`).classList.add('is-selected');
+            
+            setTimeout(() => {
+                if (teamDestination && teamDestination !== '#') {
+                    window.location.assign(teamDestination);
+                }
+            }, 520);
+        }
+
+        function renderConstellation() {
+            const container = document.getElementById('constellation');
+            const data = locData.data || {};
+            const teamName = data.teamName || "TEAM";
+            const teamPhoto = data.teamPhoto || "";
+            const members = data.members || [];
+
+            let html = `
+                <button id="node-team" class="team-node" onclick="project('team')" aria-label="Project Team">
+                    <span class="team-beam" aria-hidden="true"></span>
+                    <span class="team-photo-wrap"><img src="${teamPhoto}" alt="Team photo" onerror="this.style.display='none'"><span class="team-photo-scan" aria-hidden="true"></span></span>
+                    <span class="team-copy"><small>FEATURED PROFILE</small><strong>${teamName}</strong><span>${members.length} members · one signal</span></span>
+                    <span class="team-status">WINNING TRANSMISSION <b>✦</b></span>
+                </button>
+                <div class="constellation-link" aria-hidden="true"><span></span><i></i></div>
+                <div class="member-grid">
+            `;
+
+            members.forEach((m, i) => {
+                const num = i + 1;
+                html += `
+                    <div class="member-wrap">
+                        <span class="member-stem" aria-hidden="true"></span>
+                        <button id="node-${m.id || i}" class="member-node" style="--accent:${m.accent || '#a6faff'}" onclick="project('${m.id || i}')">
+                            <span class="projector-beam" aria-hidden="true"></span>
+                            <span class="holo-corner holo-corner-tl" aria-hidden="true"></span>
+                            <span class="holo-corner holo-corner-br" aria-hidden="true"></span>
+                            <span class="portrait-frame">
+                                <img src="${m.photo || ''}" alt="${m.name}" style="object-position:${m.crop || 'center'}" onerror="this.style.display='none'">
+                                <span class="portrait-scan" aria-hidden="true"></span>
+                            </span>
+                            <span class="member-copy"><small>${teamName} / 0${num}</small><strong>${m.name}</strong><span>Maker</span></span>
+                            <span class="project-label">tap to project <b>↗</b></span>
+                        </button>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        startBtn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                videoEl.srcObject = stream;
+                videoEl.onloadedmetadata = () => {
+                    videoEl.play();
+                    permissionScreen.style.display = 'none';
+                    arStage.style.display = 'block';
+                    setTimeout(() => videoEl.classList.add('is-ready'), 140);
+                };
+            } catch (err) {
+                errorMsg.textContent = "Camera access required for AR projection.";
+            }
+        });
+
+        fetchLocationData();
+    </script>
+</body>
+</html>

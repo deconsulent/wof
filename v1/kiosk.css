@@ -1,0 +1,318 @@
+:root {
+    --bg-color: #1a1511; /* Dark wood/warm tone */
+    --wall-panel-bg: linear-gradient(145deg, #2a221b 0%, #17110d 100%);
+    --plaque-bg: rgba(255, 255, 255, 0.03);
+    --plaque-border: rgba(255, 255, 255, 0.1);
+    --text-primary: #e6e0d4;
+    --text-secondary: #a39b8b;
+    --accent-color: #d4af37; /* Metallic gold */
+    
+    --font-heading: 'Cinzel', serif;
+    --font-body: 'Inter', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    background-image: 
+        radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 2px, transparent 2px, transparent 4px); /* Subtle texture */
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 2rem;
+    overflow-x: hidden;
+}
+
+/* --- Wall Container --- */
+.wall-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--wall-panel-bg);
+    border-radius: 8px;
+    box-shadow: 
+        0 20px 50px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.1),
+        inset 0 0 20px rgba(0,0,0,0.8);
+    padding: 4rem;
+    position: relative;
+    border: 1px solid rgba(0,0,0,0.8);
+}
+
+/* Top trim mimic */
+.wall-container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 10px;
+    background: linear-gradient(90deg, #1a1511, #362c24, #1a1511);
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid rgba(0,0,0,0.9);
+}
+
+/* --- Header --- */
+.wall-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+#wall-title {
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(212, 175, 55, 0.2);
+    margin-bottom: 0.5rem;
+}
+
+#wall-subtitle {
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: var(--text-primary);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.header-divider {
+    width: 150px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+    margin: 1.5rem auto;
+}
+
+#wall-description {
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+}
+
+/* --- Plaque Grid --- */
+.plaque-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+}
+
+/* --- Individual Plaque --- */
+.plaque {
+    background: var(--plaque-bg);
+    border: 1px solid var(--plaque-border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 
+        0 10px 30px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Metallic mounting pins mimic */
+.plaque::before, .plaque::after {
+    content: '';
+    position: absolute;
+    width: 8px; height: 8px;
+    background: radial-gradient(circle at 30% 30%, #ddd, #555);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.plaque::before { top: 15px; left: 15px; }
+.plaque::after { top: 15px; right: 15px; }
+
+.plaque-image-wrapper {
+    width: 100%;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+    border: 2px solid rgba(255,255,255,0.05);
+    background: #000;
+}
+
+.plaque img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%) contrast(1.1);
+    transition: filter 0.4s ease, transform 0.6s ease;
+}
+
+.plaque-content h2 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.plaque-content h3 {
+    font-size: 0.9rem;
+    color: var(--accent-color);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+}
+
+.plaque-content p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+}
+
+/* Hover/Touch effects */
+.plaque:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 
+        0 15px 40px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+    border-color: rgba(212, 175, 55, 0.3);
+}
+
+.plaque:hover img {
+    transform: scale(1.05);
+}
+
+/* --- Modal Overlay --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    padding: 2rem;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background: var(--wall-panel-bg);
+    border: 1px solid var(--plaque-border);
+    border-radius: 4px;
+    max-width: 1000px;
+    width: 100%;
+    position: relative;
+    transform: scale(0.95) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    overflow: hidden;
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1) translateY(0);
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px; right: 20px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 2.5rem;
+    cursor: pointer;
+    line-height: 1;
+    z-index: 10;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: var(--accent-color);
+}
+
+.modal-layout {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+#modal-image {
+    width: 45%;
+    object-fit: cover;
+    filter: grayscale(100%) contrast(1.1);
+}
+
+.modal-info {
+    padding: 4rem;
+    width: 55%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#modal-name {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+#modal-award {
+    font-size: 1.1rem;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.modal-divider {
+    width: 50px;
+    height: 2px;
+    background: var(--accent-color);
+    margin: 2rem 0;
+}
+
+#modal-bio {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .modal-layout {
+        flex-direction: column;
+    }
+    #modal-image {
+        width: 100%;
+        height: 400px;
+    }
+    .modal-info {
+        width: 100%;
+        padding: 2.5rem;
+    }
+    .wall-container {
+        padding: 2rem;
+    }
+    #wall-title {
+        font-size: 2.5rem;
+    }
+}

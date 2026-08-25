@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hackathon Winners Wall AR Prototype</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <style>
+    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:Arial, sans-serif; }
+    #overlay {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 5; color: #fff;
+      display:flex; justify-content:space-between; gap:12px; align-items:center;
+      padding: 12px 14px; background: rgba(0,0,0,0.45); backdrop-filter: blur(8px);
+    }
+    #overlay .left { display:flex; flex-direction:column; gap:4px; }
+    #overlay h1 { margin:0; font-size:18px; }
+    #overlay p { margin:0; font-size:12px; opacity:.85; line-height:1.3; }
+    #status { font-size:12px; padding:8px 10px; background:#111; border:1px solid rgba(255,255,255,.2); border-radius:10px; }
+    #controls {
+      position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 5; display:grid; gap:10px;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    button {
+      border:0; border-radius:14px; padding:14px 12px; color:#fff; font-weight:700; font-size:14px; background:#1f6feb;
+      box-shadow: 0 8px 24px rgba(0,0,0,.28);
+    }
+    button.secondary { background:#222; border:1px solid rgba(255,255,255,.15); }
+    #hint {
+      position: fixed; left: 12px; right: 12px; top: 72px; z-index: 5; color:#fff; font-size:13px;
+      background: rgba(0,0,0,0.35); padding: 10px 12px; border-radius: 14px; line-height:1.35;
+    }
+    .winner-card { 
+      width: 2.8; 
+      color: #fff; 
+      border-radius: 18px; 
+      padding: 0.35 0.35; 
+      background: rgba(10,10,12,.88); 
+      border: 2px solid rgba(255,255,255,.28);
+      box-shadow: 0 18px 38px rgba(0,0,0,.35);
+      text-align: center;
+      transform: translate(-50%, -50%);
+    }
+    .rank { display:inline-block; font-size:14px; font-weight:800; padding:5px 10px; border-radius:999px; margin-bottom:8px; }
+    .title { font-size:24px; font-weight:800; margin:0 0 4px; }
+    .meta { font-size:13px; opacity:.9; margin:0 0 8px; }
+    .desc { font-size:12px; opacity:.8; margin:0; }
+    .gold { background: linear-gradient(135deg, #f0c54a, #d89c14); }
+    .silver { background: linear-gradient(135deg, #d9dde5, #8d97a8); }
+    .bronze { background: linear-gradient(135deg, #d08b5b, #8d4f25); }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <div class="left">
+      <h1>Hackathon Winners Wall AR</h1>
+      <p>Stand in front of the wall, allow camera + location, and the winners screen appears anchored in AR.</p>
+    </div>
+    <div id="status">Ready</div>
+  </div>
+
+  <div id="hint">
+    For best results: use a phone, open on HTTPS, allow camera + location, and point the device toward the university wall.
+  </div>
+
+  <a-scene
+    vr-mode-ui="enabled: false"
+    embedded
+    renderer="logarithmicDepthBuffer: true; colorManagement: true;"
+    arjs="sourceType: webcam; debugUIEnabled: false; gpsMinDistance: 1;"
+  >
+    <a-assets>
+      <div id="winner1" class="winner-card">
+        <div class="rank gold">#1</div>
+        <div class="title">AeroVision</div>
+        <div class="meta">Grand Winner</div>
+        <p class="desc">Forest-aware UAV exploration and mapping.</p>
+      </div>
+      <div id="winner2" class="winner-card">
+        <div class="rank silver">#2</div>
+        <div class="title">UrbanDine Sky</div>
+        <div class="meta">Best Product Pitch</div>
+        <p class="desc">Autonomous urban food-air delivery concept.</p>
+      </div>
+      <div id="winner3" class="winner-card">
+        <div class="rank bronze">#3</div>
+        <div class="title">VoltPath</div>
+        <div class="meta">Technical Excellence</div>
+        <p class="desc">Battery routing and telemetry optimization.</p>
+      </div>
+    </a-assets>
+
+    <a-camera gps-camera rotation-reader></a-camera>
+
+    <a-entity gps-entity-place="latitude: 56.94960; longitude: 24.10520;" position="0 0 -8">
+      <a-plane width="8" height="3.6" color="#111" opacity="0.85" material="transparent: true;" position="0 0 0"></a-plane>
+      <a-text value="HACKATHON WINNERS" color="#ffffff" align="center" width="12" position="0 1.35 0.01"></a-text>
+      <a-text value="Awards shown at the wall anchor" color="#dddddd" align="center" width="10" position="0 1.02 0.01"></a-text>
+      <a-entity gltf-model="" visible="false"></a-entity>
+      <a-entity position="-2.5 -0.25 0.02">
+        <a-plane width="2.2" height="1.4" color="#1f6feb" opacity="0.96"></a-plane>
+        <a-text value="AeroVision\n#1 Grand Winner" color="#fff" align="center" width="4" position="0 0.12 0.03"></a-text>
+      </a-entity>
+      <a-entity position="0 -0.25 0.02">
+        <a-plane width="2.2" height="1.4" color="#444" opacity="0.96"></a-plane>
+        <a-text value="UrbanDine Sky\n#2 Best Pitch" color="#fff" align="center" width="4" position="0 0.12 0.03"></a-text>
+      </a-entity>
+      <a-entity position="2.5 -0.25 0.02">
+        <a-plane width="2.2" height="1.4" color="#8a4b2a" opacity="0.96"></a-plane>
+        <a-text value="VoltPath\n#3 Tech Award" color="#fff" align="center" width="4" position="0 0.12 0.03"></a-text>
+      </a-entity>
+    </a-entity>
+  </a-scene>
+
+  <div id="controls">
+    <button onclick="setStatus('Calibration marker: keep the wall centered in view.')">Calibrate</button>
+    <button class="secondary" onclick="setStatus('Reloading AR view...'); location.reload()">Reload</button>
+    <button class="secondary" onclick="toggleHint()">Toggle Hint</button>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const hint = document.getElementById('hint');
+    function setStatus(msg){ statusEl.textContent = msg; }
+    function toggleHint(){ hint.style.display = hint.style.display === 'none' ? 'block' : 'none'; }
+    window.addEventListener('load', () => setStatus('Request camera and location access on mobile.'));
+  </script>
+</body>
+</html>
