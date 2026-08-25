@@ -278,7 +278,6 @@
         
         const peopleContainer = document.getElementById('people-container');
         const wallField = document.getElementById('wall-field');
-        const memberCount = document.getElementById('member-count');
         const footerStatus = document.getElementById('footer-status');
         const footerCoords = document.getElementById('footer-coords');
         
@@ -288,11 +287,14 @@
         function updateHeaderTitles() {
             if (!locData || !locData.id) return;
             const title = i18n.getLocalized(locData, 'title') || locData.title || locData.name;
-            const subtitle = i18n.getLocalized(locData, 'subtitle') || locData.subtitle || i18n.t('spatial_cms');
+            const subtitle = i18n.getLocalized(locData, 'subtitle') || locData.subtitle || "";
 
-            document.getElementById('loading-title').textContent = title;
-            document.getElementById('header-title').textContent = title;
-            document.getElementById('header-eyebrow').textContent = subtitle;
+            const loadTitle = document.getElementById('loading-title');
+            if (loadTitle) loadTitle.textContent = title;
+            const headTitle = document.getElementById('header-title');
+            if (headTitle) headTitle.textContent = title;
+            const headEyebrow = document.getElementById('header-eyebrow');
+            if (headEyebrow) headEyebrow.textContent = subtitle;
         }
 
         function getPersonCardUrl(person) {
@@ -325,14 +327,16 @@
                 people = locData.data?.inductees || locData.inductees || [];
 
                 updateHeaderTitles();
-                memberCount.textContent = people.length;
-                startBtn.style.display = 'inline-block';
+                if (startBtn) startBtn.style.display = 'inline-block';
 
             } catch (err) {
                 console.error(err);
-                document.getElementById('loading-title').textContent = "Error loading screen";
-                errorMsg.style.display = 'block';
-                errorMsg.textContent = err.message;
+                const loadTitle = document.getElementById('loading-title');
+                if (loadTitle) loadTitle.textContent = "Error loading screen";
+                if (errorMsg) {
+                    errorMsg.style.display = 'block';
+                    errorMsg.textContent = err.message;
+                }
             }
         }
         fetchLocationData();
