@@ -4,9 +4,9 @@
       "id": "design-factory",
       "name": "Design Factory",
       "template": "designfactory",
-      "title": "Design Factory Accolades",
+      "title": "Design Factory",
       "subtitle": "Where Creativity Meets Engineering",
-      "description": "Showcasing the top performers who merge beautiful design with robust technology.",
+      "description": "Design Factory Family",
       "lat": 56.56,
       "lng": 24.7,
       "radius": 50,
@@ -40,12 +40,12 @@
             "photo": "/uploads/1787634932296-409002653.jpg"
           },
           {
-            "id": "test-person",
-            "name": "Test Person",
-            "role": "Test Role",
-            "initials": "TE",
-            "level": "member",
-            "accent": "#9ec6ef",
+            "id": "shiv",
+            "name": "Shiv",
+            "role": "Project Manager Assistant",
+            "initials": "SH",
+            "level": "lead",
+            "accent": "#000000",
             "photo": "https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/1787639291355-385884177.jpg"
           }
         ]
@@ -82,6 +82,11 @@
           }
         ]
       }
+    },
+    {
+      "id": "test",
+      "name": "test",
+      "inductees": []
     }
   ]
 }

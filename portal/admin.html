@@ -517,11 +517,19 @@
             const method = isEditing ? 'PUT' : 'POST';
             const url = isEditing ? `/api/locations/${currentLocation.id}` : `/api/locations`;
             
-            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(currentLocation) });
-            if (res.ok) {
-                alert("Saved successfully!");
-                fetchLocations();
-                if (!isEditing) selectLocation(currentLocation.id);
+            try {
+                const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(currentLocation) });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert("Saved successfully!");
+                    fetchLocations();
+                    if (!isEditing) selectLocation(currentLocation.id);
+                } else {
+                    alert("Failed to save: " + (data.error || "Unknown error"));
+                }
+            } catch (err) {
+                alert("Network error: " + err.message);
             }
         }
 

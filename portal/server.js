@@ -29,45 +29,38 @@ const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2
 // --- API ROUTES ---
 
 // 1. Get all screens (locations)
-app.get('/api/locations', (req, res) => {
-    res.json(readDB().locations);
+app.get('/api/locations', async (req, res) => {
+    const { data, error } = await supabase.from('locations').select('*');
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
 });
 
 // 2. Get specific screen
-app.get('/api/locations/:id', (req, res) => {
-    const db = readDB();
-    const location = db.locations.find(loc => loc.id === req.params.id);
-    if (location) res.json(location);
-    else res.status(404).json({ error: "Location not found" });
+app.get('/api/locations/:id', async (req, res) => {
+    const { data, error } = await supabase.from('locations').select('*').eq('id', req.params.id).single();
+    if (error) return res.status(404).json({ error: "Location not found" });
+    res.json(data);
 });
 
 // 3. Create new screen
-app.post('/api/locations', (req, res) => {
-    const db = readDB();
-    const newLoc = { ...req.body, inductees: [] };
-    db.locations.push(newLoc);
-    writeDB(db);
-    res.json({ success: true, location: newLoc });
+app.post('/api/locations', async (req, res) => {
+    const newLoc = { ...req.body };
+    const { data, error } = await supabase.from('locations').insert([newLoc]).select();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true, location: data[0] });
 });
 
 // 4. Update specific screen
-app.put('/api/locations/:id', (req, res) => {
-    const db = readDB();
-    const index = db.locations.findIndex(loc => loc.id === req.params.id);
-    if (index !== -1) {
-        db.locations[index] = { ...db.locations[index], ...req.body };
-        writeDB(db);
-        res.json({ success: true, location: db.locations[index] });
-    } else {
-        res.status(404).json({ error: "Location not found" });
-    }
+app.put('/api/locations/:id', async (req, res) => {
+    const { data, error } = await supabase.from('locations').update(req.body).eq('id', req.params.id).select();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true, location: data[0] });
 });
 
 // 5. Delete specific screen
-app.delete('/api/locations/:id', (req, res) => {
-    const db = readDB();
-    db.locations = db.locations.filter(loc => loc.id !== req.params.id);
-    writeDB(db);
+app.delete('/api/locations/:id', async (req, res) => {
+    const { error } = await supabase.from('locations').delete().eq('id', req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
 });
 
@@ -80,8 +73,6 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
         const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileExt}`;
         const filePath = `uploads/${fileName}`;
 
-        // Upload to Supabase 'images' bucket
-        // Note: Please ensure you have a public bucket named 'images' created in Supabase!
         const { data, error } = await supabase.storage
             .from('images')
             .upload(filePath, req.file.buffer, {
@@ -95,7 +86,6 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
             return res.status(500).json({ error: error.message });
         }
 
-        // Get public URL
         const { data: publicUrlData } = supabase.storage
             .from('images')
             .getPublicUrl(filePath);
@@ -110,11 +100,10 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
 
 // --- RENDERER ROUTE ---
 
-app.get('/view/:id', (req, res) => {
-    const db = readDB();
-    const location = db.locations.find(loc => loc.id === req.params.id);
+app.get('/view/:id', async (req, res) => {
+    const { data: location, error } = await supabase.from('locations').select('*').eq('id', req.params.id).single();
     
-    if (!location) {
+    if (error || !location) {
         return res.status(404).send("<h1>Screen not found</h1>");
     }
 
