@@ -18,3 +18,9 @@ portal/uploads/
 # Environment files
 .env
 .env.local
+
+# Scratch and temporary logs
+scratch/
+
+# Large brand guidelines PDF
+uploads/Brand Book/*.pdf
