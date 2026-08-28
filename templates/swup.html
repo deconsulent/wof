@@ -157,39 +157,52 @@
             color: #ff9e9e;
         }
         .gps-locked-card {
-            background: rgba(10, 14, 22, 0.65);
-            border: 1px solid rgba(255, 120, 120, 0.35);
-            border-radius: 18px;
-            padding: 16px;
+            background: rgba(10, 14, 22, 0.75);
+            border: 1px solid rgba(255, 180, 50, 0.4);
+            border-radius: 20px;
+            padding: 18px 16px;
             margin: 14px 0;
             text-align: center;
-        }
-        .gps-locked-card h4 {
-            margin: 0 0 6px;
-            color: #ff9e9e;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
         }
         .gps-distance-text {
             font-size: 13px;
-            color: rgba(255, 255, 255, 0.9);
-            margin: 6px 0;
-            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.95);
+            margin: 8px 0 4px;
+            line-height: 1.45;
         }
         .gps-coords-meta {
             font-family: 'DM Mono', monospace;
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-top: 6px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 8px;
+        }
+        .gps-preview-cta {
+            display: block;
+            width: 100%;
+            margin: 12px 0 6px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ffd043, #ff9f1c);
+            border: none;
+            color: #11141d;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(255, 175, 0, 0.35);
+            transition: all 0.2s ease;
+        }
+        .gps-preview-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(255, 175, 0, 0.5);
         }
         .gps-retry-btn {
-            margin-top: 10px;
-            padding: 8px 16px;
+            margin-top: 6px;
+            padding: 7px 15px;
             border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
             color: #ffffff;
             font-size: 11px;
             font-weight: 600;
@@ -197,18 +210,37 @@
             transition: all 0.2s ease;
         }
         .gps-retry-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.25);
         }
-        .gps-bypass-link {
-            display: inline-block;
-            margin-top: 10px;
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.45);
-            text-decoration: underline;
-            cursor: pointer;
+
+        /* Floating Remote Preview Watermark Banner inside AR */
+        .preview-watermark-hud {
+            position: fixed;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 18px;
+            border-radius: 999px;
+            background: rgba(15, 18, 28, 0.92);
+            border: 1px solid rgba(255, 208, 67, 0.55);
+            box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 208, 67, 0.25);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            color: #ffd043;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            pointer-events: none;
+            animation: watermark-pulse 3s infinite ease-in-out;
         }
-        .gps-bypass-link:hover {
-            color: rgba(255, 255, 255, 0.85);
+        @keyframes watermark-pulse {
+            0%, 100% { opacity: 0.92; transform: translateX(-50%) scale(1); }
+            50% { opacity: 1; transform: translateX(-50%) scale(1.02); box-shadow: 0 4px 26px rgba(0, 0, 0, 0.6), 0 0 24px rgba(255, 208, 67, 0.4); }
         }
     </style>
 </head>
@@ -292,6 +324,8 @@
 
         i18n.subscribe(() => {
             updateHeaderTitles();
+            if (typeof renderGpsLockedCard === 'function') renderGpsLockedCard();
+            if (typeof updatePreviewWatermark === 'function') updatePreviewWatermark();
             renderConstellation();
         });
 
@@ -347,36 +381,113 @@
 
         const GEOFENCE_RADIUS_METERS = 8; // ~26 ft (allows true physical presence at +-10 ft with smartphone GPS variance)
         let isGpsVerified = false;
+        let isRemotePreviewActive = false;
+        let detectedDistanceStr = '';
+        let lastGpsState = null;
 
-        function bypassGpsPrompt() {
-            const pwd = prompt("Enter admin bypass key or confirm preview access:");
-            if (pwd !== null) {
-                const url = new URL(window.location.href);
-                url.searchParams.set('bypass_gps', '1');
-                window.location.href = url.toString();
+        function updatePreviewWatermark() {
+            const watermark = document.getElementById('preview-watermark-hud');
+            if (watermark && isRemotePreviewActive) {
+                const distText = detectedDistanceStr || 'REMOTE';
+                watermark.innerHTML = `<span>⚡</span> ${i18n.t('gps_preview_active_banner', { dist: distText })}`;
             }
+        }
+
+        function renderGpsLockedCard() {
+            if (!lastGpsState) return;
+            const statusContainer = document.getElementById('gps-status-container');
+            const actionArea = document.getElementById('gps-action-area');
+            let existingCard = document.getElementById('gps-locked-card');
+
+            if (lastGpsState.type === 'verified') {
+                if (statusContainer) {
+                    statusContainer.innerHTML = `<div class="gps-status-pill is-verified">${i18n.t('gps_verified')} (${lastGpsState.distFormatted})</div>`;
+                }
+                if (startBtn) startBtn.style.display = 'block';
+                if (existingCard) existingCard.remove();
+                return;
+            }
+
+            if (lastGpsState.type === 'preview_badge') {
+                if (statusContainer) {
+                    statusContainer.innerHTML = `<div class="gps-status-pill is-verified">${i18n.t('gps_preview_badge')}</div>`;
+                }
+                if (startBtn) startBtn.style.display = 'block';
+                if (existingCard) existingCard.remove();
+                return;
+            }
+
+            if (lastGpsState.type === 'locked') {
+                if (statusContainer) {
+                    statusContainer.innerHTML = `<div class="gps-status-pill is-locked">📍 ${lastGpsState.distFormatted} Away</div>`;
+                }
+                if (!existingCard) {
+                    existingCard = document.createElement('div');
+                    existingCard.id = 'gps-locked-card';
+                    existingCard.className = 'gps-locked-card';
+                    if (actionArea && actionArea.parentNode) {
+                        actionArea.parentNode.insertBefore(existingCard, actionArea);
+                    }
+                }
+                existingCard.innerHTML = `
+                    <div class="gps-status-pill is-locked" style="margin-bottom:8px;">📍 ${i18n.t('gps_not_at_location_title')}</div>
+                    <p class="gps-distance-text">${i18n.t('gps_distance_away_msg', { dist: `<strong>${lastGpsState.distFormatted}</strong>` })}</p>
+                    <p style="font-size:12px; color:rgba(255,255,255,0.72); margin: 8px 0 4px;">${i18n.t('gps_preview_prompt')}</p>
+                    <button type="button" class="gps-preview-cta" onclick="enterPreviewMode()">${i18n.t('gps_enter_preview_btn')}</button>
+                    <div style="display:flex; justify-content:center; gap: 8px; margin-top: 6px;">
+                        <button type="button" class="gps-retry-btn" onclick="verifyGpsLocation()">${i18n.t('gps_retry_btn')}</button>
+                    </div>
+                    <div class="gps-coords-meta">Physical Target: ${lastGpsState.targetLat.toFixed(5)}, ${lastGpsState.targetLng.toFixed(5)}</div>
+                `;
+            } else if (lastGpsState.type === 'denied') {
+                if (statusContainer) {
+                    statusContainer.innerHTML = `<div class="gps-status-pill is-locked">📍 ${i18n.t('gps_not_at_location_title')}</div>`;
+                }
+                if (!existingCard) {
+                    existingCard = document.createElement('div');
+                    existingCard.id = 'gps-locked-card';
+                    existingCard.className = 'gps-locked-card';
+                    if (actionArea && actionArea.parentNode) {
+                        actionArea.parentNode.insertBefore(existingCard, actionArea);
+                    }
+                }
+                existingCard.innerHTML = `
+                    <div class="gps-status-pill is-locked" style="margin-bottom:8px;">📍 ${i18n.t('gps_required_title')}</div>
+                    <p class="gps-distance-text">${i18n.t('gps_permission_denied')}</p>
+                    <p style="font-size:12px; color:rgba(255,255,255,0.72); margin: 8px 0 4px;">${i18n.t('gps_preview_prompt')}</p>
+                    <button type="button" class="gps-preview-cta" onclick="enterPreviewMode()">${i18n.t('gps_enter_preview_btn')}</button>
+                    <div style="display:flex; justify-content:center; gap: 8px; margin-top: 6px;">
+                        <button type="button" class="gps-retry-btn" onclick="verifyGpsLocation()">${i18n.t('gps_retry_btn')}</button>
+                    </div>
+                `;
+            }
+        }
+
+        function enterPreviewMode() {
+            startExperience(true);
         }
 
         async function verifyGpsLocation() {
             const urlParams = new URLSearchParams(window.location.search);
             const statusContainer = document.getElementById('gps-status-container');
-            const actionArea = document.getElementById('gps-action-area');
             const targetLat = parseFloat(locData.lat);
             const targetLng = parseFloat(locData.lng);
 
             // Bypass via query param
             if (urlParams.get('bypass_gps') === '1' || urlParams.get('preview') === '1' || urlParams.get('admin') === '1') {
                 isGpsVerified = true;
-                if (statusContainer) {
-                    statusContainer.innerHTML = `<div class="gps-status-pill is-verified">${i18n.t('gps_preview_badge')}</div>`;
-                }
-                if (startBtn) startBtn.style.display = 'block';
+                isRemotePreviewActive = true;
+                detectedDistanceStr = 'PREVIEW';
+                lastGpsState = { type: 'preview_badge' };
+                renderGpsLockedCard();
                 return;
             }
 
             // If coordinates not set (0,0 or null), allow open access
             if (!targetLat || !targetLng || (targetLat === 0 && targetLng === 0)) {
                 isGpsVerified = true;
+                isRemotePreviewActive = false;
+                lastGpsState = null;
                 if (statusContainer) statusContainer.innerHTML = '';
                 if (startBtn) startBtn.style.display = 'block';
                 return;
@@ -384,10 +495,8 @@
 
             // GPS is configured on screen: check user location
             if (!navigator.geolocation) {
-                if (statusContainer) {
-                    statusContainer.innerHTML = `<div class="gps-status-pill is-locked">⚠️ GPS Not Supported</div>`;
-                }
-                if (startBtn) startBtn.style.display = 'block';
+                lastGpsState = { type: 'denied' };
+                renderGpsLockedCard();
                 return;
             }
 
@@ -401,66 +510,26 @@
                     const userLat = pos.coords.latitude;
                     const userLng = pos.coords.longitude;
                     const dist = calculateDistanceMeters(targetLat, targetLng, userLat, userLng);
+                    const distFormatted = dist < 1000 
+                        ? `${Math.round(dist)}m / ${Math.round(dist * 3.28)} ft`
+                        : `${(dist / 1000).toFixed(2)} km`;
+                    detectedDistanceStr = distFormatted;
 
                     if (dist <= GEOFENCE_RADIUS_METERS) {
-                        // User is within range!
                         isGpsVerified = true;
-                        if (statusContainer) {
-                            statusContainer.innerHTML = `<div class="gps-status-pill is-verified">${i18n.t('gps_verified')} (${Math.round(dist)}m)</div>`;
-                        }
-                        if (startBtn) startBtn.style.display = 'block';
-                        const card = document.getElementById('gps-locked-card');
-                        if (card) card.remove();
+                        isRemotePreviewActive = false;
+                        lastGpsState = { type: 'verified', distFormatted: `${Math.round(dist)}m` };
                     } else {
-                        // Out of range: show proximity gate
                         isGpsVerified = false;
                         if (startBtn) startBtn.style.display = 'none';
-                        const distFormatted = dist < 1000 
-                            ? `${Math.round(dist)}m / ${Math.round(dist * 3.28)} ft`
-                            : `${(dist / 1000).toFixed(2)} km`;
-                        
-                        if (statusContainer) {
-                            statusContainer.innerHTML = `<div class="gps-status-pill is-locked">📍 ${Math.round(dist)}m Out of Range</div>`;
-                        }
-                        
-                        let existingCard = document.getElementById('gps-locked-card');
-                        if (!existingCard) {
-                            existingCard = document.createElement('div');
-                            existingCard.id = 'gps-locked-card';
-                            existingCard.className = 'gps-locked-card';
-                            if (actionArea && actionArea.parentNode) {
-                                actionArea.parentNode.insertBefore(existingCard, actionArea);
-                            }
-                        }
-
-                        existingCard.innerHTML = `
-                            <h4>📍 ${i18n.t('gps_required_title')}</h4>
-                            <p class="gps-distance-text">${i18n.t('gps_out_of_range', { dist: `<strong>${distFormatted}</strong>` })}</p>
-                            <div class="gps-coords-meta">Target: ${targetLat.toFixed(5)}, ${targetLng.toFixed(5)}</div>
-                            <button type="button" class="gps-retry-btn" onclick="verifyGpsLocation()">${i18n.t('gps_retry_btn')}</button>
-                            <div><a class="gps-bypass-link" onclick="bypassGpsPrompt()">Admin / Preview Access ↗</a></div>
-                        `;
+                        lastGpsState = { type: 'locked', distFormatted, targetLat, targetLng };
                     }
+                    renderGpsLockedCard();
                 },
                 (err) => {
-                    if (statusContainer) {
-                        statusContainer.innerHTML = `<div class="gps-status-pill is-locked">📍 GPS Permission Required</div>`;
-                    }
-                    let existingCard = document.getElementById('gps-locked-card');
-                    if (!existingCard) {
-                        existingCard = document.createElement('div');
-                        existingCard.id = 'gps-locked-card';
-                        existingCard.className = 'gps-locked-card';
-                        if (actionArea && actionArea.parentNode) {
-                            actionArea.parentNode.insertBefore(existingCard, actionArea);
-                        }
-                    }
-                    existingCard.innerHTML = `
-                        <h4>📍 ${i18n.t('gps_required_title')}</h4>
-                        <p class="gps-distance-text">${i18n.t('gps_permission_denied')}</p>
-                        <button type="button" class="gps-retry-btn" onclick="verifyGpsLocation()">${i18n.t('gps_retry_btn')}</button>
-                        <div><a class="gps-bypass-link" onclick="bypassGpsPrompt()">Admin / Preview Access ↗</a></div>
-                    `;
+                    detectedDistanceStr = 'REMOTE';
+                    lastGpsState = { type: 'denied' };
+                    renderGpsLockedCard();
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
@@ -479,10 +548,11 @@
         }
 
         function renderConstellation() {
+            if (!locData || !locData.data) return;
             const container = document.getElementById('constellation');
-            const data = locData.data || {};
-            const teamName = i18n.getLocalized(data, 'teamName') || data.teamName || "TEAM";
-            const teamPhoto = data.teamPhoto || "";
+            const data = locData.data;
+            const teamName = i18n.getLocalized(data, 'teamName') || data.teamName || "SWUP";
+            const teamPhoto = data.teamPhoto || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80";
             const members = data.members || [];
 
             let html = `
@@ -528,7 +598,23 @@
             container.innerHTML = html;
         }
 
-        startBtn.addEventListener('click', async () => {
+        async function startExperience(isRemotePreview = false) {
+            if (isRemotePreview) isRemotePreviewActive = true;
+            errorMsg.textContent = '';
+
+            // Show persistent floating banner if in remote preview
+            if (isRemotePreviewActive) {
+                let watermark = document.getElementById('preview-watermark-hud');
+                if (!watermark) {
+                    watermark = document.createElement('div');
+                    watermark.id = 'preview-watermark-hud';
+                    watermark.className = 'preview-watermark-hud';
+                    document.body.appendChild(watermark);
+                }
+                const distText = detectedDistanceStr || 'REMOTE';
+                watermark.innerHTML = `<span>⚡</span> ${i18n.t('gps_preview_active_banner', { dist: distText })}`;
+            }
+
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
                 videoEl.srcObject = stream;
@@ -543,7 +629,9 @@
                 permissionScreen.style.display = 'none';
                 arStage.style.display = 'block';
             }
-        });
+        }
+
+        startBtn.addEventListener('click', () => startExperience(isRemotePreviewActive));
 
         fetchLocationData();
     </script>
