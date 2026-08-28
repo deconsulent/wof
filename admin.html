@@ -1261,7 +1261,7 @@
                     Screens
                     <span class="nav-badge" id="nav-screen-count">0</span>
                 </a>
-                <a class="nav-item" data-view="add-screen" onclick="createNewScreen(); switchView('editor');">
+                <a class="nav-item" data-view="add-screen" onclick="openNewScreenModal()">
                     <span class="nav-icon">➕</span>
                     Add Screen
                 </a>
@@ -1334,8 +1334,8 @@
                 </div>
 
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
-                    <h2 style="font-size:18px;font-weight:700;color:#ffffff;">Your Screens</h2>
-                    <button class="btn" onclick="createNewScreen(); switchView('editor');" style="padding:9px 16px;font-size:12px;">+ New Screen</button>
+                    <h2 style="font-size:18px;font-weight:700;color:var(--text-primary);">Your Screens</h2>
+                    <button class="btn" onclick="openNewScreenModal()" style="padding:9px 16px;font-size:12px;">+ New Screen</button>
                 </div>
                 <div class="dash-screens-grid" id="dash-screens-grid">
                     <!-- Populated by JS -->
@@ -1349,7 +1349,7 @@
                         <h1>Manage Screens</h1>
                         <p class="view-header-sub">All registered AR screens in the system</p>
                     </div>
-                    <button class="btn" onclick="createNewScreen(); switchView('editor');">+ Create New Screen</button>
+                    <button class="btn" onclick="openNewScreenModal()">+ Create New Screen</button>
                 </div>
 
                 <div class="screens-toolbar">
@@ -1383,6 +1383,7 @@
                         </div>
                         <div class="actions">
                             <a href="#" target="_blank" class="btn btn-secondary" id="btn-view" data-i18n="test_view">Test View ↗</a>
+                            <button type="button" class="btn btn-secondary" onclick="autoTranslateCurrentScreen()" id="btn-auto-translate" title="Auto-translate all English fields to Latvian">✨ Auto-Translate LV</button>
                             <button class="btn" onclick="saveLocation()" id="btn-save" data-i18n="save_changes">Save Changes</button>
                             <button class="btn btn-danger" onclick="deleteLocation()" data-i18n="delete_screen">Delete</button>
                         </div>
@@ -1392,7 +1393,7 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label data-i18n="internal_name">INTERNAL NAME</label>
-                            <input type="text" id="loc-name" placeholder="e.g. Design Factory Main Hall">
+                            <input type="text" id="loc-name" placeholder="e.g. Design Factory Main Hall" onblur="autoTranslateField('loc-name', 'loc-title-lv')">
                         </div>
                         <div class="form-group">
                             <label data-i18n="display_template">DISPLAY TEMPLATE / AR ENGINE</label>
@@ -1416,7 +1417,7 @@
                                 <span data-i18n="display_title_en">DISPLAY TITLE (EN)</span>
                                 <span class="lang-tag">EN</span>
                             </label>
-                            <input type="text" id="loc-title" placeholder="e.g. Design Factory">
+                            <input type="text" id="loc-title" placeholder="e.g. Design Factory" onblur="autoTranslateField('loc-title', 'loc-title-lv')">
                         </div>
                         <div class="form-group">
                             <label>
@@ -1432,7 +1433,7 @@
                                 <span data-i18n="display_subtitle_en">DISPLAY SUBTITLE (EN)</span>
                                 <span class="lang-tag">EN</span>
                             </label>
-                            <input type="text" id="loc-subtitle" placeholder="e.g. Where Creativity Meets Innovation">
+                            <input type="text" id="loc-subtitle" placeholder="e.g. Where Creativity Meets Innovation" onblur="autoTranslateField('loc-subtitle', 'loc-subtitle-lv')">
                         </div>
                         <div class="form-group">
                             <label>
@@ -1448,7 +1449,7 @@
                                 <span data-i18n="description_en">DESCRIPTION (EN)</span>
                                 <span class="lang-tag">EN</span>
                             </label>
-                            <textarea id="loc-desc" rows="2" placeholder="e.g. Design Factory Family"></textarea>
+                            <textarea id="loc-desc" rows="2" placeholder="e.g. Design Factory Family" onblur="autoTranslateField('loc-desc', 'loc-desc-lv')"></textarea>
                         </div>
                         <div class="form-group">
                             <label>
@@ -1463,7 +1464,7 @@
                     <div id="section-designfactory" class="template-section">
                         <div class="section-header">
                             <h3 data-i18n="template_df_title">Hierarchy Tree Data (Design Factory)</h3>
-                            <button class="btn btn-secondary" onclick="openV4Modal()" data-i18n="add_person">+ Add Person</button>
+                            <button class="btn btn-secondary" onclick="openV4Modal()" data-i18n="add_inductee">+ Add Inductee</button>
                         </div>
                         <div class="list-container" id="v4-list"></div>
                     </div>
@@ -1471,7 +1472,7 @@
                     <!-- Dynamic Template Section: V5 Team Profile (SWUP) -->
                     <div id="section-swup" class="template-section">
                         <div class="section-header">
-                            <h3 data-i18n="template_swup_title">Team Profile Projection Data (SWUP)</h3>
+                            <h3 data-i18n="template_swup_title">SWUP Team Profile Data</h3>
                         </div>
                         <div class="form-grid">
                             <div class="form-group">
@@ -1479,7 +1480,7 @@
                                     <span data-i18n="team_name_en">TEAM NAME (EN)</span>
                                     <span class="lang-tag">EN</span>
                                 </label>
-                                <input type="text" id="v5-teamName" placeholder="e.g. TEAM SWUP">
+                                <input type="text" id="v5-teamName" placeholder="e.g. SWUP Team" onblur="autoTranslateField('v5-teamName', 'v5-teamName-lv')">
                             </div>
                             <div class="form-group">
                                 <label>
@@ -1493,7 +1494,7 @@
                                     <span data-i18n="team_subhead_en">DESTINATION / SUBHEAD (EN)</span>
                                     <span class="lang-tag">EN</span>
                                 </label>
-                                <input type="text" id="v5-teamUrl" placeholder="e.g. Swup the problem">
+                                <input type="text" id="v5-teamUrl" placeholder="e.g. Swup the problem" onblur="autoTranslateField('v5-teamUrl', 'v5-teamUrl-lv')">
                             </div>
                             <div class="form-group">
                                 <label>
@@ -1554,7 +1555,7 @@
                                 <span class="template-feature-tag">Virtual Cards</span>
                                 <span class="template-feature-tag">GPS Anchored</span>
                             </div>
-                            <button class="btn" onclick="createScreenWithTemplate('designfactory')" style="width:100%;">Create Screen with This Template</button>
+                            <button class="btn" onclick="openNewScreenModal('designfactory')" style="width:100%;">Create Screen with This Template</button>
                         </div>
                     </div>
 
@@ -1577,7 +1578,7 @@
                                 <span class="template-feature-tag">Swipeable</span>
                                 <span class="template-feature-tag">Custom Crops</span>
                             </div>
-                            <button class="btn" onclick="createScreenWithTemplate('swup')" style="width:100%;">Create Screen with This Template</button>
+                            <button class="btn" onclick="openNewScreenModal('swup')" style="width:100%;">Create Screen with This Template</button>
                         </div>
                     </div>
                 </div>
@@ -1617,7 +1618,43 @@
         </div>
     </div>
 
-    <!-- ═══ Modals (PRESERVED EXACTLY) ═══ -->
+    <!-- ═══ Modals ═══ -->
+
+    <!-- Create New Screen Modal -->
+    <div class="modal-overlay" id="new-screen-modal">
+        <div class="glass-card modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3 id="new-screen-modal-title">Create New Screen</h3>
+                <button class="modal-close-btn" onclick="closeNewScreenModal()">✕</button>
+            </div>
+            <form onsubmit="handleNewScreenSubmit(event)">
+                <div class="form-grid" style="grid-template-columns: 1fr; margin-bottom: 0; gap: 14px;">
+                    <div class="form-group">
+                        <label>INTERNAL NAME / TITLE (EN)</label>
+                        <input type="text" id="new-screen-name" placeholder="e.g. Design Factory Main Hall" required oninput="autoSuggestScreenId(this.value)" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <span>UNIQUE SCREEN ID</span>
+                            <span style="font-size:10px;color:var(--text-muted);font-weight:normal;">lowercase, hyphens only</span>
+                        </label>
+                        <input type="text" id="new-screen-id" placeholder="e.g. design-factory" required pattern="[a-z0-9\-]+" style="font-family:'DM Mono', monospace;" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label>DISPLAY TEMPLATE / AR ENGINE</label>
+                        <select id="new-screen-template">
+                            <option value="designfactory">🌿 V4: Hierarchy Tree (DesignFactory)</option>
+                            <option value="swup">⚡ V5: Team Profile Showcase (SWUP)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeNewScreenModal()">Cancel</button>
+                    <button type="submit" class="btn">Create Screen →</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- V4 Inductee Modal -->
     <div class="modal-overlay" id="v4-modal">
@@ -1650,7 +1687,7 @@
                         <span data-i18n="role_en">ROLE / TITLE (EN)</span>
                         <span class="lang-tag">EN</span>
                     </label>
-                    <input type="text" id="v4-role" placeholder="e.g. Head of RTU Design Factory & Innovation">
+                    <input type="text" id="v4-role" placeholder="e.g. Head of RTU Design Factory & Innovation" onblur="autoTranslateField('v4-role', 'v4-role-lv')">
                 </div>
                 <div class="form-group">
                     <label>
@@ -1683,8 +1720,9 @@
             </div>
             <input type="hidden" id="v4-index">
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="document.getElementById('v4-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
-                <button class="btn" onclick="saveV4Person()" data-i18n="save_inductee">Save Inductee</button>
+                <button type="button" class="btn btn-secondary" onclick="autoTranslateField('v4-role', 'v4-role-lv')" style="margin-right:auto;">✨ Translate LV</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('v4-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn" onclick="saveV4Person()" data-i18n="save_inductee">Save Inductee</button>
             </div>
         </div>
     </div>
@@ -1720,7 +1758,7 @@
                         <span data-i18n="role_en">ROLE / TITLE (EN)</span>
                         <span class="lang-tag">EN</span>
                     </label>
-                    <input type="text" id="v5-role" placeholder="e.g. Lead Prototyper">
+                    <input type="text" id="v5-role" placeholder="e.g. Lead Prototyper" onblur="autoTranslateField('v5-role', 'v5-role-lv')">
                 </div>
                 <div class="form-group">
                     <label>
@@ -1736,7 +1774,7 @@
                         <span data-i18n="specialty_en">SPECIALTY / STREAM (EN)</span>
                         <span class="lang-tag">EN</span>
                     </label>
-                    <input type="text" id="v5-specialty" placeholder="e.g. Robotics & Hardware">
+                    <input type="text" id="v5-specialty" placeholder="e.g. Robotics & Hardware" onblur="autoTranslateField('v5-specialty', 'v5-specialty-lv')">
                 </div>
                 <div class="form-group">
                     <label>
@@ -1752,7 +1790,7 @@
                         <span data-i18n="project_status_en">PROJECT / STATUS (EN)</span>
                         <span class="lang-tag">EN</span>
                     </label>
-                    <input type="text" id="v5-project" placeholder="e.g. Swup 01 Alpha">
+                    <input type="text" id="v5-project" placeholder="e.g. Swup 01 Alpha" onblur="autoTranslateField('v5-project', 'v5-project-lv')">
                 </div>
                 <div class="form-group">
                     <label>
@@ -1768,7 +1806,7 @@
                         <span data-i18n="skills_en">SKILLS (EN - comma separated)</span>
                         <span class="lang-tag">EN</span>
                     </label>
-                    <input type="text" id="v5-skills" placeholder="CNC, PCB Design, Arduino">
+                    <input type="text" id="v5-skills" placeholder="CNC, PCB Design, Arduino" onblur="autoTranslateField('v5-skills', 'v5-skills-lv')">
                 </div>
                 <div class="form-group">
                     <label>
@@ -1789,8 +1827,9 @@
             </div>
             <input type="hidden" id="v5-index">
             <div class="modal-actions">
-                <button class="btn btn-secondary" onclick="document.getElementById('v5-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
-                <button class="btn" onclick="saveV5Member()" data-i18n="save_member">Save Member</button>
+                <button type="button" class="btn btn-secondary" onclick="autoTranslateV5ModalFields()" style="margin-right:auto;">✨ Translate LV</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('v5-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn" onclick="saveV5Member()" data-i18n="save_member">Save Member</button>
             </div>
         </div>
     </div>
@@ -1922,7 +1961,7 @@
                         <div class="empty-icon">🖥️</div>
                         <h3>No screens yet</h3>
                         <p>Create your first AR Wall of Fame screen to get started.</p>
-                        <button class="btn" onclick="createNewScreen(); switchView('editor');">+ Create First Screen</button>
+                        <button class="btn" onclick="openNewScreenModal()">+ Create First Screen</button>
                     </div>
                 `;
                 return;
@@ -2067,56 +2106,215 @@
         }
 
         /* ═══════════════════════════════════════════════════
-           CREATE NEW SCREEN (PRESERVED - view switch added)
+           TRANSLATION ENGINE (Frontend Client + API Pipeline)
            ═══════════════════════════════════════════════════ */
-        function createNewScreen() {
-            const id = prompt(i18n.t('enter_screen_id_prompt'));
-            if (!id) return;
-            const cleanId = id.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-            if (!cleanId) return showToast(i18n.t('invalid_id_alert'), 'error');
-            
-            if (Array.isArray(locations) && locations.find(l => l.id && l.id.toLowerCase() === cleanId)) {
-                return showToast(i18n.t('id_exists_alert', { id: cleanId }), 'error');
-            }
-            
-            currentLocation = {
-                id: cleanId,
-                name: "New Screen",
-                template: "designfactory",
-                title: "", title_lv: "",
-                subtitle: "", subtitle_lv: "",
-                description: "", description_lv: "",
-                lat: 0, lng: 0, radius: 50,
-                data: { inductees: [] }
-            };
-            isEditing = false;
-            populateEditor();
-            switchView('editor');
+        async function translateToLV(text) {
+            if (!text || typeof text !== 'string' || !text.trim()) return '';
+            const clean = text.trim();
+
+            // 1. First try backend translation endpoint
+            try {
+                const res = await fetch('/api/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: clean, from: 'en', to: 'lv' })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.translated && typeof data.translated === 'string' && data.translated.trim()) {
+                        return data.translated.trim();
+                    }
+                }
+            } catch (e) {}
+
+            // 2. Direct browser Google Translate API fallback
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=lv&dt=t&q=${encodeURIComponent(clean)}`;
+                const response = await fetch(url);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (Array.isArray(result) && Array.isArray(result[0])) {
+                        const translated = result[0].map(item => item[0]).filter(Boolean).join('');
+                        if (translated && translated.trim()) return translated.trim();
+                    }
+                }
+            } catch (e2) {}
+
+            return clean;
         }
 
-        function createScreenWithTemplate(tmpl) {
-            const id = prompt(i18n.t('enter_screen_id_prompt'));
-            if (!id) return;
-            const cleanId = id.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        // Live Auto-Translate helper for input field pairs (EN field -> LV field)
+        async function autoTranslateField(enInputId, lvInputId) {
+            const enEl = document.getElementById(enInputId);
+            const lvEl = document.getElementById(lvInputId);
+            if (!enEl || !lvEl) return;
+            const enVal = (enEl.value || '').trim();
+            if (enVal && (!lvEl.value || !lvEl.value.trim())) {
+                const originalPlaceholder = lvEl.placeholder;
+                lvEl.placeholder = 'Translating to Latvian...';
+                try {
+                    const lvVal = await translateToLV(enVal);
+                    if (lvVal && (!lvEl.value || !lvEl.value.trim())) {
+                        lvEl.value = lvVal;
+                    }
+                } finally {
+                    lvEl.placeholder = originalPlaceholder;
+                }
+            }
+        }
+
+        async function autoTranslateV5ModalFields() {
+            await autoTranslateField('v5-role', 'v5-role-lv');
+            await autoTranslateField('v5-specialty', 'v5-specialty-lv');
+            await autoTranslateField('v5-project', 'v5-project-lv');
+            await autoTranslateField('v5-skills', 'v5-skills-lv');
+            showToast('Team member fields translated to Latvian', 'success');
+        }
+
+        // Auto-Translate All button in editor header
+        async function autoTranslateCurrentScreen() {
+            if (!currentLocation) return;
+            const btn = document.getElementById('btn-auto-translate');
+            if (btn) {
+                btn.textContent = '✨ Translating...';
+                btn.disabled = true;
+            }
+
+            try {
+                // Title
+                const titleEn = document.getElementById('loc-title').value.trim();
+                const titleLv = document.getElementById('loc-title-lv');
+                if (titleEn && !titleLv.value.trim()) titleLv.value = await translateToLV(titleEn);
+
+                // Subtitle
+                const subEn = document.getElementById('loc-subtitle').value.trim();
+                const subLv = document.getElementById('loc-subtitle-lv');
+                if (subEn && !subLv.value.trim()) subLv.value = await translateToLV(subEn);
+
+                // Description
+                const descEn = document.getElementById('loc-desc').value.trim();
+                const descLv = document.getElementById('loc-desc-lv');
+                if (descEn && !descLv.value.trim()) descLv.value = await translateToLV(descEn);
+
+                // V4 Inductees
+                if (currentLocation.data && Array.isArray(currentLocation.data.inductees)) {
+                    for (const ind of currentLocation.data.inductees) {
+                        if (ind.role && !ind.role_lv) ind.role_lv = await translateToLV(ind.role);
+                        if (ind.superpower && !ind.superpower_lv) ind.superpower_lv = await translateToLV(ind.superpower);
+                        if (ind.current_project && !ind.current_project_lv) ind.current_project_lv = await translateToLV(ind.current_project);
+                        if (ind.skills && !ind.skills_lv) {
+                            const skillsArr = Array.isArray(ind.skills) ? ind.skills : ind.skills.split(',').map(s => s.trim());
+                            const transArr = await Promise.all(skillsArr.map(s => translateToLV(s)));
+                            ind.skills_lv = Array.isArray(ind.skills) ? transArr : transArr.join(', ');
+                        }
+                    }
+                    renderV4List();
+                }
+
+                // V5 SWUP Team & Members
+                if (currentLocation.data && currentLocation.template === 'swup') {
+                    const teamNameEn = document.getElementById('v5-teamName').value.trim();
+                    const teamNameLv = document.getElementById('v5-teamName-lv');
+                    if (teamNameEn && !teamNameLv.value.trim()) teamNameLv.value = await translateToLV(teamNameEn);
+
+                    const teamUrlEn = document.getElementById('v5-teamUrl').value.trim();
+                    const teamUrlLv = document.getElementById('v5-teamUrl-lv');
+                    if (teamUrlEn && !teamUrlLv.value.trim()) teamUrlLv.value = await translateToLV(teamUrlEn);
+
+                    if (Array.isArray(currentLocation.data.members)) {
+                        for (const mem of currentLocation.data.members) {
+                            if (mem.role && !mem.role_lv) mem.role_lv = await translateToLV(mem.role);
+                            if (mem.specialty && !mem.specialty_lv) mem.specialty_lv = await translateToLV(mem.specialty);
+                            if (mem.project && !mem.project_lv) mem.project_lv = await translateToLV(mem.project);
+                            if (mem.skills && !mem.skills_lv) {
+                                const skillsArr = Array.isArray(mem.skills) ? mem.skills : mem.skills.split(',').map(s => s.trim());
+                                const transArr = await Promise.all(skillsArr.map(s => translateToLV(s)));
+                                mem.skills_lv = Array.isArray(mem.skills) ? transArr : transArr.join(', ');
+                            }
+                        }
+                        renderV5List();
+                    }
+                }
+
+                showToast('All fields translated to Latvian!', 'success');
+            } catch (err) {
+                showToast('Translation error: ' + err.message, 'error');
+            } finally {
+                if (btn) {
+                    btn.textContent = '✨ Auto-Translate LV';
+                    btn.disabled = false;
+                }
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════
+           MODAL-BASED SCREEN CREATION (Replaces window.prompt)
+           ═══════════════════════════════════════════════════ */
+        function openNewScreenModal(defaultTemplate = 'designfactory') {
+            document.getElementById('new-screen-name').value = '';
+            const idInput = document.getElementById('new-screen-id');
+            idInput.value = '';
+            delete idInput.dataset.manual;
+            document.getElementById('new-screen-template').value = defaultTemplate;
+            document.getElementById('new-screen-modal').classList.add('visible');
+            setTimeout(() => document.getElementById('new-screen-name').focus(), 50);
+        }
+
+        function closeNewScreenModal() {
+            document.getElementById('new-screen-modal').classList.remove('visible');
+        }
+
+        function autoSuggestScreenId(name) {
+            const idInput = document.getElementById('new-screen-id');
+            if (!idInput.dataset.manual) {
+                idInput.value = (name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            }
+        }
+
+        document.getElementById('new-screen-id').addEventListener('input', function() {
+            this.dataset.manual = 'true';
+        });
+
+        async function handleNewScreenSubmit(e) {
+            if (e) e.preventDefault();
+            const name = document.getElementById('new-screen-name').value.trim();
+            const rawId = document.getElementById('new-screen-id').value.trim();
+            const tmpl = document.getElementById('new-screen-template').value;
+            
+            const cleanId = rawId.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-|-$/g, '');
             if (!cleanId) return showToast(i18n.t('invalid_id_alert'), 'error');
             
             if (Array.isArray(locations) && locations.find(l => l.id && l.id.toLowerCase() === cleanId)) {
                 return showToast(i18n.t('id_exists_alert', { id: cleanId }), 'error');
             }
-            
+
+            closeNewScreenModal();
+
+            // Auto-translate screen name to Latvian for instant multi-lang readiness
+            let titleLv = '';
+            try {
+                titleLv = await translateToLV(name);
+            } catch (err) {}
+
             currentLocation = {
                 id: cleanId,
-                name: "New Screen",
+                name: name,
                 template: tmpl,
-                title: "", title_lv: "",
-                subtitle: "", subtitle_lv: "",
-                description: "", description_lv: "",
-                lat: 0, lng: 0, radius: 50,
+                title: name,
+                title_lv: titleLv || '',
+                subtitle: '',
+                subtitle_lv: '',
+                description: '',
+                description_lv: '',
+                lat: 0,
+                lng: 0,
+                radius: 50,
                 data: tmpl === 'swup' ? { members: [] } : { inductees: [] }
             };
             isEditing = false;
             populateEditor();
             switchView('editor');
+            showToast(`Screen '${name}' initialized`, 'success');
         }
 
         /* ═══════════════════════════════════════════════════
@@ -2241,13 +2439,19 @@
             document.getElementById('v4-modal').classList.add('visible');
         }
 
-        function saveV4Person() {
+        async function saveV4Person() {
             const index = parseInt(document.getElementById('v4-index').value);
+            const roleEn = document.getElementById('v4-role').value.trim();
+            let roleLv = document.getElementById('v4-role-lv').value.trim();
+            if (roleEn && !roleLv) {
+                try { roleLv = await translateToLV(roleEn); } catch (e) {}
+            }
+
             const ind = {
                 id: document.getElementById('v4-name').value.toLowerCase().replace(/[^a-z0-9]/g, '-'),
                 name: document.getElementById('v4-name').value,
-                role: document.getElementById('v4-role').value,
-                role_lv: document.getElementById('v4-role-lv').value,
+                role: roleEn,
+                role_lv: roleLv,
                 initials: document.getElementById('v4-name').value.substring(0,2).toUpperCase(),
                 level: document.getElementById('v4-level').value,
                 accent: document.getElementById('v4-accent').value,
@@ -2328,19 +2532,43 @@
             document.getElementById('v5-modal').classList.add('visible');
         }
 
-        function saveV5Member() {
+        async function saveV5Member() {
             const index = parseInt(document.getElementById('v5-index').value);
+            const roleEn = document.getElementById('v5-role').value.trim();
+            let roleLv = document.getElementById('v5-role-lv').value.trim();
+            if (roleEn && !roleLv) {
+                try { roleLv = await translateToLV(roleEn); } catch (e) {}
+            }
+
+            const specEn = document.getElementById('v5-specialty').value.trim();
+            let specLv = document.getElementById('v5-specialty-lv').value.trim();
+            if (specEn && !specLv) {
+                try { specLv = await translateToLV(specEn); } catch (e) {}
+            }
+
+            const projEn = document.getElementById('v5-project').value.trim();
+            let projLv = document.getElementById('v5-project-lv').value.trim();
+            if (projEn && !projLv) {
+                try { projLv = await translateToLV(projEn); } catch (e) {}
+            }
+
+            const skillsEn = document.getElementById('v5-skills').value.trim();
+            let skillsLv = document.getElementById('v5-skills-lv').value.trim();
+            if (skillsEn && !skillsLv) {
+                try { skillsLv = await translateToLV(skillsEn); } catch (e) {}
+            }
+
             const m = {
                 id: document.getElementById('v5-name').value.toLowerCase().replace(/[^a-z0-9]/g, '-'),
                 name: document.getElementById('v5-name').value,
-                role: document.getElementById('v5-role').value,
-                role_lv: document.getElementById('v5-role-lv').value,
-                specialty: document.getElementById('v5-specialty').value,
-                specialty_lv: document.getElementById('v5-specialty-lv').value,
-                project: document.getElementById('v5-project').value,
-                project_lv: document.getElementById('v5-project-lv').value,
-                skills: document.getElementById('v5-skills').value,
-                skills_lv: document.getElementById('v5-skills-lv').value,
+                role: roleEn,
+                role_lv: roleLv,
+                specialty: specEn,
+                specialty_lv: specLv,
+                project: projEn,
+                project_lv: projLv,
+                skills: skillsEn,
+                skills_lv: skillsLv,
                 accent: document.getElementById('v5-accent').value,
                 crop: document.getElementById('v5-crop').value,
                 photo: document.getElementById('v5-photo').value
@@ -2362,7 +2590,7 @@
         }
 
         /* ═══════════════════════════════════════════════════
-           SAVE / DELETE LOGIC (PRESERVED EXACTLY)
+           SAVE / DELETE LOGIC (Enhanced with full auto-translate)
            ═══════════════════════════════════════════════════ */
         async function saveLocation() {
             const saveBtn = document.getElementById('btn-save');
@@ -2375,21 +2603,47 @@
             currentLocation.lat = parseFloat(document.getElementById('loc-lat').value) || 0;
             currentLocation.lng = parseFloat(document.getElementById('loc-lng').value) || 0;
 
-            // Dual Core Fields
-            currentLocation.title = document.getElementById('loc-title').value;
-            currentLocation.title_lv = document.getElementById('loc-title-lv').value;
+            // Dual Core Fields with auto-translate if LV is blank
+            const titleEn = document.getElementById('loc-title').value.trim();
+            let titleLv = document.getElementById('loc-title-lv').value.trim();
+            if (titleEn && !titleLv) {
+                try { titleLv = await translateToLV(titleEn); document.getElementById('loc-title-lv').value = titleLv; } catch (e) {}
+            }
+            currentLocation.title = titleEn;
+            currentLocation.title_lv = titleLv;
 
-            currentLocation.subtitle = document.getElementById('loc-subtitle').value;
-            currentLocation.subtitle_lv = document.getElementById('loc-subtitle-lv').value;
+            const subEn = document.getElementById('loc-subtitle').value.trim();
+            let subLv = document.getElementById('loc-subtitle-lv').value.trim();
+            if (subEn && !subLv) {
+                try { subLv = await translateToLV(subEn); document.getElementById('loc-subtitle-lv').value = subLv; } catch (e) {}
+            }
+            currentLocation.subtitle = subEn;
+            currentLocation.subtitle_lv = subLv;
 
-            currentLocation.description = document.getElementById('loc-desc').value;
-            currentLocation.description_lv = document.getElementById('loc-desc-lv').value;
+            const descEn = document.getElementById('loc-desc').value.trim();
+            let descLv = document.getElementById('loc-desc-lv').value.trim();
+            if (descEn && !descLv) {
+                try { descLv = await translateToLV(descEn); document.getElementById('loc-desc-lv').value = descLv; } catch (e) {}
+            }
+            currentLocation.description = descEn;
+            currentLocation.description_lv = descLv;
 
             if (currentLocation.template === 'swup') {
-                currentLocation.data.teamName = document.getElementById('v5-teamName').value;
-                currentLocation.data.teamName_lv = document.getElementById('v5-teamName-lv').value;
-                currentLocation.data.teamDestination = document.getElementById('v5-teamUrl').value;
-                currentLocation.data.teamDestination_lv = document.getElementById('v5-teamUrl-lv').value;
+                const teamNameEn = document.getElementById('v5-teamName').value.trim();
+                let teamNameLv = document.getElementById('v5-teamName-lv').value.trim();
+                if (teamNameEn && !teamNameLv) {
+                    try { teamNameLv = await translateToLV(teamNameEn); document.getElementById('v5-teamName-lv').value = teamNameLv; } catch (e) {}
+                }
+                currentLocation.data.teamName = teamNameEn;
+                currentLocation.data.teamName_lv = teamNameLv;
+
+                const teamUrlEn = document.getElementById('v5-teamUrl').value.trim();
+                let teamUrlLv = document.getElementById('v5-teamUrl-lv').value.trim();
+                if (teamUrlEn && !teamUrlLv) {
+                    try { teamUrlLv = await translateToLV(teamUrlEn); document.getElementById('v5-teamUrl-lv').value = teamUrlLv; } catch (e) {}
+                }
+                currentLocation.data.teamDestination = teamUrlEn;
+                currentLocation.data.teamDestination_lv = teamUrlLv;
                 currentLocation.data.teamPhoto = document.getElementById('v5-teamPhoto').value;
             }
 
@@ -2406,7 +2660,6 @@
                 
                 if (res.ok) {
                     showToast(i18n.t('saved_successfully'), 'success');
-                    // Update currentLocation with auto-translated response if provided
                     if (data && data.location) {
                         currentLocation = data.location;
                         populateEditor();
