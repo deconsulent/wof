@@ -6,7 +6,7 @@
     <title>Central Hub · RTU Science & Innovation Centre</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:ital,wght@0,500;0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="i18n.js"></script>
     <style>
         :root {
@@ -2307,9 +2307,7 @@
             const preview = document.getElementById('qr-preview');
             preview.innerHTML = `
                 <h3>${displayName}</h3>
-                <div class="qr-canvas-wrap">
-                    <canvas id="qr-canvas"></canvas>
-                </div>
+                <div class="qr-canvas-wrap" id="qr-render-target"></div>
                 <div class="qr-url">${viewUrl}</div>
                 <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
                     <button class="btn btn-secondary" onclick="downloadQR('${screenId}')">⬇ Download PNG</button>
@@ -2317,21 +2315,22 @@
                 </div>
             `;
 
-            // Generate QR code
+            // Generate QR code using qrcodejs
             if (typeof QRCode !== 'undefined') {
-                QRCode.toCanvas(document.getElementById('qr-canvas'), viewUrl, {
-                    width: 240,
-                    margin: 1,
-                    color: {
-                        dark: '#06111C',
-                        light: '#ffffff'
-                    }
+                new QRCode(document.getElementById('qr-render-target'), {
+                    text: viewUrl,
+                    width: 220,
+                    height: 220,
+                    colorDark: '#06111C',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
                 });
             }
         }
 
         function downloadQR(screenId) {
-            const canvas = document.getElementById('qr-canvas');
+            const container = document.getElementById('qr-render-target');
+            const canvas = container ? container.querySelector('canvas') : null;
             if (!canvas) return;
             const link = document.createElement('a');
             link.download = `wof-qr-${screenId}.png`;
