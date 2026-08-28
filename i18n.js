@@ -173,10 +173,23 @@
 
             // Create Screen Modal
             "modal_new_screen_title": "Create New Screen",
-            "label_screen_name": "INTERNAL NAME / TITLE (EN)",
+            "label_screen_name": "INTERNAL NAME / TITLE",
+            "placeholder_screen_name": "e.g. Design Factory Main Hall",
             "label_screen_id": "UNIQUE SCREEN ID",
             "hint_screen_id": "lowercase, hyphens only",
             "btn_create_screen_submit": "Create Screen →",
+
+            // GPS Geofence & Proximity
+            "gps_capture_btn": "📍 Capture Current GPS",
+            "gps_captured_toast": "Current GPS coordinates captured successfully",
+            "gps_required_title": "Physical Proximity Required",
+            "gps_required_desc": "This Wall of Fame screen is anchored to its physical installation at RTU.",
+            "gps_checking": "Verifying physical location...",
+            "gps_verified": "📍 Location Verified (In Range)",
+            "gps_out_of_range": "You are currently {dist} away from this Wall of Fame (Required within ±10-15 ft / ~5m).",
+            "gps_permission_denied": "Location access was denied. Please enable GPS permissions to verify you are at the physical installation.",
+            "gps_retry_btn": "🔄 Check Location Again",
+            "gps_preview_badge": "📍 Preview / Remote Mode",
 
             // Login Screen
             "login_title": "Wall of Fame",
@@ -368,10 +381,23 @@
 
             // Create Screen Modal
             "modal_new_screen_title": "Izveidot Jaunu Ekrānu",
-            "label_screen_name": "IEKŠĒJAIS NOSAUKUMS / VIRSRAKSTS (EN)",
+            "label_screen_name": "IEKŠĒJAIS NOSAUKUMS / VIRSRAKSTS",
+            "placeholder_screen_name": "piem., Dizaina Fabrikas Galvenā Zāle",
             "label_screen_id": "UNIKĀLAIS EKRĀNA ID",
             "hint_screen_id": "mazie burti, tikai defises",
             "btn_create_screen_submit": "Izveidot Ekrānu →",
+
+            // GPS Geofence & Proximity
+            "gps_capture_btn": "📍 Iegūt Pašreizējo GPS",
+            "gps_captured_toast": "Pašreizējās GPS koordinātas veiksmīgi iegūtas",
+            "gps_required_title": "Nepieciešama Fiziskā Klātbūtne",
+            "gps_required_desc": "Šī Goda Siena ir piesaistīta tās fiziskajai lokācijai RTU.",
+            "gps_checking": "Pārbauda fizisko lokāciju...",
+            "gps_verified": "📍 Lokācija Apstiprināta (Diapazonā)",
+            "gps_out_of_range": "Jūs pašlaik atrodaties {dist} attālumā no šīs Goda Sienas (Nepieciešams diapazonā ±10-15 pēdas / ~5m).",
+            "gps_permission_denied": "Piekļuve atrašanās vietai tika liegta. Lūdzu, iespējojiet GPS atļaujas, lai apstiprinātu klātbūtni.",
+            "gps_retry_btn": "🔄 Pārbaudīt lokāciju vēlreiz",
+            "gps_preview_badge": "📍 Priekšskatījuma / Attālinātais Režīms",
 
             // Login Screen
             "login_title": "Goda Siena",

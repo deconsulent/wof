@@ -151,10 +151,22 @@
   "save_member": "Saglabāt Dalībnieku",
 
   "modal_new_screen_title": "Izveidot Jaunu Ekrānu",
-  "label_screen_name": "IEKŠĒJAIS NOSAUKUMS / VIRSRAKSTS (EN)",
+  "label_screen_name": "IEKŠĒJAIS NOSAUKUMS / VIRSRAKSTS",
+  "placeholder_screen_name": "piem., Dizaina Fabrikas Galvenā Zāle",
   "label_screen_id": "UNIKĀLAIS EKRĀNA ID",
   "hint_screen_id": "mazie burti, tikai defises",
   "btn_create_screen_submit": "Izveidot Ekrānu →",
+
+  "gps_capture_btn": "📍 Iegūt Pašreizējo GPS",
+  "gps_captured_toast": "Pašreizējās GPS koordinātas veiksmīgi iegūtas",
+  "gps_required_title": "Nepieciešama Fiziskā Klātbūtne",
+  "gps_required_desc": "Šī Goda Siena ir piesaistīta tās fiziskajai lokācijai RTU.",
+  "gps_checking": "Pārbauda fizisko lokāciju...",
+  "gps_verified": "📍 Lokācija Apstiprināta (Diapazonā)",
+  "gps_out_of_range": "Jūs pašlaik atrodaties {dist} attālumā no šīs Goda Sienas (Nepieciešams diapazonā ±10-15 pēdas / ~5m).",
+  "gps_permission_denied": "Piekļuve atrašanās vietai tika liegta. Lūdzu, iespējojiet GPS atļaujas, lai apstiprinātu klātbūtni.",
+  "gps_retry_btn": "🔄 Pārbaudīt lokāciju vēlreiz",
+  "gps_preview_badge": "📍 Priekšskatījuma / Attālinātais Režīms",
 
   "login_title": "Goda Siena",
   "login_subtitle": "TELPISKĀ TVS · ADMINA PORTĀLS",

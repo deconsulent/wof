@@ -1403,7 +1403,10 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label data-i18n="latitude">LATITUDE (GPS)</label>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                                <label style="margin-bottom:0;" data-i18n="latitude">LATITUDE (GPS)</label>
+                                <button type="button" class="btn btn-secondary" onclick="captureCurrentGPS()" data-i18n="gps_capture_btn" style="padding:3px 8px;font-size:10px;line-height:1.2;">📍 Capture Current GPS</button>
+                            </div>
                             <input type="number" id="loc-lat" step="any" placeholder="56.95">
                         </div>
                         <div class="form-group">
@@ -1630,8 +1633,8 @@
             <form onsubmit="handleNewScreenSubmit(event)">
                 <div class="form-grid" style="grid-template-columns: 1fr; margin-bottom: 0; gap: 14px;">
                     <div class="form-group">
-                        <label data-i18n="label_screen_name">INTERNAL NAME / TITLE (EN)</label>
-                        <input type="text" id="new-screen-name" placeholder="e.g. Design Factory Main Hall" required oninput="autoSuggestScreenId(this.value)" autocomplete="off">
+                        <label data-i18n="label_screen_name">INTERNAL NAME / TITLE</label>
+                        <input type="text" id="new-screen-name" placeholder="e.g. Design Factory Main Hall" data-i18n-placeholder="placeholder_screen_name" required oninput="autoSuggestScreenId(this.value)" autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label>
@@ -2114,14 +2117,24 @@
            ═══════════════════════════════════════════════════ */
         async function translateToLV(text) {
             if (!text || typeof text !== 'string' || !text.trim()) return '';
+            return await translateTextClient(text, 'en', 'lv');
+        }
+
+        async function translateToEN(text) {
+            return await translateTextClient(text, 'lv', 'en');
+        }
+
+        async function translateTextClient(text, from = 'en', to = 'lv') {
+            if (!text || typeof text !== 'string' || !text.trim()) return '';
             const clean = text.trim();
+            if (from === to) return clean;
 
             // 1. First try backend translation endpoint
             try {
                 const res = await fetch('/api/translate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: clean, from: 'en', to: 'lv' })
+                    body: JSON.stringify({ text: clean, from, to })
                 });
                 if (res.ok) {
                     const data = await res.json();
@@ -2133,7 +2146,7 @@
 
             // 2. Direct browser Google Translate API fallback
             try {
-                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=lv&dt=t&q=${encodeURIComponent(clean)}`;
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(from)}&tl=${encodeURIComponent(to)}&dt=t&q=${encodeURIComponent(clean)}`;
                 const response = await fetch(url);
                 if (response.ok) {
                     const result = await response.json();
@@ -2147,22 +2160,31 @@
             return clean;
         }
 
-        // Live Auto-Translate helper for input field pairs (EN field -> LV field)
+        // Live Auto-Translate helper for input field pairs (Bi-directional EN <-> LV)
         async function autoTranslateField(enInputId, lvInputId) {
             const enEl = document.getElementById(enInputId);
             const lvEl = document.getElementById(lvInputId);
             if (!enEl || !lvEl) return;
             const enVal = (enEl.value || '').trim();
-            if (enVal && (!lvEl.value || !lvEl.value.trim())) {
+            const lvVal = (lvEl.value || '').trim();
+
+            if (enVal && !lvVal) {
                 const originalPlaceholder = lvEl.placeholder;
                 lvEl.placeholder = 'Translating to Latvian...';
                 try {
-                    const lvVal = await translateToLV(enVal);
-                    if (lvVal && (!lvEl.value || !lvEl.value.trim())) {
-                        lvEl.value = lvVal;
-                    }
+                    const res = await translateToLV(enVal);
+                    if (res && !lvEl.value.trim()) lvEl.value = res;
                 } finally {
                     lvEl.placeholder = originalPlaceholder;
+                }
+            } else if (lvVal && !enVal) {
+                const originalPlaceholder = enEl.placeholder;
+                enEl.placeholder = 'Translating to English...';
+                try {
+                    const res = await translateToEN(lvVal);
+                    if (res && !enEl.value.trim()) enEl.value = res;
+                } finally {
+                    enEl.placeholder = originalPlaceholder;
                 }
             }
         }
@@ -2172,7 +2194,7 @@
             await autoTranslateField('v5-specialty', 'v5-specialty-lv');
             await autoTranslateField('v5-project', 'v5-project-lv');
             await autoTranslateField('v5-skills', 'v5-skills-lv');
-            showToast('Team member fields translated to Latvian', 'success');
+            showToast('Team member fields translated', 'success');
         }
 
         // Auto-Translate All button in editor header
@@ -2189,23 +2211,32 @@
                 const titleEn = document.getElementById('loc-title').value.trim();
                 const titleLv = document.getElementById('loc-title-lv');
                 if (titleEn && !titleLv.value.trim()) titleLv.value = await translateToLV(titleEn);
+                else if (titleLv.value.trim() && !titleEn) document.getElementById('loc-title').value = await translateToEN(titleLv.value.trim());
 
                 // Subtitle
                 const subEn = document.getElementById('loc-subtitle').value.trim();
                 const subLv = document.getElementById('loc-subtitle-lv');
                 if (subEn && !subLv.value.trim()) subLv.value = await translateToLV(subEn);
+                else if (subLv.value.trim() && !subEn) document.getElementById('loc-subtitle').value = await translateToEN(subLv.value.trim());
 
                 // Description
                 const descEn = document.getElementById('loc-desc').value.trim();
                 const descLv = document.getElementById('loc-desc-lv');
                 if (descEn && !descLv.value.trim()) descLv.value = await translateToLV(descEn);
+                else if (descLv.value.trim() && !descEn) document.getElementById('loc-desc').value = await translateToEN(descLv.value.trim());
 
                 // V4 Inductees
                 if (currentLocation.data && Array.isArray(currentLocation.data.inductees)) {
                     for (const ind of currentLocation.data.inductees) {
                         if (ind.role && !ind.role_lv) ind.role_lv = await translateToLV(ind.role);
+                        else if (ind.role_lv && !ind.role) ind.role = await translateToEN(ind.role_lv);
+
                         if (ind.superpower && !ind.superpower_lv) ind.superpower_lv = await translateToLV(ind.superpower);
+                        else if (ind.superpower_lv && !ind.superpower) ind.superpower = await translateToEN(ind.superpower_lv);
+
                         if (ind.current_project && !ind.current_project_lv) ind.current_project_lv = await translateToLV(ind.current_project);
+                        else if (ind.current_project_lv && !ind.current_project) ind.current_project = await translateToEN(ind.current_project_lv);
+
                         if (ind.skills && !ind.skills_lv) {
                             const skillsArr = Array.isArray(ind.skills) ? ind.skills : ind.skills.split(',').map(s => s.trim());
                             const transArr = await Promise.all(skillsArr.map(s => translateToLV(s)));
@@ -2220,6 +2251,7 @@
                     const teamNameEn = document.getElementById('v5-teamName').value.trim();
                     const teamNameLv = document.getElementById('v5-teamName-lv');
                     if (teamNameEn && !teamNameLv.value.trim()) teamNameLv.value = await translateToLV(teamNameEn);
+                    else if (teamNameLv.value.trim() && !teamNameEn) document.getElementById('v5-teamName').value = await translateToEN(teamNameLv.value.trim());
 
                     const teamUrlEn = document.getElementById('v5-teamUrl').value.trim();
                     const teamUrlLv = document.getElementById('v5-teamUrl-lv');
@@ -2228,8 +2260,14 @@
                     if (Array.isArray(currentLocation.data.members)) {
                         for (const mem of currentLocation.data.members) {
                             if (mem.role && !mem.role_lv) mem.role_lv = await translateToLV(mem.role);
+                            else if (mem.role_lv && !mem.role) mem.role = await translateToEN(mem.role_lv);
+
                             if (mem.specialty && !mem.specialty_lv) mem.specialty_lv = await translateToLV(mem.specialty);
+                            else if (mem.specialty_lv && !mem.specialty) mem.specialty = await translateToEN(mem.specialty_lv);
+
                             if (mem.project && !mem.project_lv) mem.project_lv = await translateToLV(mem.project);
+                            else if (mem.project_lv && !mem.project) mem.project = await translateToEN(mem.project_lv);
+
                             if (mem.skills && !mem.skills_lv) {
                                 const skillsArr = Array.isArray(mem.skills) ? mem.skills : mem.skills.split(',').map(s => s.trim());
                                 const transArr = await Promise.all(skillsArr.map(s => translateToLV(s)));
@@ -2240,7 +2278,7 @@
                     }
                 }
 
-                showToast('All fields translated to Latvian!', 'success');
+                showToast('All fields synchronized and translated!', 'success');
             } catch (err) {
                 showToast('Translation error: ' + err.message, 'error');
             } finally {
@@ -2252,8 +2290,16 @@
         }
 
         /* ═══════════════════════════════════════════════════
-           MODAL-BASED SCREEN CREATION (Replaces window.prompt)
+           MODAL-BASED SCREEN CREATION (Bi-directional & clean slugs)
            ═══════════════════════════════════════════════════ */
+        function transliterateLatvian(text) {
+            const map = {
+                'ā':'a', 'č':'c', 'ē':'e', 'ģ':'g', 'ī':'i', 'ķ':'k', 'ļ':'l', 'ņ':'n', 'š':'s', 'ū':'u', 'ž':'z',
+                'Ā':'a', 'Č':'c', 'Ē':'e', 'Ģ':'g', 'Ī':'i', 'Ķ':'k', 'Ļ':'l', 'Ņ':'n', 'Š':'s', 'Ū':'u', 'Ž':'z'
+            };
+            return (text || '').replace(/[āčēģīķļņšūžĀČĒĢĪĶĻŅŠŪŽ]/g, char => map[char] || char);
+        }
+
         function openNewScreenModal(defaultTemplate = 'designfactory') {
             document.getElementById('new-screen-name').value = '';
             const idInput = document.getElementById('new-screen-id');
@@ -2271,7 +2317,8 @@
         function autoSuggestScreenId(name) {
             const idInput = document.getElementById('new-screen-id');
             if (!idInput.dataset.manual) {
-                idInput.value = (name || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                const transliterated = transliterateLatvian(name);
+                idInput.value = transliterated.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
             }
         }
 
@@ -2285,7 +2332,7 @@
             const rawId = document.getElementById('new-screen-id').value.trim();
             const tmpl = document.getElementById('new-screen-template').value;
             
-            const cleanId = rawId.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-|-$/g, '');
+            const cleanId = transliterateLatvian(rawId).toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-|-$/g, '');
             if (!cleanId) return showToast(i18n.t('invalid_id_alert'), 'error');
             
             if (Array.isArray(locations) && locations.find(l => l.id && l.id.toLowerCase() === cleanId)) {
@@ -2294,17 +2341,31 @@
 
             closeNewScreenModal();
 
-            // Auto-translate screen name to Latvian for instant multi-lang readiness
-            let titleLv = '';
-            try {
-                titleLv = await translateToLV(name);
-            } catch (err) {}
+            const isLvMode = (i18n.getLanguage() === 'lv');
+            let titleEn = name;
+            let titleLv = name;
+
+            if (isLvMode) {
+                titleLv = name;
+                try {
+                    titleEn = await translateToEN(name);
+                } catch (err) {
+                    titleEn = name;
+                }
+            } else {
+                titleEn = name;
+                try {
+                    titleLv = await translateToLV(name);
+                } catch (err) {
+                    titleLv = name;
+                }
+            }
 
             currentLocation = {
                 id: cleanId,
-                name: name,
+                name: titleEn || name,
                 template: tmpl,
-                title: name,
+                title: titleEn || name,
                 title_lv: titleLv || '',
                 subtitle: '',
                 subtitle_lv: '',
@@ -2322,7 +2383,35 @@
         }
 
         /* ═══════════════════════════════════════════════════
-           POPULATE EDITOR (PRESERVED EXACTLY + breadcrumb)
+           GPS COORDINATE CAPTURE (1-Click Device Setup)
+           ═══════════════════════════════════════════════════ */
+        function captureCurrentGPS() {
+            if (!navigator.geolocation) {
+                showToast('Geolocation is not supported by your browser', 'error');
+                return;
+            }
+            showToast('Capturing GPS coordinates...', 'info');
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = parseFloat(pos.coords.latitude.toFixed(6));
+                    const lng = parseFloat(pos.coords.longitude.toFixed(6));
+                    document.getElementById('loc-lat').value = lat;
+                    document.getElementById('loc-lng').value = lng;
+                    if (currentLocation) {
+                        currentLocation.lat = lat;
+                        currentLocation.lng = lng;
+                    }
+                    showToast(i18n.t('gps_captured_toast'), 'success');
+                },
+                (err) => {
+                    showToast(`GPS Error: ${err.message}`, 'error');
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        /* ═══════════════════════════════════════════════════
+           POPULATE EDITOR (PRESERVED + Remote Preview Bypass)
            ═══════════════════════════════════════════════════ */
         function populateEditor() {
             const title = i18n.getLocalized(currentLocation, 'title') || currentLocation.name || currentLocation.id;
@@ -2347,7 +2436,7 @@
             document.getElementById('loc-desc').value = currentLocation.description || '';
             document.getElementById('loc-desc-lv').value = currentLocation.description_lv || '';
 
-            document.getElementById('btn-view').href = `/view/${currentLocation.id}`;
+            document.getElementById('btn-view').href = `/view/${currentLocation.id}?bypass_gps=1`;
             onTemplateChange();
         }
 
