@@ -32,6 +32,81 @@
             "confirm_delete_screen": "Are you sure you want to delete this screen?",
             "network_error": "Network error: {error}",
             
+            // Sidebar Navigation
+            "nav_main": "MAIN",
+            "nav_dashboard": "Dashboard",
+            "nav_screens": "Screens",
+            "nav_add_screen": "Add Screen",
+            "nav_tools": "TOOLS",
+            "nav_templates": "Templates",
+            "nav_qr": "QR Codes",
+            "user_role_admin": "ADMINISTRATOR",
+            "sign_out": "Sign Out",
+
+            // Dashboard
+            "dash_title": "Dashboard",
+            "dash_subtitle": "Overview of your Wall of Fame deployment",
+            "metric_active_screens": "Active Screens",
+            "metric_total_people": "Total People",
+            "metric_ar_templates": "AR Templates",
+            "metric_system_status": "System Status",
+            "status_online": "Online",
+            "your_screens": "Your Screens",
+            "btn_new_screen": "+ New Screen",
+            "no_screens_yet": "No screens yet",
+            "no_screens_p": "Create your first AR Wall of Fame screen to get started.",
+            "btn_create_first_screen": "+ Create First Screen",
+            "person": "person",
+            "people": "people",
+            "btn_edit": "✎ Edit",
+            "btn_live_view": "↗ Live View",
+            "btn_qr": "📱 QR",
+
+            // Screens Manager
+            "screens_title": "Manage Screens",
+            "screens_subtitle": "All registered AR screens in the system",
+            "search_screens_placeholder": "Search screens...",
+            "no_screens_found": "No screens found",
+            "no_screens_found_p": "Create your first screen to begin.",
+            "table_screen": "Screen",
+            "table_template": "Template",
+            "table_people": "People",
+            "table_coords": "GPS Coordinates",
+            "table_actions": "Actions",
+
+            // Templates Library
+            "templates_title": "AR Templates Library",
+            "templates_subtitle": "Available Spatial AR display engines for Wall of Fame screens",
+            "tmpl_tree_title": "Hierarchy Tree",
+            "tmpl_tree_version": "V4 · DesignFactory Engine",
+            "tmpl_tree_desc": "Spatial 3D orbital tree visualization. Arranges team members in concentric tiers — Root (Director/Head), Lead (Team Leads), and Staff (Core Members) — orbiting a central anchor. Each inductee is represented by a floating card with photo, role, and accent color. Supports virtual card deep links via double-tap.",
+            "tag_3d_orbit": "3D Orbit Layout",
+            "tag_hierarchy_tiers": "Hierarchy Tiers",
+            "tag_draggable": "Draggable",
+            "tag_virtual_cards": "Virtual Cards",
+            "tag_gps_anchored": "GPS Anchored",
+            "tag_horizontal_carousel": "Horizontal Carousel",
+            "tag_hero_stage": "Hero Stage",
+            "tag_skills_radar": "Skills Radar",
+            "tag_swipeable": "Swipeable",
+            "tag_custom_crops": "Custom Crops",
+            "tmpl_swup_title": "Team Profile Showcase",
+            "tmpl_swup_version": "V5 · SWUP Engine",
+            "tmpl_swup_desc": "Horizontal kinetic carousel with interactive hero stage. Features team members in a swipeable horizontal strip with individual profile cards showcasing specialty, project status, skills radar, and custom crop positioning. Includes team-level hero photo and destination branding.",
+            "btn_create_with_template": "Create Screen with This Template",
+
+            // QR Codes
+            "qr_title": "QR Code Generator",
+            "qr_subtitle": "Generate scannable QR codes for your AR Wall of Fame screens",
+            "qr_select_screen": "Select a Screen",
+            "qr_placeholder_text": "Select a screen from the list to generate its QR code",
+            "qr_download_btn": "Download QR Code (.png)",
+            "qr_open_ar_preview": "Live AR Preview ↗",
+
+            // Editor
+            "breadcrumb_screens": "Screens",
+            "breadcrumb_editor": "Editor",
+            "btn_auto_translate": "✨ Auto-Translate LV",
             "internal_name": "INTERNAL NAME",
             "display_template": "DISPLAY TEMPLATE / AR ENGINE",
             "latitude": "LATITUDE (GPS)",
@@ -43,16 +118,20 @@
             "description_en": "DESCRIPTION (EN)",
             "description_lv": "DESCRIPTION (LV)",
             "auto_translate_hint": "Auto-translates from EN if left empty",
+            "no_inductees_yet": "No inductees added to this tree yet.",
+            "no_members_yet": "No team members added yet.",
 
             "template_df_title": "Hierarchy Tree Data (Design Factory)",
             "add_person": "+ Add Person",
+            "add_inductee": "+ Add Inductee",
             "edit": "Edit",
             "delete": "Delete",
             "confirm_delete_person": "Delete this person from the tree?",
             
             "modal_df_title": "Hierarchy Inductee Profile",
             "full_name": "FULL NAME",
-            "photo_upload": "PHOTO UPLOAD",
+            "photo_upload": "PHOTO",
+            "click_to_upload": "Click box to upload photo",
             "role_en": "ROLE / TITLE (EN)",
             "role_lv": "ROLE / TITLE (LV)",
             "hierarchy_level": "HIERARCHY LEVEL / GROUP",
@@ -68,12 +147,16 @@
             "certifications_en": "CERTIFICATIONS (EN - comma separated)",
             "certifications_lv": "CERTIFICATIONS (LV - comma separated)",
             "accent_color": "ACCENT COLOR",
+            "virtual_card_url": "VIRTUAL CARD URL (Redirect on Double Tap)",
+            "virtual_card_hint": "Defaults to https://df-virtual-cards.vercel.app/(firstname-lastname)",
+            "crop_label": "CROP (CSS object-position)",
             "cancel": "Cancel",
             "save_inductee": "Save Inductee",
+            "translate_lv_btn": "✨ Translate LV",
 
-            "template_swup_title": "Team Profile Projection Data (SWUP)",
-            "team_name_en": "TEAM / SQUAD NAME (EN)",
-            "team_name_lv": "TEAM / SQUAD NAME (LV)",
+            "template_swup_title": "SWUP Team Profile Data",
+            "team_name_en": "TEAM NAME (EN)",
+            "team_name_lv": "TEAM NAME (LV)",
             "team_subhead_en": "DESTINATION / SUBHEAD (EN)",
             "team_subhead_lv": "DESTINATION / SUBHEAD (LV)",
             "team_hero_photo": "TEAM HERO PHOTO",
@@ -87,6 +170,24 @@
             "project_status_en": "PROJECT / STATUS (EN)",
             "project_status_lv": "PROJECT / STATUS (LV)",
             "save_member": "Save Member",
+
+            // Create Screen Modal
+            "modal_new_screen_title": "Create New Screen",
+            "label_screen_name": "INTERNAL NAME / TITLE (EN)",
+            "label_screen_id": "UNIQUE SCREEN ID",
+            "hint_screen_id": "lowercase, hyphens only",
+            "btn_create_screen_submit": "Create Screen →",
+
+            // Login Screen
+            "login_title": "Wall of Fame",
+            "login_subtitle": "SPATIAL CMS · ADMIN PORTAL",
+            "login_username": "Username",
+            "login_password": "Password",
+            "login_btn": "Sign In",
+            "login_error_invalid": "Invalid username or password",
+
+            // Footer
+            "footer_copyright": "© 2026 Riga Technical University · RTU Science & Innovation Centre",
 
             "ar_protocol": "AR / SPATIAL PROTOCOL",
             "open_stage_title": "Open the stage\nin your space.",
@@ -126,6 +227,81 @@
             "confirm_delete_screen": "Vai tiešām vēlaties dzēst šo ekrānu?",
             "network_error": "Tīkla kļūda: {error}",
             
+            // Sidebar Navigation
+            "nav_main": "GALVENAIS",
+            "nav_dashboard": "Pārskats",
+            "nav_screens": "Ekrāni",
+            "nav_add_screen": "Pievienot Ekrānu",
+            "nav_tools": "RĪKI",
+            "nav_templates": "Veidnes",
+            "nav_qr": "QR Kodi",
+            "user_role_admin": "ADMINISTRATORS",
+            "sign_out": "Iziet",
+
+            // Dashboard
+            "dash_title": "Pārskats",
+            "dash_subtitle": "Goda Sienas sistēmas un ekrānu pārskats",
+            "metric_active_screens": "Aktīvie Ekrāni",
+            "metric_total_people": "Kopā Dalībnieki",
+            "metric_ar_templates": "AR Veidnes",
+            "metric_system_status": "Sistēmas Statuss",
+            "status_online": "Tiešsaistē",
+            "your_screens": "Jūsu Ekrāni",
+            "btn_new_screen": "+ Jauns Ekrāns",
+            "no_screens_yet": "Pagaidām nav neviena ekrāna",
+            "no_screens_p": "Izveidojiet savu pirmo AR Goda Sienas ekrānu, lai sāktu darbu.",
+            "btn_create_first_screen": "+ Izveidot Pirmo Ekrānu",
+            "person": "persona",
+            "people": "dalībnieki",
+            "btn_edit": "✎ Rediģēt",
+            "btn_live_view": "↗ Tiešskats",
+            "btn_qr": "📱 QR",
+
+            // Screens Manager
+            "screens_title": "Pārvaldīt Ekrānus",
+            "screens_subtitle": "Visi sistēmā reģistrētie AR ekrāni",
+            "search_screens_placeholder": "Meklēt ekrānus...",
+            "no_screens_found": "Ekrāni nav atrasti",
+            "no_screens_found_p": "Izveidojiet savu pirmo ekrānu, lai sāktu.",
+            "table_screen": "Ekrāns",
+            "table_template": "Veidne",
+            "table_people": "Dalībnieki",
+            "table_coords": "GPS Koordinātas",
+            "table_actions": "Darbības",
+
+            // Templates Library
+            "templates_title": "AR Veidņu Bibliotēka",
+            "templates_subtitle": "Pieejamie telpiskie AR displeja dzinēji Goda Sienas ekrāniem",
+            "tmpl_tree_title": "Hierarhijas Koks",
+            "tmpl_tree_version": "V4 · DesignFactory Dzinējs",
+            "tmpl_tree_desc": "Telpiskā 3D orbitālā koka vizualizācija. Izvieto komandas dalībniekus koncentriskos līmeņos — Sakne (Direktors/Vadītājs), Līderis (Komandas vadītājs) un Dalībnieks (Pamatsastāvs) — ap centrālo enkuru. Katrs dalībnieks tiek attēlots ar peldošu kartīti ar foto, lomu un akcenta krāsu. Atbalsta virtuālo vizītkaršu saites ar dubultskārienu.",
+            "tag_3d_orbit": "3D Orbītas Izkārtojums",
+            "tag_hierarchy_tiers": "Hierarhijas Līmeņi",
+            "tag_draggable": "Pārvietojams",
+            "tag_virtual_cards": "Virtuālās Vizītkartes",
+            "tag_gps_anchored": "GPS Piesaiste",
+            "tag_horizontal_carousel": "Horizontāls Karuselis",
+            "tag_hero_stage": "Galvenā Skatuve",
+            "tag_skills_radar": "Prasmju Radars",
+            "tag_swipeable": "Pārvelkams",
+            "tag_custom_crops": "Pielāgots Foto Apgriezums",
+            "tmpl_swup_title": "Komandas Profilu Skats",
+            "tmpl_swup_version": "V5 · SWUP Dzinējs",
+            "tmpl_swup_desc": "Horizontāls kinētisks karuselis ar interaktīvu galveno skatuvi. Parāda komandas dalībniekus pārvelkamā horizontālā joslā ar individuālām profila kartītēm, kas attēlo specialitāti, projekta statusu, prasmju radaru un pielāgotu foto pozicionēšanu. Ietver komandas galveno fotoattēlu un mērķa zīmolvedību.",
+            "btn_create_with_template": "Izveidot Ekrānu ar Šo Veidni",
+
+            // QR Codes
+            "qr_title": "QR Kodu Ģenerators",
+            "qr_subtitle": "Ģenerējiet skenējamus QR kodus saviem AR Goda Sienas ekrāniem",
+            "qr_select_screen": "Izvēlieties Ekrānu",
+            "qr_placeholder_text": "Izvēlieties ekrānu no saraksta, lai ģenerētu tā QR kodu",
+            "qr_download_btn": "Lejupielādēt QR Kodu (.png)",
+            "qr_open_ar_preview": "Atvērt AR Priekšskatījumu ↗",
+
+            // Editor
+            "breadcrumb_screens": "Ekrāni",
+            "breadcrumb_editor": "Redaktors",
+            "btn_auto_translate": "✨ Auto-Tulkot uz LV",
             "internal_name": "IEKŠĒJAIS NOSAUKUMS",
             "display_template": "DISPLEJA VEIDNE / AR DZINĒJS",
             "latitude": "PLATUMS (GPS)",
@@ -137,16 +313,20 @@
             "description_en": "APRAKSTS (EN)",
             "description_lv": "APRAKSTS (LV)",
             "auto_translate_hint": "Automātiski tulko no EN, ja atstāts tukšs",
+            "no_inductees_yet": "Šajā hierarhijas kokā pagaidām nav pievienots neviens dalībnieks.",
+            "no_members_yet": "Pagaidām nav pievienots neviens komandas dalībnieks.",
 
             "template_df_title": "Hierarhijas Koka Dati (Design Factory)",
             "add_person": "+ Pievienot Personu",
+            "add_inductee": "+ Pievienot Dalībnieku",
             "edit": "Rediģēt",
             "delete": "Dzēst",
             "confirm_delete_person": "Dzēst šo personu no hierarhijas koka?",
             
             "modal_df_title": "Hierarhijas Dalībnieka Profils",
             "full_name": "VĀRDS UZVĀRDS",
-            "photo_upload": "FOTO AUGŠUPIELĀDE",
+            "photo_upload": "FOTO",
+            "click_to_upload": "Noklikšķiniet, lai augšupielādētu foto",
             "role_en": "AMATS / LOMA (EN)",
             "role_lv": "AMATS / LOMA (LV)",
             "hierarchy_level": "HIERARHIJAS LĪMENIS / GRUPA",
@@ -162,15 +342,19 @@
             "certifications_en": "SERTIFIKĀTI (EN - atdalīti ar komatu)",
             "certifications_lv": "SERTIFIKĀTI (LV - atdalīti ar komatu)",
             "accent_color": "AKCENTA KRĀSA",
+            "virtual_card_url": "VIRTUĀLĀS VIZĪTKARTES SAITE (Dubultskāriens)",
+            "virtual_card_hint": "Noklusējums: https://df-virtual-cards.vercel.app/(vards-uzvards)",
+            "crop_label": "APGRIEZUMS (CSS object-position)",
             "cancel": "Atcelt",
             "save_inductee": "Saglabāt Dalībnieku",
+            "translate_lv_btn": "✨ Tulkot uz LV",
 
-            "template_swup_title": "Komandas Profila Projekcijas Dati (SWUP)",
+            "template_swup_title": "SWUP Komandas Profila Dati",
             "team_name_en": "KOMANDAS NOSAUKUMS (EN)",
             "team_name_lv": "KOMANDAS NOSAUKUMS (LV)",
             "team_subhead_en": "MĒRĶIS / ZEMVIRSRAKSTS (EN)",
             "team_subhead_lv": "MĒRĶIS / ZEMVIRSRAKSTS (LV)",
-            "team_hero_photo": "KOMANDAS FOTO",
+            "team_hero_photo": "KOMANDAS GALVENAIS FOTO",
             "team_members": "Komandas Dalībnieki",
             "add_member": "+ Pievienot Dalībnieku",
             "confirm_delete_member": "Dzēst šo dalībnieku no komandas?",
@@ -181,6 +365,24 @@
             "project_status_en": "PROJEKTS / STATUSS (EN)",
             "project_status_lv": "PROJEKTS / STATUSS (LV)",
             "save_member": "Saglabāt Dalībnieku",
+
+            // Create Screen Modal
+            "modal_new_screen_title": "Izveidot Jaunu Ekrānu",
+            "label_screen_name": "IEKŠĒJAIS NOSAUKUMS / VIRSRAKSTS (EN)",
+            "label_screen_id": "UNIKĀLAIS EKRĀNA ID",
+            "hint_screen_id": "mazie burti, tikai defises",
+            "btn_create_screen_submit": "Izveidot Ekrānu →",
+
+            // Login Screen
+            "login_title": "Goda Siena",
+            "login_subtitle": "TELPISKĀ TVS · ADMINA PORTĀLS",
+            "login_username": "Lietotājvārds",
+            "login_password": "Parole",
+            "login_btn": "Pieslēgties",
+            "login_error_invalid": "Nederīgs lietotājvārds vai parole",
+
+            // Footer
+            "footer_copyright": "© 2026 Rīgas Tehniskā universitāte · RTU Zinātnes un inovāciju centrs",
 
             "ar_protocol": "AR / TELPISKAIS PROTOKOLS",
             "open_stage_title": "Atveriet skatuvi\nsavā telpā.",
@@ -313,10 +515,10 @@
         return `
             <div class="lang-switcher ${customClass}" role="group" aria-label="Language Selector" style="pointer-events: auto; z-index: 9999;">
                 <button type="button" class="lang-switcher-btn ${isEn ? 'active' : ''}" data-lang="en" onclick="event.stopPropagation(); window.i18n.setLanguage('en')" style="pointer-events: auto; cursor: pointer;">
-                    GB EN
+                    🇬🇧 EN
                 </button>
                 <button type="button" class="lang-switcher-btn ${isLv ? 'active' : ''}" data-lang="lv" onclick="event.stopPropagation(); window.i18n.setLanguage('lv')" style="pointer-events: auto; cursor: pointer;">
-                    LV LV
+                    🇱🇻 LV
                 </button>
             </div>
         `;

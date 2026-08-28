@@ -1213,23 +1213,23 @@
             <div class="login-logo">
                 <img src="assets/brand/rtu-innovations-white.png" alt="RTU Science and Innovation Centre">
             </div>
-            <h1 class="login-title">Wall of Fame</h1>
-            <p class="login-subtitle">SPATIAL CMS · ADMIN PORTAL</p>
+            <h1 class="login-title" data-i18n="login_title">Wall of Fame</h1>
+            <p class="login-subtitle" data-i18n="login_subtitle">SPATIAL CMS · ADMIN PORTAL</p>
             
-            <div class="login-error" id="login-error">
+            <div class="login-error" id="login-error" data-i18n="login_error_invalid">
                 Invalid username or password
             </div>
 
             <form id="login-form" onsubmit="handleLoginSubmit(event)">
                 <div class="login-input-group">
-                    <label>Username</label>
+                    <label data-i18n="login_username">Username</label>
                     <input type="text" id="login-username" class="login-input" placeholder="admin" required autocomplete="username">
                 </div>
                 <div class="login-input-group">
-                    <label>Password</label>
+                    <label data-i18n="login_password">Password</label>
                     <input type="password" id="login-password" class="login-input" placeholder="••••••••••••" required autocomplete="current-password">
                 </div>
-                <button type="submit" class="btn login-btn" id="login-submit-btn">
+                <button type="submit" class="btn login-btn" id="login-submit-btn" data-i18n="login_btn">
                     Sign In
                 </button>
             </form>
@@ -1251,29 +1251,29 @@
             </div>
 
             <nav class="sidebar-nav">
-                <div class="sidebar-nav-label">MAIN</div>
+                <div class="sidebar-nav-label" data-i18n="nav_main">MAIN</div>
                 <a class="nav-item active" data-view="dashboard" onclick="switchView('dashboard')">
                     <span class="nav-icon">📊</span>
-                    Dashboard
+                    <span data-i18n="nav_dashboard">Dashboard</span>
                 </a>
                 <a class="nav-item" data-view="screens" onclick="switchView('screens')">
                     <span class="nav-icon">🖥️</span>
-                    Screens
+                    <span data-i18n="nav_screens">Screens</span>
                     <span class="nav-badge" id="nav-screen-count">0</span>
                 </a>
                 <a class="nav-item" data-view="add-screen" onclick="openNewScreenModal()">
                     <span class="nav-icon">➕</span>
-                    Add Screen
+                    <span data-i18n="nav_add_screen">Add Screen</span>
                 </a>
 
-                <div class="sidebar-nav-label">TOOLS</div>
+                <div class="sidebar-nav-label" data-i18n="nav_tools">TOOLS</div>
                 <a class="nav-item" data-view="templates" onclick="switchView('templates')">
                     <span class="nav-icon">🎨</span>
-                    Templates
+                    <span data-i18n="nav_templates">Templates</span>
                 </a>
                 <a class="nav-item" data-view="qr" onclick="switchView('qr')">
                     <span class="nav-icon">📱</span>
-                    QR Codes
+                    <span data-i18n="nav_qr">QR Codes</span>
                 </a>
             </nav>
 
@@ -1284,9 +1284,9 @@
                     </div>
                     <div class="user-info">
                         <div class="user-name" id="sidebar-user-name">Admin</div>
-                        <div class="user-role">ADMINISTRATOR</div>
+                        <div class="user-role" data-i18n="user_role_admin">ADMINISTRATOR</div>
                     </div>
-                    <button class="logout-btn" onclick="performLogout()" title="Sign Out">
+                    <button class="logout-btn" onclick="performLogout()" title="Sign Out" data-i18n-title="sign_out">
                         🚪
                     </button>
                 </div>
@@ -1305,8 +1305,8 @@
             <div class="view active" id="view-dashboard">
                 <div class="view-header">
                     <div>
-                        <h1>Dashboard</h1>
-                        <p class="view-header-sub">Overview of your Wall of Fame deployment</p>
+                        <h1 data-i18n="dash_title">Dashboard</h1>
+                        <p class="view-header-sub" data-i18n="dash_subtitle">Overview of your Wall of Fame deployment</p>
                     </div>
                 </div>
 
@@ -1314,28 +1314,28 @@
                     <div class="metric-card">
                         <div class="metric-icon">🖥️</div>
                         <div class="metric-value" id="metric-screens">0</div>
-                        <div class="metric-label">Active Screens</div>
+                        <div class="metric-label" data-i18n="metric_active_screens">Active Screens</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-icon">👥</div>
                         <div class="metric-value" id="metric-people">0</div>
-                        <div class="metric-label">Total People</div>
+                        <div class="metric-label" data-i18n="metric_total_people">Total People</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-icon">🎨</div>
                         <div class="metric-value">2</div>
-                        <div class="metric-label">AR Templates</div>
+                        <div class="metric-label" data-i18n="metric_ar_templates">AR Templates</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-icon">🟢</div>
-                        <div class="metric-value" id="metric-status" style="font-size:18px;">Online</div>
-                        <div class="metric-label">System Status</div>
+                        <div class="metric-value" id="metric-status" style="font-size:18px;" data-i18n="status_online">Online</div>
+                        <div class="metric-label" data-i18n="metric_system_status">System Status</div>
                     </div>
                 </div>
 
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
-                    <h2 style="font-size:18px;font-weight:700;color:var(--text-primary);">Your Screens</h2>
-                    <button class="btn" onclick="openNewScreenModal()" style="padding:9px 16px;font-size:12px;">+ New Screen</button>
+                    <h2 style="font-size:18px;font-weight:700;color:var(--text-primary);" data-i18n="your_screens">Your Screens</h2>
+                    <button class="btn" onclick="openNewScreenModal()" style="padding:9px 16px;font-size:12px;" data-i18n="btn_new_screen">+ New Screen</button>
                 </div>
                 <div class="dash-screens-grid" id="dash-screens-grid">
                     <!-- Populated by JS -->
@@ -1346,16 +1346,16 @@
             <div class="view" id="view-screens">
                 <div class="view-header">
                     <div>
-                        <h1>Manage Screens</h1>
-                        <p class="view-header-sub">All registered AR screens in the system</p>
+                        <h1 data-i18n="screens_title">Manage Screens</h1>
+                        <p class="view-header-sub" data-i18n="screens_subtitle">All registered AR screens in the system</p>
                     </div>
-                    <button class="btn" onclick="openNewScreenModal()">+ Create New Screen</button>
+                    <button class="btn" onclick="openNewScreenModal()" data-i18n="create_new_screen">+ Create New Screen</button>
                 </div>
 
                 <div class="screens-toolbar">
                     <div class="search-box">
                         <span class="search-icon">🔍</span>
-                        <input type="text" id="screen-search" class="search-input" placeholder="Search screens..." oninput="filterScreens()">
+                        <input type="text" id="screen-search" class="search-input" placeholder="Search screens..." data-i18n-placeholder="search_screens_placeholder" oninput="filterScreens()">
                     </div>
                 </div>
 
@@ -1367,9 +1367,9 @@
             <!-- ────────── Screen Editor View ────────── -->
             <div class="view" id="view-editor">
                 <div class="editor-breadcrumb">
-                    <a onclick="switchView('screens')">Screens</a>
+                    <a onclick="switchView('screens')" data-i18n="breadcrumb_screens">Screens</a>
                     <span>›</span>
-                    <span id="breadcrumb-screen-name">Editor</span>
+                    <span id="breadcrumb-screen-name" data-i18n="breadcrumb_editor">Editor</span>
                 </div>
 
                 <div class="glass-card" id="editor">
@@ -1383,7 +1383,7 @@
                         </div>
                         <div class="actions">
                             <a href="#" target="_blank" class="btn btn-secondary" id="btn-view" data-i18n="test_view">Test View ↗</a>
-                            <button type="button" class="btn btn-secondary" onclick="autoTranslateCurrentScreen()" id="btn-auto-translate" title="Auto-translate all English fields to Latvian">✨ Auto-Translate LV</button>
+                            <button type="button" class="btn btn-secondary" onclick="autoTranslateCurrentScreen()" id="btn-auto-translate" title="Auto-translate all English fields to Latvian" data-i18n="btn_auto_translate">✨ Auto-Translate LV</button>
                             <button class="btn" onclick="saveLocation()" id="btn-save" data-i18n="save_changes">Save Changes</button>
                             <button class="btn btn-danger" onclick="deleteLocation()" data-i18n="delete_screen">Delete</button>
                         </div>
@@ -1512,7 +1512,7 @@
                                         <span style="position:absolute;z-index:-1">+</span>
                                     </div>
                                     <input type="hidden" id="v5-teamPhoto">
-                                    <small style="color:var(--text-muted)">Click box to upload photo</small>
+                                    <small style="color:var(--text-muted)" data-i18n="click_to_upload">Click box to upload photo</small>
                                 </div>
                             </div>
                         </div>
@@ -1530,8 +1530,8 @@
             <div class="view" id="view-templates">
                 <div class="view-header">
                     <div>
-                        <h1>AR Templates Library</h1>
-                        <p class="view-header-sub">Available Spatial AR display engines for Wall of Fame screens</p>
+                        <h1 data-i18n="templates_title">AR Templates Library</h1>
+                        <p class="view-header-sub" data-i18n="templates_subtitle">Available Spatial AR display engines for Wall of Fame screens</p>
                     </div>
                 </div>
 
@@ -1540,22 +1540,22 @@
                     <div class="template-card">
                         <div class="template-card-visual v4-bg">🌿</div>
                         <div class="template-card-body">
-                            <h3>Hierarchy Tree</h3>
-                            <div class="template-version">V4 · DesignFactory Engine</div>
-                            <p>
+                            <h3 data-i18n="tmpl_tree_title">Hierarchy Tree</h3>
+                            <div class="template-version" data-i18n="tmpl_tree_version">V4 · DesignFactory Engine</div>
+                            <p data-i18n="tmpl_tree_desc">
                                 Spatial 3D orbital tree visualization. Arranges team members in concentric tiers — 
                                 <strong>Root</strong> (Director/Head), <strong>Lead</strong> (Team Leads), and <strong>Staff</strong> (Core Members) — 
                                 orbiting a central anchor. Each inductee is represented by a floating card with photo, role, 
                                 and accent color. Supports virtual card deep links via double-tap.
                             </p>
                             <div class="template-features">
-                                <span class="template-feature-tag">3D Orbit Layout</span>
-                                <span class="template-feature-tag">Hierarchy Tiers</span>
-                                <span class="template-feature-tag">Draggable</span>
-                                <span class="template-feature-tag">Virtual Cards</span>
-                                <span class="template-feature-tag">GPS Anchored</span>
+                                <span class="template-feature-tag" data-i18n="tag_3d_orbit">3D Orbit Layout</span>
+                                <span class="template-feature-tag" data-i18n="tag_hierarchy_tiers">Hierarchy Tiers</span>
+                                <span class="template-feature-tag" data-i18n="tag_draggable">Draggable</span>
+                                <span class="template-feature-tag" data-i18n="tag_virtual_cards">Virtual Cards</span>
+                                <span class="template-feature-tag" data-i18n="tag_gps_anchored">GPS Anchored</span>
                             </div>
-                            <button class="btn" onclick="openNewScreenModal('designfactory')" style="width:100%;">Create Screen with This Template</button>
+                            <button class="btn" onclick="openNewScreenModal('designfactory')" style="width:100%;" data-i18n="btn_create_with_template">Create Screen with This Template</button>
                         </div>
                     </div>
 
@@ -1563,22 +1563,22 @@
                     <div class="template-card">
                         <div class="template-card-visual v5-bg">⚡</div>
                         <div class="template-card-body">
-                            <h3>Team Profile Showcase</h3>
-                            <div class="template-version">V5 · SWUP Engine</div>
-                            <p>
+                            <h3 data-i18n="tmpl_swup_title">Team Profile Showcase</h3>
+                            <div class="template-version" data-i18n="tmpl_swup_version">V5 · SWUP Engine</div>
+                            <p data-i18n="tmpl_swup_desc">
                                 Horizontal kinetic carousel with interactive hero stage. Features team members in a 
                                 swipeable horizontal strip with individual profile cards showcasing specialty, 
                                 project status, skills radar, and custom crop positioning. Includes team-level 
                                 hero photo and destination branding.
                             </p>
                             <div class="template-features">
-                                <span class="template-feature-tag">Horizontal Carousel</span>
-                                <span class="template-feature-tag">Hero Stage</span>
-                                <span class="template-feature-tag">Skills Radar</span>
-                                <span class="template-feature-tag">Swipeable</span>
-                                <span class="template-feature-tag">Custom Crops</span>
+                                <span class="template-feature-tag" data-i18n="tag_horizontal_carousel">Horizontal Carousel</span>
+                                <span class="template-feature-tag" data-i18n="tag_hero_stage">Hero Stage</span>
+                                <span class="template-feature-tag" data-i18n="tag_skills_radar">Skills Radar</span>
+                                <span class="template-feature-tag" data-i18n="tag_swipeable">Swipeable</span>
+                                <span class="template-feature-tag" data-i18n="tag_custom_crops">Custom Crops</span>
                             </div>
-                            <button class="btn" onclick="openNewScreenModal('swup')" style="width:100%;">Create Screen with This Template</button>
+                            <button class="btn" onclick="openNewScreenModal('swup')" style="width:100%;" data-i18n="btn_create_with_template">Create Screen with This Template</button>
                         </div>
                     </div>
                 </div>
@@ -1588,14 +1588,14 @@
             <div class="view" id="view-qr">
                 <div class="view-header">
                     <div>
-                        <h1>QR Code Generator</h1>
-                        <p class="view-header-sub">Generate scannable QR codes for your AR Wall of Fame screens</p>
+                        <h1 data-i18n="qr_title">QR Code Generator</h1>
+                        <p class="view-header-sub" data-i18n="qr_subtitle">Generate scannable QR codes for your AR Wall of Fame screens</p>
                     </div>
                 </div>
 
                 <div class="qr-layout">
                     <div class="qr-selector">
-                        <h3>Select a Screen</h3>
+                        <h3 data-i18n="qr_select_screen">Select a Screen</h3>
                         <div class="qr-screen-list" id="qr-screen-list">
                             <!-- Populated by JS -->
                         </div>
@@ -1603,7 +1603,7 @@
                     <div class="qr-preview" id="qr-preview">
                         <div class="qr-placeholder">
                             <div style="font-size:48px;margin-bottom:12px;opacity:0.4;">📱</div>
-                            <p>Select a screen from the list to generate its QR code</p>
+                            <p data-i18n="qr_placeholder_text">Select a screen from the list to generate its QR code</p>
                         </div>
                     </div>
                 </div>
@@ -1612,7 +1612,7 @@
             <!-- Footer -->
             <footer class="app-footer">
                 <div>
-                    <span>© 2026 Riga Technical University · RTU Science & Innovation Centre</span>
+                    <span data-i18n="footer_copyright">© 2026 Riga Technical University · RTU Science & Innovation Centre</span>
                 </div>
             </footer>
         </div>
@@ -1624,24 +1624,24 @@
     <div class="modal-overlay" id="new-screen-modal">
         <div class="glass-card modal" style="max-width: 480px;">
             <div class="modal-header">
-                <h3 id="new-screen-modal-title">Create New Screen</h3>
+                <h3 id="new-screen-modal-title" data-i18n="modal_new_screen_title">Create New Screen</h3>
                 <button class="modal-close-btn" onclick="closeNewScreenModal()">✕</button>
             </div>
             <form onsubmit="handleNewScreenSubmit(event)">
                 <div class="form-grid" style="grid-template-columns: 1fr; margin-bottom: 0; gap: 14px;">
                     <div class="form-group">
-                        <label>INTERNAL NAME / TITLE (EN)</label>
+                        <label data-i18n="label_screen_name">INTERNAL NAME / TITLE (EN)</label>
                         <input type="text" id="new-screen-name" placeholder="e.g. Design Factory Main Hall" required oninput="autoSuggestScreenId(this.value)" autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label>
-                            <span>UNIQUE SCREEN ID</span>
-                            <span style="font-size:10px;color:var(--text-muted);font-weight:normal;">lowercase, hyphens only</span>
+                            <span data-i18n="label_screen_id">UNIQUE SCREEN ID</span>
+                            <span style="font-size:10px;color:var(--text-muted);font-weight:normal;" data-i18n="hint_screen_id">lowercase, hyphens only</span>
                         </label>
                         <input type="text" id="new-screen-id" placeholder="e.g. design-factory" required pattern="[a-z0-9\-]+" style="font-family:'DM Mono', monospace;" autocomplete="off">
                     </div>
                     <div class="form-group">
-                        <label>DISPLAY TEMPLATE / AR ENGINE</label>
+                        <label data-i18n="display_template">DISPLAY TEMPLATE / AR ENGINE</label>
                         <select id="new-screen-template">
                             <option value="designfactory">🌿 V4: Hierarchy Tree (DesignFactory)</option>
                             <option value="swup">⚡ V5: Team Profile Showcase (SWUP)</option>
@@ -1649,8 +1649,8 @@
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeNewScreenModal()">Cancel</button>
-                    <button type="submit" class="btn">Create Screen →</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeNewScreenModal()" data-i18n="cancel">Cancel</button>
+                    <button type="submit" class="btn" data-i18n="btn_create_screen_submit">Create Screen →</button>
                 </div>
             </form>
         </div>
@@ -1673,6 +1673,7 @@
                             <span style="position:absolute;z-index:-1">+</span>
                         </div>
                         <input type="hidden" id="v4-photo">
+                        <small style="color:var(--text-muted)" data-i18n="click_to_upload">Click box to upload photo</small>
                     </div>
                 </div>
                 
@@ -1712,15 +1713,15 @@
 
                 <div class="form-group full">
                     <label>
-                        <span>VIRTUAL CARD URL (Redirect on Double Tap)</span>
+                        <span data-i18n="virtual_card_url">VIRTUAL CARD URL (Redirect on Double Tap)</span>
                         <span class="lang-tag auto">AUTO</span>
                     </label>
-                    <input type="text" id="v4-cardUrl" placeholder="Defaults to https://df-virtual-cards.vercel.app/(firstname-lastname)">
+                    <input type="text" id="v4-cardUrl" placeholder="Defaults to https://df-virtual-cards.vercel.app/(firstname-lastname)" data-i18n-placeholder="virtual_card_hint">
                 </div>
             </div>
             <input type="hidden" id="v4-index">
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="autoTranslateField('v4-role', 'v4-role-lv')" style="margin-right:auto;">✨ Translate LV</button>
+                <button type="button" class="btn btn-secondary" onclick="autoTranslateField('v4-role', 'v4-role-lv')" style="margin-right:auto;" data-i18n="translate_lv_btn">✨ Translate LV</button>
                 <button type="button" class="btn btn-secondary" onclick="document.getElementById('v4-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn" onclick="saveV4Person()" data-i18n="save_inductee">Save Inductee</button>
             </div>
@@ -1744,6 +1745,7 @@
                             <span style="position:absolute;z-index:-1">+</span>
                         </div>
                         <input type="hidden" id="v5-photo">
+                        <small style="color:var(--text-muted)" data-i18n="click_to_upload">Click box to upload photo</small>
                     </div>
                 </div>
 
@@ -1821,13 +1823,13 @@
                     <input type="color" id="v5-accent" style="height:44px;width:100%;padding:2px;cursor:pointer;">
                 </div>
                 <div class="form-group">
-                    <label>CROP (CSS object-position)</label>
+                    <label data-i18n="crop_label">CROP (CSS object-position)</label>
                     <input type="text" id="v5-crop" placeholder="e.g. 50% 28%">
                 </div>
             </div>
             <input type="hidden" id="v5-index">
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="autoTranslateV5ModalFields()" style="margin-right:auto;">✨ Translate LV</button>
+                <button type="button" class="btn btn-secondary" onclick="autoTranslateV5ModalFields()" style="margin-right:auto;" data-i18n="translate_lv_btn">✨ Translate LV</button>
                 <button type="button" class="btn btn-secondary" onclick="document.getElementById('v5-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
                 <button type="button" class="btn" onclick="saveV5Member()" data-i18n="save_member">Save Member</button>
             </div>
@@ -1898,14 +1900,16 @@
         }
 
         /* ═══════════════════════════════════════════════════
-           I18N INITIALIZATION (PRESERVED EXACTLY)
+           I18N INITIALIZATION & REAL-TIME VIEW RE-RENDERING
            ═══════════════════════════════════════════════════ */
         document.getElementById('sidebar-lang-container').innerHTML = i18n.createSwitcherHTML();
         i18n.subscribe(() => {
             renderSidebar();
+            renderDashboard();
+            renderScreensTable();
+            renderQRScreenList();
             if (currentLocation) {
-                renderV4List();
-                renderV5List();
+                populateEditor();
             }
         });
 
@@ -1934,7 +1938,7 @@
         }
 
         /* ═══════════════════════════════════════════════════
-           DASHBOARD RENDERING (NEW)
+           DASHBOARD RENDERING (Full I18n Support)
            ═══════════════════════════════════════════════════ */
         function renderDashboard() {
             // Update metrics
@@ -1959,9 +1963,9 @@
                 grid.innerHTML = `
                     <div class="empty-state" style="grid-column:1/-1;">
                         <div class="empty-icon">🖥️</div>
-                        <h3>No screens yet</h3>
-                        <p>Create your first AR Wall of Fame screen to get started.</p>
-                        <button class="btn" onclick="openNewScreenModal()">+ Create First Screen</button>
+                        <h3>${i18n.t('no_screens_yet')}</h3>
+                        <p>${i18n.t('no_screens_p')}</p>
+                        <button class="btn" onclick="openNewScreenModal()">${i18n.t('btn_create_first_screen')}</button>
                     </div>
                 `;
                 return;
@@ -1989,13 +1993,13 @@
                         <span class="screen-item-tag ${tagClass}">${tagLabel}</span>
                     </div>
                     <div class="dash-card-meta">
-                        <span>👥 <strong>${peopleCount}</strong> ${peopleCount === 1 ? 'person' : 'people'}</span>
+                        <span>👥 <strong>${peopleCount}</strong> ${peopleCount === 1 ? i18n.t('person') : i18n.t('people')}</span>
                         ${loc.lat ? `<span>📍 ${parseFloat(loc.lat).toFixed(2)}, ${parseFloat(loc.lng).toFixed(2)}</span>` : ''}
                     </div>
                     <div class="dash-card-actions">
-                        <button class="btn btn-secondary" onclick="editScreenFromDash('${loc.id}')">✎ Edit</button>
-                        <a href="/view/${loc.id}" target="_blank" class="btn btn-secondary">↗ Live View</a>
-                        <button class="btn btn-secondary" onclick="switchView('qr'); setTimeout(() => generateQRFor('${loc.id}'), 100);">📱 QR</button>
+                        <button class="btn btn-secondary" onclick="editScreenFromDash('${loc.id}')">${i18n.t('btn_edit')}</button>
+                        <a href="/view/${loc.id}" target="_blank" class="btn btn-secondary">${i18n.t('btn_live_view')}</a>
+                        <button class="btn btn-secondary" onclick="switchView('qr'); setTimeout(() => generateQRFor('${loc.id}'), 100);">${i18n.t('btn_qr')}</button>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -2008,7 +2012,7 @@
         }
 
         /* ═══════════════════════════════════════════════════
-           SCREENS TABLE RENDERING (NEW)
+           SCREENS TABLE RENDERING (Full I18n Support)
            ═══════════════════════════════════════════════════ */
         function renderScreensTable() {
             const list = document.getElementById('screens-table-list');
@@ -2018,8 +2022,8 @@
                 list.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">🖥️</div>
-                        <h3>No screens found</h3>
-                        <p>Create your first screen to begin.</p>
+                        <h3>${i18n.t('no_screens_found')}</h3>
+                        <p>${i18n.t('no_screens_found_p')}</p>
                     </div>
                 `;
                 return;
@@ -2044,10 +2048,10 @@
                         <small>${loc.id}</small>
                     </div>
                     <span class="screen-item-tag ${tagClass}">${tagLabel}</span>
-                    <span style="font-size:12px;color:var(--text-muted);">👥 ${peopleCount}</span>
+                    <span style="font-size:12px;color:var(--text-muted);">👥 ${peopleCount} ${peopleCount === 1 ? i18n.t('person') : i18n.t('people')}</span>
                     <div class="st-actions">
-                        <button class="btn btn-secondary" onclick="editScreenFromDash('${loc.id}')" style="padding:8px 14px;font-size:12px;">Edit</button>
-                        <a href="/view/${loc.id}" target="_blank" class="btn btn-secondary" style="padding:8px 14px;font-size:12px;">View ↗</a>
+                        <button class="btn btn-secondary" onclick="editScreenFromDash('${loc.id}')" style="padding:8px 14px;font-size:12px;">${i18n.t('edit')}</button>
+                        <a href="/view/${loc.id}" target="_blank" class="btn btn-secondary" style="padding:8px 14px;font-size:12px;">${i18n.t('btn_live_view')}</a>
                     </div>
                 `;
                 row.dataset.name = displayName.toLowerCase() + ' ' + loc.id.toLowerCase();
@@ -2390,7 +2394,7 @@
             const list = document.getElementById('v4-list');
             list.innerHTML = '';
             const data = currentLocation.data.inductees;
-            if (!data || data.length === 0) return list.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">No inductees added to this tree yet.</p>';
+            if (!data || data.length === 0) return list.innerHTML = `<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">${i18n.t('no_inductees_yet')}</p>`;
 
             data.forEach((ind, i) => {
                 const roleEn = ind.role || '';
@@ -2481,7 +2485,7 @@
             const list = document.getElementById('v5-list');
             list.innerHTML = '';
             const data = currentLocation.data.members;
-            if (!data || data.length === 0) return list.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">No team members added yet.</p>';
+            if (!data || data.length === 0) return list.innerHTML = `<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">${i18n.t('no_members_yet')}</p>`;
 
             data.forEach((m, i) => {
                 const currentRole = i18n.getLocalized(m, 'role') || m.role || 'Member';
@@ -2728,14 +2732,14 @@
         }
 
         /* ═══════════════════════════════════════════════════
-           QR CODE GENERATOR (NEW)
+           QR CODE GENERATOR (Full I18n Support)
            ═══════════════════════════════════════════════════ */
         function renderQRScreenList() {
             const list = document.getElementById('qr-screen-list');
             list.innerHTML = '';
 
             if (locations.length === 0) {
-                list.innerHTML = '<p style="color:var(--text-muted);font-size:13px;padding:16px;">No screens available. Create a screen first.</p>';
+                list.innerHTML = `<p style="color:var(--text-muted);font-size:13px;padding:16px;">${i18n.t('no_screens_found')}</p>`;
                 return;
             }
 
@@ -2778,8 +2782,8 @@
                 <div class="qr-canvas-wrap" id="qr-render-target"></div>
                 <div class="qr-url">${viewUrl}</div>
                 <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-                    <button class="btn btn-secondary" onclick="downloadQR('${screenId}')">⬇ Download PNG</button>
-                    <a href="${viewUrl}" target="_blank" class="btn btn-secondary">↗ Open Live View</a>
+                    <button class="btn btn-secondary" onclick="downloadQR('${screenId}')">⬇ ${i18n.t('qr_download_btn')}</button>
+                    <a href="${viewUrl}" target="_blank" class="btn btn-secondary">${i18n.t('qr_open_ar_preview')}</a>
                 </div>
             `;
 
