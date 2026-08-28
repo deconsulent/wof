@@ -43,11 +43,10 @@
             position: sticky; top: 0; z-index: 50;
             gap: 16px;
         }
-        .navbar-brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
-        .navbar-logo-wrap { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-        .navbar-logo-rtu { height: 28px; width: auto; object-fit: contain; }
-        .navbar-logo-divider { width: 1px; height: 24px; background: rgba(255, 255, 255, 0.2); }
-        .navbar-logo-inov { height: 24px; width: auto; object-fit: contain; }
+        .navbar-brand { display: flex; align-items: center; gap: 18px; min-width: 0; }
+        .navbar-logo-wrap { display: flex; align-items: center; flex-shrink: 0; }
+        .navbar-logo-inov { height: 38px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 10px rgba(0,0,0,0.45)); }
+        .navbar-logo-divider { width: 1px; height: 28px; background: rgba(160, 244, 255, 0.2); }
         
         .navbar-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .navbar h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px; color: #ffffff; }
@@ -303,8 +302,7 @@
                 padding: 10px 14px;
                 gap: 10px;
             }
-            .navbar-logo-rtu { height: 22px; }
-            .navbar-logo-inov { height: 20px; }
+            .navbar-logo-inov { height: 26px; }
             .navbar h1 {
                 font-size: 14.5px;
                 gap: 6px;
@@ -471,10 +469,9 @@
     <nav class="navbar">
         <div class="navbar-brand">
             <div class="navbar-logo-wrap">
-                <img src="assets/brand/rtu-white.png" alt="RTU" class="navbar-logo-rtu">
-                <div class="navbar-logo-divider"></div>
-                <img src="assets/brand/rtu-innovations-transparent.png" alt="RTU Science and Innovation" class="navbar-logo-inov">
+                <img src="assets/brand/rtu-innovations-white.png" alt="RTU Science and Innovation Centre" class="navbar-logo-inov">
             </div>
+            <div class="navbar-logo-divider"></div>
             <div class="navbar-title">
                 <h1>Wall of Fame <span class="badge">Spatial CMS</span></h1>
             </div>
