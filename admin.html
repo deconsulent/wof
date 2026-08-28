@@ -161,33 +161,179 @@
             font-family: 'DM Mono', monospace;
         }
 
-        /* Sidebar Footer */
+        /* Sidebar Footer & User Profile */
         .sidebar-footer {
             padding: 14px 16px;
             border-top: 1px solid var(--rtu-border);
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
-        .sidebar-status {
+        .sidebar-user-card {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            color: var(--text-muted);
+            gap: 10px;
+            padding: 9px 12px;
+            background: rgba(6, 20, 32, 0.65);
+            border: 1px solid var(--rtu-border);
+            border-radius: 14px;
+        }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 1.5px solid var(--rtu-magenta);
+            box-shadow: 0 0 10px var(--rtu-magenta-glow);
+        }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .user-name {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.2;
+        }
+        .user-role {
+            font-size: 9px;
             font-family: 'DM Mono', monospace;
+            color: var(--rtu-cyan);
+            letter-spacing: 0.08em;
         }
-        .sidebar-status .status-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--rtu-cyan);
-            box-shadow: 0 0 8px var(--rtu-cyan-glow);
-            animation: pulse-dot 2s ease-in-out infinite;
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            border-radius: 8px;
+            padding: 5px 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
         }
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+        .logout-btn:hover {
+            background: rgba(220, 38, 38, 0.2);
+            color: #fca5a5;
+            border-color: rgba(248, 113, 113, 0.35);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+        }
+        .sidebar-bottom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Fullscreen Login Screen (matches DF Virtual Cards) */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: radial-gradient(circle at 50% 12%, #220822 0%, #081726 38%, #03080F 100%);
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 38px 32px;
+            background: rgba(10, 28, 44, 0.8);
+            border: 1px solid var(--rtu-border);
+            border-radius: 24px;
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 24px 64px rgba(0,0,0,0.6);
+        }
+        .login-logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .login-logo img {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 12px rgba(0,0,0,0.5));
+        }
+        .login-title {
+            font-size: 21px;
+            font-weight: 800;
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+        .login-subtitle {
+            font-size: 10.5px;
+            font-family: 'DM Mono', monospace;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 26px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .login-error {
+            background: rgba(220, 38, 38, 0.15);
+            border: 1px solid rgba(248, 113, 113, 0.35);
+            color: #fca5a5;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            margin-bottom: 18px;
+            text-align: center;
+            display: none;
+        }
+        .login-error.visible {
+            display: block;
+        }
+        .login-input-group {
+            margin-bottom: 18px;
+        }
+        .login-input-group label {
+            display: block;
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            color: var(--text-muted);
+            margin-bottom: 7px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .login-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(2, 10, 18, 0.65);
+            border: 1px solid var(--rtu-border);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+        .login-input:focus {
+            border-color: var(--rtu-magenta);
+            box-shadow: 0 0 16px var(--rtu-magenta-glow);
+            background: rgba(3, 14, 24, 0.85);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 13px;
+            margin-top: 8px;
+            font-size: 14px;
         }
 
         /* Language Switcher */
@@ -1021,14 +1167,43 @@
 </head>
 <body>
 
+    <!-- ═══ Fullscreen Login Screen (matches DF Virtual Cards) ═══ -->
+    <div class="login-container" id="login-view">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="assets/brand/rtu-innovations-white.png" alt="RTU Science and Innovation Centre">
+            </div>
+            <h1 class="login-title">Wall of Fame</h1>
+            <p class="login-subtitle">SPATIAL CMS · ADMIN PORTAL</p>
+            
+            <div class="login-error" id="login-error">
+                Invalid username or password
+            </div>
+
+            <form id="login-form" onsubmit="handleLoginSubmit(event)">
+                <div class="login-input-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" class="login-input" placeholder="admin" required autocomplete="username">
+                </div>
+                <div class="login-input-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" class="login-input" placeholder="••••••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn login-btn" id="login-submit-btn">
+                    Sign In
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Mobile Header (visible ≤ 768px) -->
-    <div class="mobile-header">
+    <div class="mobile-header" id="mobile-header" style="display:none;">
         <img src="assets/brand/rtu-innovations-white.png" alt="RTU" style="height:28px;">
         <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
     </div>
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-    <div class="app-layout">
+    <div class="app-layout" id="app-layout" style="display:none;">
         <!-- ═══ Left Sidebar Navigation ═══ -->
         <aside class="app-sidebar" id="app-sidebar">
             <div class="sidebar-brand">
@@ -1060,21 +1235,25 @@
                     <span class="nav-icon">📱</span>
                     QR Codes
                 </a>
-
-                <div class="sidebar-nav-label">SYSTEM</div>
-                <a class="nav-item" onclick="window.open('https://www.rtu.lv', '_blank')">
-                    <span class="nav-icon">🌐</span>
-                    rtu.lv
-                </a>
             </nav>
 
             <div class="sidebar-footer">
-                <div id="sidebar-lang-container">
-                    <!-- Language Switcher injected by i18n -->
+                <div class="sidebar-user-card">
+                    <div class="user-avatar">
+                        <img id="sidebar-user-avatar" src="https://ui-avatars.com/api/?name=Admin&background=C8237F&color=fff&size=128" alt="Admin">
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="sidebar-user-name">Admin</div>
+                        <div class="user-role">ADMINISTRATOR</div>
+                    </div>
+                    <button class="logout-btn" onclick="performLogout()" title="Sign Out">
+                        🚪
+                    </button>
                 </div>
-                <div class="sidebar-status">
-                    <span class="status-dot"></span>
-                    <span>Supabase Connected</span>
+                <div class="sidebar-bottom-row">
+                    <div id="sidebar-lang-container">
+                        <!-- Language Switcher injected by i18n -->
+                    </div>
                 </div>
             </div>
         </aside>
@@ -1393,10 +1572,6 @@
             <footer class="app-footer">
                 <div>
                     <span>© 2026 Riga Technical University · RTU Science & Innovation Centre</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:16px;">
-                    <span style="color: var(--rtu-cyan);">● Database Live</span>
-                    <a href="https://www.rtu.lv" target="_blank">rtu.lv</a>
                 </div>
             </footer>
         </div>
@@ -2339,9 +2514,163 @@
         }
 
         /* ═══════════════════════════════════════════════════
+           AUTHENTICATION ENGINE (Matching DF Virtual Cards)
+           ═══════════════════════════════════════════════════ */
+        const AUTH_STORAGE_KEY = 'df_wof_session';
+        const DEFAULT_ADMIN_USER = 'admin';
+        const DEFAULT_ADMIN_PASS = 'DFAdmin2026!';
+        let currentUser = null;
+
+        function getStoredSession() {
+            try {
+                const s = localStorage.getItem(AUTH_STORAGE_KEY) || sessionStorage.getItem(AUTH_STORAGE_KEY);
+                return s ? JSON.parse(s) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function setStoredSession(session) {
+            try {
+                localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+                sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+            } catch (e) {}
+        }
+
+        function clearStoredSession() {
+            try {
+                localStorage.removeItem(AUTH_STORAGE_KEY);
+                sessionStorage.removeItem(AUTH_STORAGE_KEY);
+            } catch (e) {}
+        }
+
+        async function performLogin(username, password) {
+            const errorEl = document.getElementById('login-error');
+            const submitBtn = document.getElementById('login-submit-btn');
+            
+            errorEl.classList.remove('visible');
+            submitBtn.textContent = 'Signing in...';
+            submitBtn.disabled = true;
+
+            const trimmedUser = (username || '').trim();
+            const trimmedPass = (password || '').trim();
+
+            try {
+                // Check hardcoded admin matching df-virtual-cards
+                if (trimmedUser === DEFAULT_ADMIN_USER && trimmedPass === DEFAULT_ADMIN_PASS) {
+                    const session = {
+                        username: 'admin',
+                        name: 'Admin',
+                        role: 'admin',
+                        token: 'df-admin-token-' + Date.now(),
+                        time: Date.now()
+                    };
+                    setStoredSession(session);
+                    onLoginSuccess(session);
+                    return;
+                }
+
+                // Call /api/auth endpoint
+                const res = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: trimmedUser, password: trimmedPass })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    const session = {
+                        username: data.user.username || trimmedUser,
+                        name: data.user.name || trimmedUser,
+                        role: data.user.role || 'admin',
+                        token: data.token || ('token-' + Date.now()),
+                        time: Date.now()
+                    };
+                    setStoredSession(session);
+                    onLoginSuccess(session);
+                } else {
+                    errorEl.textContent = data.error || 'Invalid username or password';
+                    errorEl.classList.add('visible');
+                }
+            } catch (err) {
+                // Fallback check
+                if (trimmedUser === DEFAULT_ADMIN_USER && trimmedPass === DEFAULT_ADMIN_PASS) {
+                    const session = { username: 'admin', name: 'Admin', role: 'admin', time: Date.now() };
+                    setStoredSession(session);
+                    onLoginSuccess(session);
+                } else {
+                    errorEl.textContent = 'Invalid username or password';
+                    errorEl.classList.add('visible');
+                }
+            } finally {
+                submitBtn.textContent = 'Sign In';
+                submitBtn.disabled = false;
+            }
+        }
+
+        function handleLoginSubmit(e) {
+            if (e) e.preventDefault();
+            const u = document.getElementById('login-username').value;
+            const p = document.getElementById('login-password').value;
+            performLogin(u, p);
+        }
+
+        function onLoginSuccess(session) {
+            currentUser = session;
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('app-layout').style.display = 'flex';
+            if (window.innerWidth <= 768) {
+                document.getElementById('mobile-header').style.display = 'flex';
+            }
+            
+            // Update sidebar user card
+            const userNameEl = document.getElementById('sidebar-user-name');
+            const userAvatarEl = document.getElementById('sidebar-user-avatar');
+            if (userNameEl) userNameEl.textContent = session.name || session.username || 'Admin';
+            if (userAvatarEl) userAvatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(session.name || session.username || 'Admin')}&background=C8237F&color=fff&size=128`;
+
+            showToast(`Welcome back, ${session.name || session.username}!`, 'success');
+            fetchLocations();
+        }
+
+        function performLogout() {
+            clearStoredSession();
+            currentUser = null;
+            document.getElementById('app-layout').style.display = 'none';
+            document.getElementById('mobile-header').style.display = 'none';
+            document.getElementById('login-view').style.display = 'flex';
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-error').classList.remove('visible');
+            showToast('Signed out successfully');
+        }
+
+        function checkAuth() {
+            // Check URL parameters for instant login (matches df-virtual-cards)
+            const urlParams = new URLSearchParams(window.location.search);
+            const u = urlParams.get('username');
+            const p = urlParams.get('password');
+            if (u && p) {
+                document.getElementById('login-username').value = u;
+                document.getElementById('login-password').value = p;
+                performLogin(u, p);
+                return;
+            }
+
+            const session = getStoredSession();
+            if (session && session.username) {
+                onLoginSuccess(session);
+            } else {
+                document.getElementById('login-view').style.display = 'flex';
+                document.getElementById('app-layout').style.display = 'none';
+                document.getElementById('mobile-header').style.display = 'none';
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════
            INITIALIZE
            ═══════════════════════════════════════════════════ */
-        fetchLocations();
+        checkAuth();
     </script>
 </body>
 </html>

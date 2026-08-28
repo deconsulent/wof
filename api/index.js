@@ -36,7 +36,56 @@ const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2
 
 const { translateText, translateArray, autoTranslateScreenPayload } = require('./translate');
 
+// Hardcoded admin credentials matching df-virtual-cards
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'DFAdmin2026!';
+
 // --- API ROUTES ---
+
+// 0. Authentication Endpoint
+app.post('/api/auth', async (req, res) => {
+    try {
+        const { username, password } = req.body || {};
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Username and password are required' });
+        }
+
+        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+            return res.json({
+                success: true,
+                message: 'Login successful',
+                user: { username: 'admin', name: 'Admin', role: 'admin' },
+                token: 'df-admin-token-' + Date.now()
+            });
+        }
+
+        // Check regular user in Supabase if exists in 'users' table
+        try {
+            const { data: user, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('username', username)
+                .single();
+
+            if (user && !error) {
+                const { password_hash, ...userWithoutPassword } = user;
+                return res.json({
+                    success: true,
+                    message: 'Login successful',
+                    user: userWithoutPassword,
+                    token: 'df-user-token-' + Date.now()
+                });
+            }
+        } catch (e) {
+            // Supabase users table fallback
+        }
+
+        return res.status(401).json({ error: 'Invalid username or password' });
+    } catch (err) {
+        console.error('Auth error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 // 1. Get all screens (locations)
 app.get('/api/locations', async (req, res) => {
