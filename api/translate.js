@@ -250,6 +250,35 @@ async function autoTranslateScreenPayload(payload) {
                 }
             }
         }
+
+        // V6: Prototypes showcase (Bi-directional) — items[] shares shape with prototypes[]
+        const protoList = Array.isArray(cloned.data.prototypes) ? cloned.data.prototypes : (Array.isArray(cloned.data.items) ? cloned.data.items : null);
+        if (Array.isArray(protoList)) {
+            for (const proto of protoList) {
+                if (proto.name && (!proto.name_lv || !String(proto.name_lv).trim())) {
+                    proto.name_lv = await translateText(proto.name, 'en', 'lv');
+                } else if (proto.name_lv && (!proto.name || !String(proto.name).trim())) {
+                    proto.name = await translateText(proto.name_lv, 'lv', 'en');
+                }
+
+                if (proto.desc && (!proto.desc_lv || !String(proto.desc_lv).trim())) {
+                    proto.desc_lv = await translateText(proto.desc, 'en', 'lv');
+                } else if (proto.desc_lv && (!proto.desc || !String(proto.desc).trim())) {
+                    proto.desc = await translateText(proto.desc_lv, 'lv', 'en');
+                }
+
+                if (proto.description && (!proto.description_lv || !String(proto.description_lv).trim())) {
+                    proto.description_lv = await translateText(proto.description, 'en', 'lv');
+                } else if (proto.description_lv && (!proto.description || !String(proto.description).trim())) {
+                    proto.description = await translateText(proto.description_lv, 'lv', 'en');
+                }
+
+                if (proto.prog && (!proto.prog_lv || !String(proto.prog_lv).trim())) {
+                    // Programme tags are proper nouns (SIG FBVV, BCI…) — copy, don't machine-translate
+                    proto.prog_lv = proto.prog;
+                }
+            }
+        }
     }
 
     return cloned;

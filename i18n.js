@@ -103,6 +103,21 @@
             "qr_download_btn": "Download QR Code (.png)",
             "qr_open_ar_preview": "Live AR Preview ↗",
 
+            // V6 Prototypes Showcase
+            "tmpl_proto_title": "Prototypes Showcase",
+            "tmpl_proto_version": "V6 · Prototypes Engine",
+            "tmpl_proto_desc": "Fullscreen AR carousel for physical prototype collections. Center-stage parametric 3D model per prototype, left/right arrows to browse, title below the model, and a bottom-left search panel with a scrollable filtered list.",
+            "tag_3d_models": "Parametric 3D",
+            "tag_searchable": "Searchable",
+            "tag_ar_carousel": "AR Carousel",
+            "proto_search_placeholder": "Search 34 prototypes...",
+            "proto_browse_hint": "‹ › Browse · Drag 3D to rotate",
+            "proto_drag_hint": "Drag to rotate · Scroll list via search",
+            "proto_perm_hint": "Enable your camera to place each prototype hologram in your room. Drag the 3D view to rotate, use arrows to browse.",
+            "proto_visit": "Visit website ↗",
+            "proto_no_results": "No prototypes found.",
+            "proto_items": "prototypes",
+
             // Editor
             "breadcrumb_screens": "Screens",
             "breadcrumb_editor": "Editor",
@@ -315,6 +330,21 @@
             "qr_placeholder_text": "Izvēlieties ekrānu no saraksta, lai ģenerētu tā QR kodu",
             "qr_download_btn": "Lejupielādēt QR Kodu (.png)",
             "qr_open_ar_preview": "Atvērt AR Priekšskatījumu ↗",
+
+            // V6 Prototypes Showcase
+            "tmpl_proto_title": "Prototipu Skate",
+            "tmpl_proto_version": "V6 · Prototipu Dzinējs",
+            "tmpl_proto_desc": "Pilnekrāna AR karuselis fiziskām prototipu kolekcijām. Parametrisks 3D modelis centrā, bultiņas pārlūkošanai, nosaukums zem modeļa un meklēšanas panelis apakšā pa kreisi ar ritināmu filtrētu sarakstu.",
+            "tag_3d_models": "Parametrisks 3D",
+            "tag_searchable": "Meklējams",
+            "tag_ar_carousel": "AR Karuselis",
+            "proto_search_placeholder": "Meklēt 34 prototipos...",
+            "proto_browse_hint": "‹ › Pārlūkot · Velc 3D, lai pagrieztu",
+            "proto_drag_hint": "Velc, lai pagrieztu · Saraksts caur meklēšanu",
+            "proto_perm_hint": "Iespējojiet kameru, lai novietotu katra prototipa hologrammu savā telpā. Velciet 3D skatu, lai pagrieztu, izmantojiet bultiņas pārlūkošanai.",
+            "proto_visit": "Atvērt vietni ↗",
+            "proto_no_results": "Prototipi nav atrasti.",
+            "proto_items": "prototipi",
 
             // Editor
             "breadcrumb_screens": "Ekrāni",

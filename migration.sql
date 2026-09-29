@@ -50,6 +50,26 @@ END $$;
 --   photo: string
 -- }
 --
+-- For 'prototypes' template (V6 Prototypes Showcase 2026):
+-- data = {
+--   prototypes: [
+--     {
+--       id: string,
+--       name: string,
+--       name_lv: string,
+--       prog: string,          -- programme tag, proper noun (SIG FBVV, BCI…), copied to prog_lv
+--       prog_lv: string,
+--       desc: string,          -- or description
+--       desc_lv: string,       -- or description_lv
+--       kind: 'uav3d'|'antenna'|'iot'|'pen'|'ice'|'boat'|'locker'|'rover'|'battlebot'|'snow'|'hands'|'hearme'|'laptop'|'cargodrone'|'food'|'urbn'|'notebook'|'patch'|'shelf'|'lab'|'cabinet'|'vita'|'bin'|'floatbot'|'haps'|'vr'|'aidrone'|'lunar'|'dance'|'window'|'bench',
+--       accent: string,
+--       emoji: string,
+--       url: string,           -- optional website; tap on 3D model + Visit button open it
+--       photo: string          -- optional preview image; card thumbnail + floating 3D panel
+--     }
+--   ]
+-- }  -- NOTE: legacy alias data.items[] is also accepted by the viewer
+--
 -- For 'swup' template (Team Profile Projection):
 -- data = {
 --   teamName: string,

@@ -7,7 +7,9 @@ const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = 3001; // Using 3001 to avoid conflict with the v1 server if it's running
-const DB_FILE = path.join(__dirname, 'database.json');
+const DB_FILE = fs.existsSync(path.join(__dirname, '../database.json'))
+    ? path.join(__dirname, '../database.json')
+    : path.join(__dirname, 'database.json');
 
 app.use(cors());
 app.use(express.json());
@@ -30,9 +32,25 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Helper to read/write DB
-const readDB = () => JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+// Helper to read/write DB with safety
+const readDB = () => {
+    try {
+        if (fs.existsSync(DB_FILE)) {
+            return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+        }
+    } catch (e) {
+        console.error("readDB error:", e);
+    }
+    return { locations: [] };
+};
+
+const writeDB = (data) => {
+    try {
+        fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+    } catch (e) {
+        console.error("writeDB error:", e);
+    }
+};
 
 const { translateText, translateArray, autoTranslateScreenPayload } = require('./translate');
 
@@ -89,25 +107,54 @@ app.post('/api/auth', async (req, res) => {
 
 // 1. Get all screens (locations)
 app.get('/api/locations', async (req, res) => {
-    const { data, error } = await supabase.from('locations').select('*');
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data);
+    try {
+        const { data, error } = await supabase.from('locations').select('*');
+        if (error) throw error;
+        if (data && data.length > 0) {
+            return res.json(data);
+        }
+    } catch (err) {
+        console.warn('Supabase fetch failed or paused, falling back to database.json:', err.message || err);
+    }
+    const db = readDB();
+    res.json(db.locations || []);
 });
 
 // 2. Get specific screen
 app.get('/api/locations/:id', async (req, res) => {
-    const { data, error } = await supabase.from('locations').select('*').eq('id', req.params.id).single();
-    if (error) return res.status(404).json({ error: "Location not found" });
-    res.json(data);
+    try {
+        const { data, error } = await supabase.from('locations').select('*').eq('id', req.params.id).single();
+        if (error) throw error;
+        if (data) return res.json(data);
+    } catch (err) {
+        console.warn('Supabase single fetch failed, falling back to database.json:', err.message || err);
+    }
+    const db = readDB();
+    const found = (db.locations || []).find(l => l.id === req.params.id);
+    if (found) return res.json(found);
+    res.status(404).json({ error: "Location not found" });
 });
 
 // 3. Create new screen (with automatic English -> Latvian translation fallback)
 app.post('/api/locations', async (req, res) => {
     try {
         const translatedPayload = await autoTranslateScreenPayload(req.body);
-        const { data, error } = await supabase.from('locations').insert([translatedPayload]).select();
-        if (error) return res.status(500).json({ error: error.message });
-        res.json({ success: true, location: data[0] });
+        let created = translatedPayload;
+        try {
+            const { data, error } = await supabase.from('locations').insert([translatedPayload]).select();
+            if (!error && data && data[0]) created = data[0];
+        } catch (e) {
+            console.warn('Supabase insert skipped (offline):', e.message || e);
+        }
+        // Always persist to local DB
+        const db = readDB();
+        db.locations = db.locations || [];
+        const idx = db.locations.findIndex(l => l.id === created.id);
+        if (idx >= 0) db.locations[idx] = created;
+        else db.locations.push(created);
+        writeDB(db);
+
+        res.json({ success: true, location: created });
     } catch (err) {
         console.error("Error creating location:", err);
         res.status(500).json({ error: err.message });
@@ -118,9 +165,26 @@ app.post('/api/locations', async (req, res) => {
 app.put('/api/locations/:id', async (req, res) => {
     try {
         const translatedPayload = await autoTranslateScreenPayload(req.body);
-        const { data, error } = await supabase.from('locations').update(translatedPayload).eq('id', req.params.id).select();
-        if (error) return res.status(500).json({ error: error.message });
-        res.json({ success: true, location: data[0] });
+        let updated = translatedPayload;
+        try {
+            const { data, error } = await supabase.from('locations').update(translatedPayload).eq('id', req.params.id).select();
+            if (!error && data && data[0]) updated = data[0];
+        } catch (e) {
+            console.warn('Supabase update skipped (offline):', e.message || e);
+        }
+        // Always persist to local DB
+        const db = readDB();
+        db.locations = db.locations || [];
+        const idx = db.locations.findIndex(l => l.id === req.params.id);
+        if (idx >= 0) {
+            db.locations[idx] = { ...db.locations[idx], ...updated };
+            updated = db.locations[idx];
+        } else {
+            db.locations.push(updated);
+        }
+        writeDB(db);
+
+        res.json({ success: true, location: updated });
     } catch (err) {
         console.error("Error updating location:", err);
         res.status(500).json({ error: err.message });
@@ -129,8 +193,12 @@ app.put('/api/locations/:id', async (req, res) => {
 
 // 5. Delete specific screen
 app.delete('/api/locations/:id', async (req, res) => {
-    const { error } = await supabase.from('locations').delete().eq('id', req.params.id);
-    if (error) return res.status(500).json({ error: error.message });
+    try {
+        await supabase.from('locations').delete().eq('id', req.params.id);
+    } catch (e) {}
+    const db = readDB();
+    db.locations = (db.locations || []).filter(l => l.id !== req.params.id);
+    writeDB(db);
     res.json({ success: true });
 });
 

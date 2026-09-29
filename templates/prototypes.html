@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+<title>Prototypes 2026 — Spatial Showcase</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet">
+<script src="../db-shim.js?v=20260928b"></script>
+<script src="../i18n.js?v=20260928b"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{ --accent:#ffb020; }
+html,body{min-height:100%;margin:0;touch-action:pan-x pan-y;overscroll-behavior:none;}
+button,a,.arrow-btn,#search-toggle{-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+body{background:#0b0e16;color:#fff7e8;font-family:'Manrope',sans-serif;overflow-x:hidden;}
+button{font:inherit;}
+.permission-screen{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 20%,#3a2c12,#10131d 65%);position:relative;z-index:50;}
+.permission-card{position:relative;max-width:460px;width:100%;padding:36px;text-align:center;border:1px solid rgba(255,176,32,.45);border-radius:28px;background:rgba(20,16,8,.55);box-shadow:inset 0 1px rgba(255,255,255,.25),0 20px 80px rgba(0,0,0,.5),0 0 70px rgba(255,176,32,.12);backdrop-filter:blur(26px);}
+.permission-orb{width:66px;height:66px;display:grid;place-items:center;margin:0 auto 20px;border-radius:50%;font-size:28px;background:radial-gradient(circle,rgba(255,200,80,.8),rgba(200,120,20,.15) 55%,transparent 70%);box-shadow:0 0 40px #ffb020;}
+.perm-logo{display:inline-block;background:#fff;border-radius:18px;padding:12px 20px;margin-bottom:18px;box-shadow:0 10px 34px rgba(0,0,0,.4),0 0 40px rgba(255,176,32,.18);}
+.perm-logo img{height:54px;width:auto;display:block;}
+.brand-logo-badge{display:inline-flex;align-items:center;background:#fff;border-radius:10px;padding:5px 10px;box-shadow:0 4px 16px rgba(0,0,0,.35);}
+.brand-logo-badge img{height:26px;width:auto;display:block;}
+.eyebrow{margin:0;color:#ffd9a0;font:500 10px/1.3 'DM Mono',monospace;letter-spacing:.15em;}
+.permission-card h1{margin:12px 0 12px;font:700 clamp(26px,4vw,38px)/1 'Montserrat',sans-serif;letter-spacing:-.06em;}
+.permission-copy{color:rgba(255,240,210,.75);font-size:14px;line-height:1.55;}
+.permission-error{color:#ffc9c9;font-size:13px;}
+.glass-button{padding:13px 20px;color:#231600;font-weight:800;border:1px solid #ffe1ae;border-radius:999px;background:#ffcf6e;cursor:pointer;box-shadow:0 0 26px rgba(255,176,32,.4);}
+.glass-button:hover{transform:translateY(-2px);}
+.ar-stage{position:relative;min-height:100vh;overflow:hidden;background:#0e1420;isolation:isolate;}
+.camera-feed,.fallback-environment,.camera-grade,.global-scanlines{position:fixed;inset:0;}
+.camera-feed{z-index:-5;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease;}
+.camera-feed.is-ready{opacity:1;}
+.fallback-environment{z-index:-6;background:linear-gradient(115deg,#2b2417,#3d3a2e 40%,#131a26);}
+.fallback-environment::after{content:'';position:absolute;inset:30% -20% -20%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 12vw);transform:perspective(300px) rotateX(52deg);}
+.camera-grade{z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 50% 55%,transparent 25%,rgba(0,8,18,.45) 100%),linear-gradient(120deg,rgba(60,35,0,.2),transparent 50%,rgba(0,30,60,.2));}
+.global-scanlines{z-index:1;pointer-events:none;opacity:.18;background:repeating-linear-gradient(0deg,rgba(255,220,160,.12) 0 1px,transparent 1px 4px);mix-blend-mode:screen;}
+.main-overlay{position:relative;z-index:3;width:min(1240px,100%);min-height:100vh;box-sizing:border-box;margin:auto;padding:20px clamp(14px,4vw,54px) 120px;display:flex;flex-direction:column;}
+.top-hud{display:flex;justify-content:space-between;gap:18px;align-items:center;}
+.brand-lockup{display:flex;align-items:center;gap:10px;}
+.brand-mark{display:grid;width:30px;height:30px;place-items:center;border:1px solid rgba(255,200,100,.7);color:#ffe3ae;font-size:16px;box-shadow:0 0 16px rgba(255,176,32,.6);border-radius:8px;}
+.brand-lockup p{margin:0 0 3px;color:rgba(255,220,170,.7);font:500 8px/1 'DM Mono',monospace;letter-spacing:.16em;}
+.brand-lockup h1{margin:0;font:700 15px/1 'Montserrat',sans-serif;letter-spacing:-.04em;}
+.hud-right{display:flex;align-items:center;gap:10px;}
+.live-status{display:flex;align-items:center;gap:7px;color:rgba(255,235,200,.85);font:500 9px/1 'DM Mono',monospace;letter-spacing:.09em;}
+.live-status i{width:6px;height:6px;border-radius:50%;background:#ffc65c;box-shadow:0 0 10px #ffc65c;animation:blink 1.4s steps(2) infinite;}
+.lang-switcher{display:inline-flex;background:rgba(20,16,8,.55);border:1px solid rgba(255,200,100,.35);border-radius:999px;padding:3px;gap:4px;backdrop-filter:blur(14px);}
+.lang-switcher-btn{background:transparent;border:none;color:#ffd9a0;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;padding:5px 12px;border-radius:999px;cursor:pointer;}
+.lang-switcher-btn.active{background:#ffcf6e;color:#231600;}
+.stage-wrap{position:relative;display:grid;grid-template-columns:64px 1fr 64px;gap:10px;align-items:center;margin-top:14px;}
+.arrow-btn{width:56px;height:56px;border-radius:50%;border:1px solid rgba(255,210,140,.55);background:rgba(20,16,8,.6);color:#ffe3ae;font-size:24px;cursor:pointer;backdrop-filter:blur(12px);transition:.2s;z-index:5;}
+.arrow-btn:hover{background:rgba(255,176,32,.3);transform:scale(1.06);}
+.arrow-btn:active{transform:scale(.96);}
+#model-viewport{position:relative;height:clamp(300px,min(52vh,52dvh),500px);min-height:300px;border:1px solid rgba(255,200,100,.35);border-radius:26px;overflow:hidden;background:linear-gradient(135deg,rgba(40,28,8,.35),rgba(5,12,24,.25));box-shadow:inset 0 1px rgba(255,255,255,.25),0 22px 70px rgba(0,0,0,.35),0 0 60px rgba(255,176,32,.08);backdrop-filter:blur(6px);touch-action:none;cursor:grab;}
+.visit-btn{display:none;margin:12px auto 0;padding:10px 22px;border-radius:999px;border:1px solid #ffe1ae;background:#ffcf6e;color:#231600;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none;}
+.visit-btn.show{display:inline-block;}
+.proto-thumb{display:none;width:100%;max-height:150px;object-fit:cover;border-radius:14px;margin-bottom:12px;border:1px solid rgba(255,200,100,.35);}
+.proto-thumb.show{display:block;}
+#model-viewport:active{cursor:grabbing;}
+#model-viewport canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block;}
+.viewport-fallback{position:absolute;inset:0;display:none;place-items:center;font-size:84px;}
+.model-hint{position:absolute;left:14px;bottom:12px;font:500 9px/1 'DM Mono',monospace;letter-spacing:.1em;color:rgba(255,225,180,.6);pointer-events:none;text-transform:uppercase;}
+.model-index{position:absolute;right:14px;top:12px;font:700 11px/1 'DM Mono',monospace;color:#ffd9a0;background:rgba(0,0,0,.4);border:1px solid rgba(255,200,100,.35);padding:6px 12px;border-radius:999px;}
+.proto-card{margin-top:14px;padding:20px 22px;border:1px solid rgba(255,200,100,.3);border-radius:22px;background:rgba(12,14,22,.62);backdrop-filter:blur(18px);text-align:center;box-shadow:0 14px 50px rgba(0,0,0,.4);}
+.proto-card .prog{display:inline-block;font:700 9px/1 'DM Mono',monospace;letter-spacing:.12em;padding:6px 12px;border-radius:999px;background:color-mix(in srgb,var(--accent) 18%,transparent);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);color:var(--accent);margin-bottom:10px;text-transform:uppercase;}
+.proto-card h2{margin:0;font:800 clamp(22px,3.4vw,36px)/1 'Montserrat',sans-serif;letter-spacing:-.05em;}
+.proto-card p{margin:10px auto 0;max-width:640px;color:rgba(255,240,215,.72);font-size:13.5px;line-height:1.55;}
+.proto-dots{display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap;max-width:100%;overflow:hidden;}
+.proto-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;}
+.proto-dots i.on{background:var(--accent);box-shadow:0 0 10px var(--accent);}
+/* Search bottom-left */
+.search-fab{position:fixed;right:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:10px;}
+#search-toggle{width:56px;height:56px;border-radius:50%;border:1px solid #ffe1ae;background:#ffcf6e;color:#231600;cursor:pointer;box-shadow:0 8px 30px rgba(255,176,32,.45);transition:.2s;display:grid;place-items:center;}
+#search-toggle svg{display:block;}
+#search-toggle:hover{transform:scale(1.06);}
+.search-panel{position:fixed;right:18px;bottom:86px;z-index:60;width:min(340px,calc(100vw - 36px));max-height:min(52vh,420px);display:none;flex-direction:column;border:1px solid rgba(255,200,100,.4);border-radius:18px;background:rgba(12,14,22,.94);backdrop-filter:blur(22px);box-shadow:0 18px 60px rgba(0,0,0,.55);overflow:hidden;}
+.search-panel.open{display:flex;}
+.search-panel input{margin:12px;padding:11px 14px;border-radius:12px;border:1px solid rgba(255,200,100,.3);background:rgba(255,255,255,.06);color:#fff;font-size:14px;outline:none;font-family:inherit;}
+.search-panel input:focus{border-color:#ffb020;}
+#search-list{overflow-y:auto;padding:0 12px 12px;display:flex;flex-direction:column;gap:6px;}
+#search-list::-webkit-scrollbar{width:6px;}
+#search-list::-webkit-scrollbar-thumb{background:rgba(255,176,32,.4);border-radius:3px;}
+.search-item{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid transparent;cursor:pointer;text-align:left;width:100%;color:#fff;}
+.search-item:hover{background:rgba(255,176,32,.12);border-color:rgba(255,176,32,.35);}
+.search-item.active{background:rgba(255,176,32,.18);border-color:#ffb020;}
+.search-item .emoji{font-size:20px;width:28px;text-align:center;flex-shrink:0;}
+.search-item .t{min-width:0;}
+.search-item .t b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.search-item .t small{font:500 9px 'DM Mono',monospace;color:rgba(255,220,170,.65);letter-spacing:.06em;}
+.search-count{padding:0 14px 10px;font:500 10px 'DM Mono',monospace;color:rgba(255,220,170,.6);}
+.bottom-hud{display:flex;justify-content:space-between;padding:14px 4px 0;color:rgba(255,230,190,.6);font:500 9px/1.4 'DM Mono',monospace;letter-spacing:.08em;}
+.gps-status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:600;font-family:'DM Mono',monospace;margin-bottom:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);}
+.gps-status-pill.is-verified{background:rgba(124,240,176,.15);border-color:rgba(124,240,176,.4);color:#7cf0b0;}
+.gps-status-pill.is-locked{background:rgba(240,121,121,.15);border-color:rgba(240,121,121,.4);color:#ff9e9e;}
+.gps-locked-card{background:rgba(10,14,22,.8);border:1px solid rgba(255,180,50,.4);border-radius:20px;padding:18px 16px;margin:14px 0;text-align:center;}
+.gps-distance-text{font-size:13px;margin:8px 0 4px;line-height:1.45;}
+.gps-preview-cta{display:block;width:100%;margin:12px 0 6px;padding:12px 20px;border-radius:999px;background:linear-gradient(135deg,#ffd043,#ff9f1c);border:none;color:#11141d;font-size:13px;font-weight:700;cursor:pointer;}
+.gps-retry-btn{margin-top:6px;padding:7px 15px;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:11px;font-weight:600;cursor:pointer;}
+.preview-watermark-hud{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999;display:inline-flex;align-items:center;gap:8px;padding:6px 18px;border-radius:999px;background:rgba(15,18,28,.92);border:1px solid rgba(255,208,67,.55);color:#ffd043;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;pointer-events:none;}
+@keyframes blink{50%{opacity:.25;box-shadow:none;}}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.proto-card.swap{animation:cardIn .35s ease;}
+@media (min-width:1024px){.main-overlay{padding-top:26px;}.stage-wrap{max-width:1020px;margin-left:auto;margin-right:auto;width:100%;}#model-viewport{height:clamp(340px,50vh,520px);}.proto-card{max-width:1020px;margin-left:auto;margin-right:auto;width:100%;}}
+@media (min-width:761px) and (max-width:1023px){.stage-wrap{grid-template-columns:56px 1fr 56px;}#model-viewport{height:44vh;min-height:300px;}}
+@media (max-width:760px){.main-overlay{padding:14px 12px 110px;}.top-hud{flex-wrap:wrap;}.stage-wrap{grid-template-columns:1fr;position:relative;}#model-viewport{min-height:270px;height:44dvh;order:-1;}.arrow-btn{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;font-size:20px;z-index:6;background:rgba(12,14,22,.72);}#prev-btn{left:10px;}#next-btn{right:10px;}.model-index{top:10px;right:10px;}.proto-card{padding:16px 14px;}.proto-card h2{font-size:clamp(20px,6vw,28px);}.search-panel{left:auto;right:12px;bottom:78px;width:min(340px,calc(100vw - 24px));max-height:46dvh;}.search-fab{right:12px;bottom:12px;}#search-toggle{width:52px;height:52px;}.bottom-hud{font-size:8px;}}
+@media (max-width:390px){.arrow-btn{width:40px;height:40px;font-size:17px;}#model-viewport{min-height:230px;height:40dvh;border-radius:18px;}.proto-card{border-radius:16px;padding:14px 12px;}.brand-lockup h1{font-size:13px;}.live-status{font-size:8px;}}
+@media (orientation:landscape) and (max-height:500px){#model-viewport{height:62dvh;min-height:200px;}.proto-card p{display:none;}.main-overlay{padding-bottom:90px;}}
+</style>
+</head>
+<body>
+<div id="permission-screen" class="permission-screen">
+  <div class="permission-card">
+    <div class="perm-logo"><img id="perm-logo" src="../assets/brand/rtu-innovations-en.jpg" alt="RTU Innovations"></div>
+    <div style="display:flex;justify-content:center;margin-bottom:14px;" id="perm-lang-container"></div>
+    <div id="gps-status-container"></div>
+    <p class="eyebrow">RTU · PROTOTYPES 2026</p>
+    <h1 id="loading-title">Loading prototypes…</h1>
+    <p class="permission-copy" data-i18n="proto_perm_hint">Enable your camera to place each prototype hologram in your room. Drag the 3D view to rotate, use arrows to browse.</p>
+    <p id="permission-error" class="permission-error"></p>
+    <div id="gps-action-area"><button id="start-btn" class="glass-button" style="display:none;">Enable camera ↗</button></div>
+  </div>
+</div>
+<div id="ar-stage" class="ar-stage" style="display:none;">
+  <video id="camera-feed" class="camera-feed" muted playsinline></video>
+  <div class="fallback-environment"></div><div class="camera-grade"></div><div class="global-scanlines"></div>
+  <main class="main-overlay">
+    <header class="top-hud">
+      <div class="brand-lockup"><span class="brand-logo-badge"><img id="hud-logo" src="../assets/brand/rtu-innovations-en.jpg" alt="RTU"></span><div><p>PROTOTYPES · 2026</p><h1 id="header-title">Prototype Showcase</h1></div></div>
+      <div class="hud-right"><div id="hud-lang-container"></div><div class="live-status"><i></i><span>LIVE</span></div></div>
+    </header>
+    <div class="stage-wrap">
+      <button class="arrow-btn" id="prev-btn" aria-label="Previous">‹</button>
+      <div id="model-viewport"><div class="viewport-fallback" id="viewport-fallback">📦</div><div class="model-index" id="model-index">1 / 34</div><div class="model-hint" data-i18n="proto_drag_hint">Drag to rotate · Scroll list via search</div></div>
+      <button class="arrow-btn" id="next-btn" aria-label="Next">›</button>
+    </div>
+    <section class="proto-card" id="proto-card">
+      <img class="proto-thumb" id="proto-thumb" alt="Prototype preview">
+      <span class="prog" id="proto-prog">SIG FBVV</span>
+      <h2 id="proto-name">Prototype</h2>
+      <p id="proto-desc"></p>
+      <div><a class="visit-btn" id="proto-visit" href="#" target="_blank" rel="noopener">Visit website ↗</a></div>
+      <div class="proto-dots" id="proto-dots"></div>
+    </section>
+    <footer class="bottom-hud"><span data-i18n="proto_browse_hint">‹ › Browse · Drag 3D to rotate</span><span id="proto-counter">01 / 34</span></footer>
+  </main>
+  <div class="search-fab"><button id="search-toggle" aria-label="Search"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#231600" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.2" y1="16.2" x2="21" y2="21"/></svg></button></div>
+  <div class="search-panel" id="search-panel">
+    <input id="search-input" type="text" placeholder="Search 34 prototypes..." data-i18n-placeholder="proto_search_placeholder" autocomplete="off">
+    <div class="search-count" id="search-count"></div>
+    <div id="search-list"></div>
+  </div>
+</div>
+<script>
+/* ============ SEED: 34 prototypes 2026, fully bilingual EN+LV (used if API has no data) ============ */
+const SEED = [
+{id:"uav-3d",name:"3D UAV",name_lv:"3D UAV",prog:"SIG FBVV",desc:"Prototype of a 3D-printed unmanned aerial vehicle body.",desc_lv:"3D printēts bezpilota gaisa kuģa korpusa prototips.",kind:"uav3d",accent:"#7cf0b0",emoji:"🛸"},
+{id:"video-ant",name:"Video Signal Receiving Antennas",name_lv:"Video signāla uztveršanas antenas",prog:"SIG FBVV",desc:"Prototype of a UAV video receiving system.",desc_lv:"Bezpilota gaisa kuģa video uztveršanas sistēmas prototips.",kind:"antenna",accent:"#7cf0b0",emoji:"📡"},
+{id:"crowdstate",name:"CrowdState",name_lv:"CrowdState",prog:"SIG FBVV",desc:"Customer flow forecasting system; IoT- and AI-based real-time micro-enterprise footfall collection and forecasting.",desc_lv:"Klientu plūsmas prognozēšanas sistēma — IoT un MI risinājums mikrouzņēmumu apmeklētāju plūsmas uzskaitei un prognozēšanai reāllaikā.",kind:"iot",accent:"#7cf0b0",emoji:"📊"},
+{id:"gravipen",name:"Gravipen",name_lv:"Gravipen",prog:"SIG FBVV",desc:"Prototype of a digital pen.",desc_lv:"Digitālās pildspalvas prototips.",kind:"pen",accent:"#7cf0b0",emoji:"🖊️"},
+{id:"icesense-fbvv",name:"IceSense",name_lv:"IceSense",prog:"SIG FBVV",desc:"Prototype of an ice thickness measurement sensor.",desc_lv:"Ledus biezuma mērīšanas sensora prototips.",kind:"ice",accent:"#7cf0b0",emoji:"🧊"},
+{id:"icesense-bci",name:"IceSense",name_lv:"IceSense",prog:"SIG BCI",desc:"Prototype of an ice thickness measurement sensor.",desc_lv:"Ledus biezuma mērīšanas sensora prototips.",kind:"ice",accent:"#c4b5fd",emoji:"🧊"},
+{id:"hydrocontest",name:"LA Hydrocontest",name_lv:"LA Hydrocontest",prog:"SIG FBVV",desc:"Prototype of a remotely controlled boat (drone).",desc_lv:"Tālvadāmas laivas (drona) prototips.",kind:"boat",accent:"#7cf0b0",emoji:"⛵"},
+{id:"velotraks",name:"Velotraks",name_lv:"Velotraks",prog:"SIG FBVV",desc:"Prototype of a ventilated locker for cyclists' equipment.",desc_lv:"Vēdināma skapja prototips velosipēdistu ekipējumam.",kind:"locker",accent:"#7cf0b0",emoji:"🚲"},
+{id:"bruntor",name:"Bruntor",name_lv:"Bruntor",prog:"Liepāja project",desc:"Remotely controllable platform (Liepāja).",desc_lv:"Tālvadāma platforma (Liepājas projekts).",kind:"rover",accent:"#f0bf79",emoji:"🤖"},
+{id:"bbk",name:"BBK (Battle Bot Kit)",name_lv:"BBK (kaujas robotu komplekts)",prog:"SIG Future Sandbox",desc:"Universal battle robot kit.",desc_lv:"Universāls kaujas robotu komplekts.",kind:"battlebot",accent:"#b7f8ff",emoji:"⚔️"},
+{id:"baltic-snow",name:"Baltic Snow",name_lv:"Baltic Snow",prog:"SIG BCI",desc:"Prototype of cellulose-based artificial snow.",desc_lv:"Celulozes mākslīgā sniega prototips.",kind:"snow",accent:"#c4b5fd",emoji:"❄️"},
+{id:"hearme-bci",name:"HearMe",name_lv:"HearMe",prog:"SIG BCI",desc:"Web app for sign-language communication: real-time speech-to-text, text-to-sign conversion, virtual signing avatars, role modes for deaf / hearing / interpreter users, and secure WebRTC video.",desc_lv:"Tīmekļa lietotne saziņai zīmju valodā: runas pārvēršana tekstā reāllaikā, teksta pārvēršana žestos, virtuālie zīmju valodas avatari, lomu režīmi nedzirdīgajiem / dzirdīgajiem / tulkiem un droši WebRTC videozvani.",kind:"hearme",accent:"#c4b5fd",emoji:"🤟"},
+{id:"hearme-fvl",name:"HearMe",name_lv:"HearMe",prog:"SIG FVL",desc:"Web app for sign-language communication: real-time speech-to-text, text-to-sign conversion, virtual signing avatars, role modes for deaf / hearing / interpreter users, and secure WebRTC video.",desc_lv:"Tīmekļa lietotne saziņai zīmju valodā: runas pārvēršana tekstā reāllaikā, teksta pārvēršana žestos, virtuālie zīmju valodas avatari, lomu režīmi nedzirdīgajiem / dzirdīgajiem / tulkiem un droši WebRTC videozvani.",kind:"hearme",accent:"#f0bf79",emoji:"🤟"},
+{id:"priede",name:"Priede (Sprungulis)",name_lv:"Priede (Sprungulis)",prog:"SIG BCI",desc:"Prototype of a programming training platform.",desc_lv:"Programmēšanas apmācību platformas prototips.",kind:"laptop",accent:"#c4b5fd",emoji:"💻"},
+{id:"spoks",name:"Spoks",name_lv:"Spoks",prog:"SIG BCI",desc:"Prototype of a cargo unmanned aerial vehicle.",desc_lv:"Kravas bezpilota gaisa kuģa prototips.",kind:"cargodrone",accent:"#c4b5fd",emoji:"📦"},
+{id:"urbndine",name:"UrbnDINE",name_lv:"UrbnDINE",prog:"SIG FVL",desc:"End-to-end hospitality OS in real time: guest ordering, tableside staff ops, kitchen fulfillment, Bolt Food & Wolt delivery integrations, fiscal printing and BI analytics in one cloud suite.",desc_lv:"Viesmīlības operētājsistēma pilnam ciklam reāllaikā: viesu pasūtījumi, darbs pie galdiem, virtuves izpilde, Bolt Food un Wolt piegāžu integrācijas, fiskālā druka un biznesa analītika vienotā mākoņa sistēmā.",kind:"urbn",accent:"#f0bf79",emoji:"🍔"},
+{id:"plusma",name:"Plusma",name_lv:"Plusma",prog:"SIG FVL",desc:"Digital note-taking app for STEM students and professionals; automates math input, editing and graph drawing.",desc_lv:"Digitāla piezīmju lietotne STEM studentiem un profesionāļiem; automatizē matemātisko darbību ievadi, rediģēšanu un grafiku zīmēšanu.",kind:"notebook",accent:"#f0bf79",emoji:"📐"},
+{id:"pink-patch",name:"Pink Patch",name_lv:"Pink Patch",prog:"SIG III (Swap the Problem)",desc:"mRNA antiviral patch for the treatment of conjunctivitis.",desc_lv:"mRNS pretvīrusu plāksteris konjunktivīta ārstēšanai.",kind:"patch",accent:"#f9a8d4",emoji:"🩹"},
+{id:"smart-store",name:"Smart Store",name_lv:"Smart Store",prog:"SIG III (Swap the Problem)",desc:"Smart inventory and procurement planning system for pharmaceutical materials.",desc_lv:"Vieda krājumu un iepirkumu plānošanas sistēma farmācijas materiāliem.",kind:"shelf",accent:"#f9a8d4",emoji:"🏪"},
+{id:"core",name:"C.O.R.E.",name_lv:"C.O.R.E.",prog:"SIG III (Swap the Problem)",desc:"Automated laboratory data entry and integration system for LIMS.",desc_lv:"Automatizēta laboratorijas datu ievades un integrācijas sistēma LIMS.",kind:"lab",accent:"#f9a8d4",emoji:"🧬"},
+{id:"smart-cabinet",name:"Smart Cabinet",name_lv:"Smart Cabinet",prog:"SIG III (Swap the Problem)",desc:"Smart medication storage system with automated inventory tracking.",desc_lv:"Vieda zāļu uzglabāšanas sistēma ar automātisku krājumu uzskaiti.",kind:"cabinet",accent:"#f9a8d4",emoji:"💊"},
+{id:"vitamatch",name:"VitaMatch",name_lv:"VitaMatch",prog:"SIG III (Swap the Problem)",desc:"Personalised vitamin drink preparation system.",desc_lv:"Personalizēta vitamīnu dzērienu pagatavošanas sistēma.",kind:"vita",accent:"#f9a8d4",emoji:"🧃"},
+{id:"medbin",name:"MedBin",name_lv:"MedBin",prog:"SIG III (Swap the Problem)",desc:"Automated medication waste sorting system.",desc_lv:"Automatizēta zāļu atkritumu šķirošanas sistēma.",kind:"bin",accent:"#f9a8d4",emoji:"♻️"},
+{id:"biobot",name:"Floating Bioremediation Robot",name_lv:"Peldošais bioremediācijas robots",prog:"SIG III (Swap the Problem)",desc:"Robotic pharmaceutical wastewater treatment system for reducing antibiotic residues.",desc_lv:"Robotizēta farmaceitisko notekūdeņu attīrīšanas sistēma antibiotiku atlieku samazināšanai.",kind:"floatbot",accent:"#f9a8d4",emoji:"🌊"},
+{id:"haps",name:"se-HAPS",name_lv:"se-HAPS",prog:"SIG III – VIP",desc:"Simplified Engineering High Altitude Pseudo Satellite — 3D-printed UAV prototype.",desc_lv:"Vienkāršināts lielaugstuma pseidosatelīts — 3D printēts bezpilota lidaparāta prototips.",kind:"haps",accent:"#fde68a",emoji:"🛰️"},
+{id:"xrmed",name:"Xrmed",name_lv:"Xrmed",prog:"SIG III – VIP",desc:"VR application for children to virtually explore the hospital before hospitalisation, reducing anxiety.",desc_lv:"VR lietotne bērniem, kas ļauj virtuāli iepazīt slimnīcas vidi pirms hospitalizācijas, mazinot trauksmi.",kind:"vr",accent:"#fde68a",emoji:"🥽"},
+{id:"uav-robotics",name:"UAV Robotics",name_lv:"UAV Robotics",prog:"SIG III – VIP",desc:"Autonomous UAV with AI and computer vision; navigates with limited GPS.",desc_lv:"Autonoms bezpilota lidaparāts ar MI un datorredzi; orientējas arī vidē ar ierobežotu GPS.",kind:"aidrone",accent:"#fde68a",emoji:"🤖"},
+{id:"lunar",name:"Lunar Energy Payload Builders Club",name_lv:"Mēness enerģijas klubs",prog:"SIG III – VIP",desc:"Reduced-scale lunar rover energy system using thermoacoustic heat-to-electricity conversion.",desc_lv:"Mēness rovera energosistēmas prototips samazinātā mērogā, siltumu elektroenerģijā pārvēršot ar termoakustiku.",kind:"lunar",accent:"#fde68a",emoji:"🌙"},
+{id:"ab",name:"AB – iCoDaCo",name_lv:"AB – iCoDaCo",prog:"iCoDaCo Design Sprint",desc:"Digital platform prototype for the European contemporary dance community.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#93c5fd",emoji:"💃",url:"",photo:""},
+{id:"pd",name:"PD – iCoDaCo",name_lv:"PD – iCoDaCo",prog:"iCoDaCo Design Sprint",desc:"Digital platform prototype for the European contemporary dance community.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#c4b5fd",emoji:"🕺",url:"",photo:""},
+{id:"rj",name:"RJ – iCoDaCo",name_lv:"RJ – iCoDaCo",prog:"iCoDaCo Design Sprint",desc:"Digital platform prototype for the European contemporary dance community.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#f9a8d4",emoji:"🎭",url:"",photo:""},
+{id:"sd",name:"SD – iCoDaCo",name_lv:"SD – iCoDaCo",prog:"iCoDaCo Design Sprint",desc:"Digital platform prototype for the European contemporary dance community.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#67e8f3",emoji:"🎶",url:"",photo:""},
+{id:"fake-window",name:"Fake Window",name_lv:"Viltus logs",prog:"LG x RTU x Hannam",desc:"Made from recycled old screens; imitates a window with natural daylight and changing sky. Gives e-waste a second life.",desc_lv:"Izgatavots no pārstrādātiem veciem ekrāniem; imitē logu ar dabisku dienasgaismu un mainīgām debesīm. Dod nolietotai elektronikai otro dzīvi.",kind:"window",accent:"#fca5a5",emoji:"🪟"},
+{id:"lg-repair",name:"LG Repair Workshops",name_lv:"LG remonta darbnīcas",prog:"LG x RTU x Hannam",desc:"Open workshops to learn LG appliance repair; extends device life, cuts e-waste, builds skills.",desc_lv:"Atvērtas darbnīcas, kur iemācīties labot LG sadzīves tehniku. Pagarina ierīču mūžu, mazina e-atkritumus un attīsta praktiskas prasmes.",kind:"bench",accent:"#fca5a5",emoji:"🔧"}
+];
+/* ============ STATE ============ */
+let locData={}, prototypes=SEED.slice(), idx=0;
+/* ============ I18N ============ */
+try{document.getElementById('perm-lang-container').innerHTML=i18n.createSwitcherHTML();document.getElementById('hud-lang-container').innerHTML=i18n.createSwitcherHTML();}catch(e){}
+function updateBrandLogo(){
+  var lv=false;try{lv=i18n.getLanguage()==='lv';}catch(e){}
+  var src=lv?'../assets/brand/rtu-innovations-lv.jpg':'../assets/brand/rtu-innovations-en.jpg';
+  ['perm-logo','hud-logo'].forEach(function(id){
+    var el=document.getElementById(id);if(!el)return;
+    el.onerror=function(){if(el.src.indexOf('rtu-innovations-en.jpg')===-1)el.src='../assets/brand/rtu-innovations-en.jpg';};
+    if(el.getAttribute('src')!==src)el.src=src;
+    el.alt=lv?'RTU Inovācijas':'RTU Innovations';
+  });
+}
+try{i18n.subscribe(()=>{updateBrandLogo();updateCard();renderSearch(document.getElementById('search-input')?document.getElementById('search-input').value:'');if(typeof renderGpsLockedCard==='function')renderGpsLockedCard();const t=i18n.getLocalized(locData,'title')||locData.title||locData.name;if(t){document.getElementById('header-title').textContent=t;document.getElementById('loading-title').textContent=t;}});}catch(e){}
+updateBrandLogo();
+const permissionScreen=document.getElementById('permission-screen'),arStage=document.getElementById('ar-stage'),startBtn=document.getElementById('start-btn'),errorMsg=document.getElementById('permission-error'),videoEl=document.getElementById('camera-feed');
+/* ============ NO-ZOOM (iOS / Android / desktop) ============ */
+document.addEventListener('gesturestart',function(e){e.preventDefault();});
+document.addEventListener('gesturechange',function(e){e.preventDefault();});
+document.addEventListener('gestureend',function(e){e.preventDefault();});
+document.addEventListener('dblclick',function(e){e.preventDefault();},{passive:false});
+document.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault();},{passive:false});
+document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault();},{passive:false});
+/* ============ FETCH ============ */
+async function fetchLocationData(){
+  try{
+    const qp=new URLSearchParams(window.location.search);let locId=qp.get('id');
+    if(!locId){const parts=window.location.pathname.split('/').filter(Boolean);locId=parts[parts.length-1];}
+    if(!locId||locId==='prototypes'||locId==='view'){throw new Error('__seed__');}
+    const res=await fetch('/api/locations/'+encodeURIComponent(locId));
+    if(!res.ok)throw new Error('Location not found');
+    locData=await res.json();
+    const arr=locData.data&&(locData.data.prototypes||locData.data.items);
+    if(Array.isArray(arr)&&arr.length){prototypes=arr.map((p,i)=>({id:p.id||('p'+i),name:p.name||p.title||('Prototype '+(i+1)),name_lv:p.name_lv||'',prog:p.prog||p.programme||p.category||'',desc:p.desc||p.description||'',desc_lv:p.desc_lv||p.description_lv||'',kind:p.kind||p.model||'iot',accent:p.accent||'#ffb020',emoji:p.emoji||'📦',url:p.url||p.link||'',photo:p.photo||p.image||''}));}
+    const t=i18n.getLocalized(locData,'title')||locData.title||locData.name;
+    if(t){document.getElementById('header-title').textContent=t;document.getElementById('loading-title').textContent=t;}
+    const qi=parseInt(qp.get('index')||'',10);if(!isNaN(qi))idx=Math.max(0,Math.min(prototypes.length-1,qi));
+    await verifyGpsLocation();
+  }catch(err){
+    if(err.message!=='__seed__')console.warn(err);
+    locData={id:'prototypes-2026',title:'Prototypes 2026',subtitle:'Spatial Showcase'};
+    document.getElementById('header-title').textContent='Prototypes 2026';
+    document.getElementById('loading-title').textContent='Prototypes 2026';
+    await verifyGpsLocation();
+  }
+  buildDots();updateCard(true);renderSearch("");
+}
+/* ============ GPS (same pattern as other templates) ============ */
+function calcDist(a,b,c,d){const R=6371e3,f1=a*Math.PI/180,f2=c*Math.PI/180,dp=(c-a)*Math.PI/180,dl=(d-b)*Math.PI/180;const h=Math.sin(dp/2)**2+Math.cos(f1)*Math.cos(f2)*Math.sin(dl/2)**2;return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));}
+const GEOFENCE=8;let isGpsVerified=false,isRemotePreviewActive=false,detectedDistanceStr='',lastGpsState=null;
+function renderGpsLockedCard(){
+  if(!lastGpsState)return;const sc=document.getElementById('gps-status-container'),aa=document.getElementById('gps-action-area');let card=document.getElementById('gps-locked-card');
+  const T=(k,f)=>{try{return i18n.t(k);}catch(e){return f;}};
+  if(lastGpsState.type==='verified'){sc.innerHTML='<div class="gps-status-pill is-verified">'+i18n.t('gps_verified')+' ('+lastGpsState.distFormatted+')</div>';startBtn.style.display='inline-block';if(card)card.remove();return;}
+  if(lastGpsState.type==='preview_badge'){sc.innerHTML='<div class="gps-status-pill is-verified">'+i18n.t('gps_preview_badge')+'</div>';startBtn.style.display='inline-block';if(card)card.remove();return;}
+  if(lastGpsState.type==='locked'||lastGpsState.type==='denied'){
+    var isDenied=lastGpsState.type==='denied';
+    sc.innerHTML='<div class="gps-status-pill is-locked">📍 '+(lastGpsState.distFormatted||'REMOTE')+'</div>';
+    if(!card){card=document.createElement('div');card.id='gps-locked-card';card.className='gps-locked-card';aa.parentNode.insertBefore(card,aa);}
+    card.innerHTML='<div class="gps-status-pill is-locked" style="margin-bottom:8px;">📍 '+i18n.t(isDenied?'gps_required_title':'gps_not_at_location_title')+'</div>'
+      +'<p class="gps-distance-text">'+(isDenied?i18n.t('gps_permission_denied'):i18n.t('gps_distance_away_msg',{dist:'<strong>'+lastGpsState.distFormatted+'</strong>'}))+'</p>'
+      +'<p style="font-size:12px;color:rgba(255,255,255,.72)">'+i18n.t('gps_preview_prompt')+'</p>'
+      +'<button class="gps-preview-cta" onclick="enterPreviewMode()">'+i18n.t('gps_enter_preview_btn')+'</button>'
+      +'<div><button class="gps-retry-btn" onclick="verifyGpsLocation()">'+i18n.t('gps_retry_btn')+'</button></div>';
+  }
+}
+function enterPreviewMode(){startExperience(true);}
+async function verifyGpsLocation(){
+  const qp=new URLSearchParams(window.location.search),sc=document.getElementById('gps-status-container');
+  const tLat=parseFloat(locData.lat),tLng=parseFloat(locData.lng);
+  if(qp.get('bypass_gps')==='1'||qp.get('preview')==='1'||qp.get('admin')==='1'){isGpsVerified=true;isRemotePreviewActive=true;detectedDistanceStr='PREVIEW';lastGpsState={type:'preview_badge'};renderGpsLockedCard();return;}
+  if(!tLat||!tLng||(tLat===0&&tLng===0)){isGpsVerified=true;isRemotePreviewActive=false;lastGpsState=null;sc.innerHTML='';startBtn.style.display='inline-block';return;}
+  if(!navigator.geolocation){lastGpsState={type:'denied',distFormatted:'remote'};renderGpsLockedCard();return;}
+  sc.innerHTML='<div class="gps-status-pill">📡 '+i18n.t('gps_checking')+'</div>';startBtn.style.display='none';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const d=calcDist(tLat,tLng,pos.coords.latitude,pos.coords.longitude);
+    const f=d<1000?Math.round(d)+'m':(d/1000).toFixed(2)+' km';detectedDistanceStr=f;
+    if(d<=GEOFENCE){isGpsVerified=true;isRemotePreviewActive=false;lastGpsState={type:'verified',distFormatted:Math.round(d)+'m'};}
+    else{isGpsVerified=false;lastGpsState={type:'locked',distFormatted:f};}renderGpsLockedCard();
+  },()=>{detectedDistanceStr='REMOTE';lastGpsState={type:'denied',distFormatted:'remote'};renderGpsLockedCard();},{enableHighAccuracy:true,timeout:10000,maximumAge:0});
+}
+/* ============ THREE.JS VIEWER ============ */
+let renderer,scene,camera,modelGroup,spinGroup,dust=null,raf=null,dragging=false,px=0,rotY=.6,rotX=.15,autoSpin=true;
+function mat(c,e){return new THREE.MeshStandardMaterial({color:c||'#ffb020',roughness:.52,metalness:.22,emissive:e||0x000000,emissiveIntensity:.5});}
+function M(geo,color,x,y,z,rx,ry,rz,emissive){const m=new THREE.Mesh(geo,mat(color,emissive));m.position.set(x||0,y||0,z||0);if(rx)m.rotation.x=rx;if(ry)m.rotation.y=ry;if(rz)m.rotation.z=rz;return m;}
+/* Design Factory palette: warm-white + graphite monochrome, ONE accent per prototype */
+const PAPER='#e8ebee',INK='#23272f';
+const B=(w,h,d,c,x,y,z)=>M(new THREE.BoxGeometry(w,h,d),c,x,y,z);
+const CY=(rt,rb,h,c,x,y,z,seg)=>M(new THREE.CylinderGeometry(rt,rb,h,seg||24),c,x,y,z);
+const SP=(r,c,x,y,z)=>M(new THREE.SphereGeometry(r,20,16),c,x,y,z);
+const TO=(r,t,c,x,y,z,rx)=>M(new THREE.TorusGeometry(r,t,14,28),c,x,y,z,rx||0);
+const CO=(r,h,c,x,y,z)=>M(new THREE.ConeGeometry(r,h,20),c,x,y,z);
+function prop(x,z,y,accent){const g=new THREE.Group();g.add(CY(.09,.09,.22,INK,x,y,z));const disc=CY(.55,.55,.02,'#ffffff',x,y+.16,z,20);disc.material.transparent=true;disc.material.opacity=.16;g.add(disc);return g;}
+const BUILDERS={
+uav3d(a){const g=new THREE.Group();g.add(B(1.2,.35,1.2,PAPER,0,0,0));g.add(B(.5,.22,.9,INK,0,.25,0));g.add(SP(.16,a,0,.3,.5));[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([sx,sz])=>{g.add(B(.9,.08,.12,PAPER,sx*.7,0,sz*.7));g.add(prop(sx*1.1,sz*1.1,0,a));});return g;},
+antenna(a){const g=new THREE.Group();g.add(CY(.5,.6,.15,INK,0,-1.2,0));g.add(CY(.06,.06,2.4,PAPER,0,0,0));[0,2.1,4.2].forEach(r=>{const l=CY(.03,.03,1.1,'#8b93a7',Math.cos(r)*.45,-.9,Math.sin(r)*.45);l.rotation.z=Math.cos(r)*.5;l.rotation.x=-Math.sin(r)*.5;g.add(l);});const d1=M(new THREE.SphereGeometry(.55,20,12,0,Math.PI*2,0,1.1),PAPER,-.7,.7,0);d1.rotation.z=1.1;g.add(d1);const d2=d1.clone();d2.position.x=.7;d2.rotation.z=-1.1;g.add(d2);g.add(SP(.1,a,0,1.35,0));return g;},
+iot(a){const g=new THREE.Group();g.add(B(1.1,.8,.7,PAPER,0,-.3,0));g.add(CY(.03,.03,1,INK,.4,.6,0));g.add(SP(.08,a,.4,1.15,0));[[-.9,0],[0,.4],[.9,0]].forEach(([x,z],i)=>{g.add(CY(.12,.12,.5,PAPER,x,-.9,z));g.add(SP(.14,i?INK:a,x,-.55,z));});g.add(TO(.9,.03,a,0,.6,0,Math.PI/2));return g;},
+pen(a){const g=new THREE.Group();const b=CY(.09,.09,2.2,PAPER,0,0,0);b.rotation.z=Math.PI/2;g.add(b);const t=CO(.09,.4,INK,1.3,0,0);t.rotation.z=-Math.PI/2;g.add(t);g.add(B(.5,.05,.06,PAPER,-.4,.12,0));g.add(TO(.12,.02,a,-.9,0,0,Math.PI/2));return g;},
+ice(a){const g=new THREE.Group();g.add(B(2.2,.5,1.6,'#cfe0ea',0,-1,0));g.add(CY(.3,.35,.3,a,0,-.3,0));g.add(CY(.05,.05,.9,INK,0,.3,0));const beam=CO(.5,1.2,a,0,-.7,0);beam.material.transparent=true;beam.material.opacity=.28;g.add(beam);g.add(TO(.55,.03,a,0,-.95,0,Math.PI/2));return g;},
+boat(a){const g=new THREE.Group();g.add(B(1.8,.4,.7,PAPER,0,-.4,0));g.add(B(.7,.5,.6,PAPER,-.1,.05,0));g.add(CY(.04,.04,1.1,INK,.5,.6,0));g.add(B(.5,.3,.05,a,.5,1,0));g.add(TO(1.3,.03,a,0,-.75,0,Math.PI/2));return g;},
+locker(a){const g=new THREE.Group();g.add(B(1.6,1.8,.7,PAPER,0,0,0));[-.55,0,.55].forEach(x=>{g.add(B(.42,1.5,.06,INK,x,0,.36));});g.add(TO(.25,.05,INK,0,.5,.4));[0,1,2].forEach(i=>{const b=B(.3,.03,.02,a,0,.5-Math.cos(i*2)*.18,.42+Math.sin(i*2)*.18);b.rotation.x=i*1.1;g.add(b);});return g;},
+rover(a){const g=new THREE.Group();g.add(B(1.2,.45,.8,PAPER,0,0,0));[[-.45,.45],[.45,.45],[-.45,-.45],[.45,-.45]].forEach(([x,z])=>{const w=CY(.28,.28,.2,INK,x,-.35,z);w.rotation.x=Math.PI/2;g.add(w);});g.add(CY(.05,.05,.8,PAPER,.4,.5,0));g.add(B(.35,.2,.2,INK,.4,.95,0));g.add(SP(.06,a,.4,.95,.12));return g;},
+battlebot(a){const g=new THREE.Group();const wedge=B(1.3,.3,1.1,INK,0,-.3,0);g.add(wedge);[-.5,.5].forEach(x=>{const w=CY(.3,.3,.2,'#111111',x,-.3,.55);w.rotation.z=Math.PI/2;g.add(w);});g.add(B(1.5,.07,.12,a,0,.15,0));g.add(SP(.12,PAPER,0,.35,0));return g;},
+snow(a){const g=new THREE.Group();g.add(B(1.4,.5,1,'#8a6f4d',0,-.8,0));const heap=SP(.7,'#ffffff',0,-.35,0);heap.scale.y=.55;g.add(heap);const f1=B(.7,.07,.07,a,0,.7,0),f2=B(.7,.07,.07,a,0,.7,0),f3=B(.7,.07,.07,a,0,.7,0);f2.rotation.z=1.05;f3.rotation.z=-1.05;g.add(f1,f2,f3);return g;},
+hands(a){const g=new THREE.Group();g.add(B(1.5,1,.08,INK,0,.2,-.5));const sc=B(1.2,.7,.02,a,0,.25,-.44);sc.material.emissive=new THREE.Color(a);sc.material.emissiveIntensity=.22;g.add(sc);[[-.4],[.4]].forEach(([x])=>{g.add(SP(.16,PAPER,x,-.6,.3));for(let i=0;i<3;i++)g.add(CY(.045,.045,.4,PAPER,x-.12+i*.12,-.3,.3));});g.add(TO(.7,.03,a,0,-.2,0));return g;},
+laptop(a){const g=new THREE.Group();g.add(B(1.4,.08,1,PAPER,0,-.6,0));const s=B(1.4,1,.07,INK,0,0,-.5);s.rotation.x=-.25;g.add(s);for(let i=0;i<4;i++)g.add(B(.9,.05,.02,i===3?a:PAPER,0,-.2+i*.2,-.42+i*.05));return g;},
+cargodrone(a){const g=new THREE.Group();g.add(B(1.6,.12,1.6,INK,0,.6,0));[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([sx,sz])=>g.add(prop(sx*.9,sz*.9,.6,a)));g.add(CY(.03,.03,.7,PAPER,.5,.2,.5));g.add(CY(.03,.03,.7,PAPER,-.5,.2,-.5));g.add(B(.8,.5,.8,PAPER,0,-.35,0));g.add(B(.84,.1,.84,INK,0,-.05,0));return g;},
+food(a){const g=new THREE.Group();g.add(B(.6,1.1,.08,INK,-.7,0,0));g.add(B(.5,.8,.02,PAPER,-.7,.05,.05));[0,1,2].forEach(i=>g.add(B(.5,.35,.4,i===1?INK:PAPER,.5,-.6+i*.02,-.3+i*.35)));g.add(CO(.2,.3,a,.5,.5,.2));return g;},
+notebook(a){const g=new THREE.Group();g.add(B(1.1,1.4,.12,INK,0,0,0));g.add(B(.95,1.25,.02,'#ffffff',0,0,.07));g.add(B(.6,.06,.02,PAPER,-.05,.3,.09));g.add(B(.4,.06,.02,a,-.15,.1,.09));g.add(TO(.18,.05,a,.25,-.3,.1));const p=CY(.05,.05,1.1,PAPER,.8,-.2,0);p.rotation.z=1.2;g.add(p);return g;},
+patch(a){const g=new THREE.Group();g.add(B(1.2,.9,.08,PAPER,0,0,0));g.add(B(.9,.6,.1,a,0,0,.01));g.add(SP(.12,a,.2,.1,.12));g.add(SP(.07,PAPER,-.2,-.1,.12));return g;},
+shelf(a){const g=new THREE.Group();[[-.7],[.7]].forEach(([x])=>{g.add(B(.07,1.9,.6,INK,x,0,0));});[-.6,0,.6].forEach(y=>{g.add(B(1.5,.06,.6,PAPER,0,y,0));[0,1,2].forEach(i=>g.add(B(.3,.35,.3,i===1?INK:PAPER,-.45+i*.45,y+.22,0)));});return g;},
+lab(a){const g=new THREE.Group();g.add(B(1.4,.12,.6,INK,0,-.7,0));[0,1,2].forEach(i=>{const x=-.45+i*.45;g.add(CY(.11,.11,.8,'#cfe0ea',x,-.1,0,14));g.add(CY(.09,.09,.3,i===1?a:PAPER,x,-.28,0,14));});g.add(B(.9,.5,.05,INK,0,.6,-.4));g.add(B(.6,.06,.02,a,0,.6,-.36));return g;},
+cabinet(a){const g=new THREE.Group();g.add(B(1.2,1.8,.7,PAPER,0,0,0));g.add(B(.9,1.5,.04,'#cfe0ea',0,0,.36));[0,1].forEach(i=>{const y=-.4+i*.7;g.add(B(.9,.05,.4,PAPER,0,y,.1));g.add(CY(.09,.09,.3,INK,-.25,y+.2,.1,12));g.add(CY(.09,.09,.3,a,.25,y+.2,.1,12));});return g;},
+vita(a){const g=new THREE.Group();g.add(CY(.3,.25,.8,PAPER,0,-.2,0,18));g.add(CY(.32,.32,.12,PAPER,0,.25,0,18));const st=CY(.03,.03,.9,a,.15,.4,0);st.rotation.z=-.3;g.add(st);g.add(CY(.16,.16,.05,'#e8a13c',-.3,.35,0,14));return g;},
+bin(a){const g=new THREE.Group();g.add(CY(.5,.42,1,'#5b6472',0,-.3,0,18));g.add(TO(.5,.05,a,0,.25,0,Math.PI/2));g.add(B(.3,.3,.3,PAPER,-.7,.5,0));g.add(B(.3,.3,.3,INK,0,.7,0));g.add(B(.3,.3,.3,PAPER,.7,.5,0));return g;},
+floatbot(a){const g=new THREE.Group();const w=CY(.9,.9,.06,'#33505c',0,-.9,0,26);g.add(w);[-.55,.55].forEach(x=>{const p=CY(.18,.18,1,PAPER,x,-.6,0,14);p.rotation.z=Math.PI/2;g.add(p);});g.add(B(1,.3,.7,PAPER,0,-.2,0));const arm=B(.12,1,.12,INK,.3,.4,0);arm.rotation.z=-.5;g.add(arm);g.add(SP(.12,a,.62,.8,0));return g;},
+haps(a){const g=new THREE.Group();g.add(B(3,.07,.7,PAPER,0,.3,0));for(let i=0;i<4;i++)g.add(B(.4,.02,.5,'#2b3a4d',-1+i*.65,.35,0));g.add(B(.25,.25,1.4,PAPER,0,.2,0));g.add(B(.7,.5,.06,PAPER,0,.2,-.8));return g;},
+vr(a){const g=new THREE.Group();g.add(B(1.1,.55,.5,'#1b2230',0,0,0));g.add(TO(.55,.09,INK,0,0,-.3));g.add(CY(.16,.16,.1,PAPER,-.25,0,.28,16));g.add(CY(.16,.16,.1,PAPER,.25,0,.28,16));g.add(B(.5,.08,.02,a,0,.32,.1));return g;},
+aidrone(a){const g=new THREE.Group();g.add(B(1,.3,1,PAPER,0,0,0));[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([sx,sz])=>g.add(prop(sx*.75,sz*.75,0,a)));g.add(SP(.3,INK,0,-.1,.55));g.add(SP(.17,a,0,-.08,.78));g.add(TO(.45,.04,PAPER,0,-.1,.55));return g;},
+lunar(a){const g=new THREE.Group();g.add(B(1.1,.4,.7,PAPER,0,.1,0));[-.5,0,.5].forEach(x=>{[-.45,.45].forEach(z=>{const w=CY(.2,.2,.14,INK,x,-.3,z);w.rotation.x=Math.PI/2;g.add(w);});});g.add(CY(.04,.04,.7,PAPER,.4,.6,0));g.add(B(.3,.18,.18,INK,.4,1,0));for(let i=0;i<3;i++)g.add(TO(.16,.03,a,-.3,.2+i*.14,0,Math.PI/2));g.add(CY(1.1,1.1,.05,'#8b93a7',0,-.62,0,30));return g;},
+dance(a){const g=new THREE.Group();g.add(CY(.9,.9,.12,INK,0,-.8,0,26));[[-.4,0],[0,.3],[.4,0]].forEach(([x,z],i)=>{g.add(CY(.1,.1,.55,PAPER,x,-.35,z,10));g.add(SP(.13,i===1?a:INK,x,0,z));});const s1=CO(.5,1.4,PAPER,-.6,.4,-.6);s1.material.transparent=true;s1.material.opacity=.18;g.add(s1);const s2=s1.clone();s2.position.x=.6;g.add(s2);return g;},
+hearme(a){const g=new THREE.Group();
+g.add(B(1.5,1,.08,'#101623',0,.35,-.55));
+for(let i=0;i<3;i++)g.add(B(1.1-i*.15,.07,.02,i===2?a:PAPER,-.05,.55-i*.2,-.49));
+g.add(CY(.14,.16,.6,PAPER,-.75,-.35,.25,12));g.add(SP(.13,PAPER,-.75,.1,.25));
+const ha1=CY(.045,.045,.5,PAPER,-.95,.15,.3);ha1.rotation.z=.7;g.add(ha1);
+const ha2=CY(.045,.045,.5,PAPER,-.55,.15,.3);ha2.rotation.z=-.7;g.add(ha2);
+[[PAPER,-.4],[a,0],[PAPER,.4]].forEach(function(rc){g.add(B(.32,.14,.1,rc[0],rc[1],-.78,.35));});
+g.add(B(.5,.35,.05,'#0e2a38',.78,-.12,-.2));g.add(B(.5,.35,.05,'#0e2a38',.78,.35,-.2));
+g.add(SP(.09,a,.78,.12,-.13));g.add(TO(.6,.025,a,0,1.2,-.5));
+return g;},
+urbn(a){const g=new THREE.Group();
+g.add(B(1.8,.14,.9,'#5b3a1e',0,-.75,0));
+g.add(CY(.05,.05,.7,'#8b93a7',-.55,-.3,-.2));
+const utab=B(.6,.45,.05,'#101623',-.55,.15,-.2);utab.rotation.x=-.2;g.add(utab);
+g.add(B(.45,.06,.02,PAPER,-.55,.24,-.15));g.add(B(.3,.06,.02,a,-.62,.1,-.15));
+g.add(B(1.2,.05,.05,INK,.2,.78,-.3));
+[0,1,2].forEach(function(i){g.add(B(.22,.3,.02,'#ffffff',-.15+i*.3,.58,-.3));});
+const ucl=SP(.28,PAPER,.55,-.35,.25);ucl.scale.y=.6;g.add(ucl);g.add(CY(.34,.34,.05,a,.55,-.55,.25,18));
+g.add(B(.34,.3,.34,'#1FEB9B',-.15,-.4,.45));g.add(B(.34,.3,.34,'#00C2E8',.25,-.4,.45));
+const urp=B(.16,.4,.02,'#ffffff',.88,-.2,-.15);urp.rotation.z=.15;g.add(urp);
+return g;},
+window(a){const g=new THREE.Group();g.add(B(1.6,1.2,.1,'#5b3a1e',0,0,0));g.add(B(1.35,.95,.05,'#9fd8ff',0,0,.03));g.add(SP(.18,'#ffe27a',.35,.25,.1));g.add(SP(.14,'#fff',-.35,.2,.08));g.add(SP(.1,'#fff',-.15,.3,.08));g.add(B(1.35,.06,.06,'#5b3a1e',0,0,.06));g.add(B(.06,.95,.06,'#5b3a1e',0,0,.06));return g;},
+bench(a){const g=new THREE.Group();g.add(B(1.7,.12,.8,'#8a6f4d',0,-.1,0));[[-.7],[.7]].forEach(([x])=>{g.add(B(.1,.9,.7,'#5b6472',x,-.6,0));});g.add(B(.5,.35,.4,PAPER,-.3,.15,0));g.add(B(.4,.08,.3,a,.45,.1,0));const h=B(.08,.5,.08,'#8a5a2b',.2,.45,0);h.rotation.z=.6;g.add(h);g.add(SP(.09,a,-.3,.45,0));return g;}
+};
+let threeReady=false;
+function fitThree(){
+  if(!renderer||!camera)return;
+  const vp=document.getElementById('model-viewport');
+  const w=vp.clientWidth||1,h=vp.clientHeight||1;
+  renderer.setSize(w,h);
+  camera.aspect=w/h;
+  camera.position.set(0,.6,camera.aspect<.8?4.4+(.8-camera.aspect)*3.4:4.4);
+  camera.lookAt(0,-.1,0);
+  camera.updateProjectionMatrix();
+}
+function initThree(){
+  if(threeReady)return true;
+  const vp=document.getElementById('model-viewport');
+  if(!vp.clientWidth||!vp.clientHeight)return false; // stage still hidden — retry after it is shown
+  try{
+    renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    vp.insertBefore(renderer.domElement,vp.firstChild);
+  }catch(e){document.getElementById('viewport-fallback').style.display='grid';return false;}
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(42,1,.1,100);
+  scene.add(new THREE.HemisphereLight(0xfff2dd,0x223355,.95));
+  const d=new THREE.DirectionalLight(0xffffff,.9);d.position.set(3,5,4);scene.add(d);
+  const pl=new THREE.PointLight(0xffb020,.8,20);pl.position.set(-3,2,3);scene.add(pl);
+  const fill=new THREE.DirectionalLight(0x88aaff,.4);fill.position.set(-4,2,-3);scene.add(fill);
+  const grid=new THREE.GridHelper(6,12,0x9aa3b2,0x2a2f3a);grid.position.y=-1.35;grid.material.transparent=true;grid.material.opacity=.22;scene.add(grid);
+  const disc=CY(1.5,1.5,.04,'#ffb020',0,-1.36,0,40);disc.material.transparent=true;disc.material.opacity=.08;scene.add(disc);
+  modelGroup=new THREE.Group();spinGroup=new THREE.Group();modelGroup.add(spinGroup);scene.add(modelGroup);
+  try{
+    const dg=new THREE.BufferGeometry();const dp=new Float32Array(120*3);
+    for(let di=0;di<120;di++){dp[di*3]=(Math.random()-.5)*7;dp[di*3+1]=Math.random()*3-1.2;dp[di*3+2]=(Math.random()-.5)*7;}
+    dg.setAttribute('position',new THREE.BufferAttribute(dp,3));
+    dust=new THREE.Points(dg,new THREE.PointsMaterial({color:0xffffff,size:.02,transparent:true,opacity:.32}));
+    scene.add(dust);
+  }catch(e){dust=null;}
+  const el=renderer.domElement;let downX=0,downY=0;
+  el.addEventListener('pointerdown',e=>{dragging=true;downX=e.clientX;downY=e.clientY;px=e.clientX;autoSpin=false;try{el.setPointerCapture(e.pointerId);}catch(_){}});
+  el.addEventListener('pointermove',e=>{if(!dragging)return;rotY+=(e.clientX-px)*.012;px=e.clientX;});
+  const up=e=>{dragging=false;setTimeout(()=>autoSpin=true,2500);
+    if(e&&Math.hypot(e.clientX-downX,e.clientY-downY)<8){const p=prototypes[idx];if(p&&p.url)window.open(p.url,'_blank','noopener');}};
+  el.addEventListener('pointerup',up);el.addEventListener('pointercancel',()=>{dragging=false;});
+  fitThree();
+  window.addEventListener('resize',fitThree);
+  window.addEventListener('orientationchange',()=>setTimeout(fitThree,250));
+  if('ResizeObserver' in window){new ResizeObserver(()=>fitThree()).observe(vp);}
+  (function loop(){raf=requestAnimationFrame(loop);if(autoSpin&&!dragging)rotY+=.008;if(dust)dust.rotation.y+=.0007;spinGroup.rotation.y+=(rotY-spinGroup.rotation.y)*.08;spinGroup.rotation.x+=(rotX-spinGroup.rotation.x)*.08;spinGroup.position.y=Math.sin(Date.now()/900)*.07;renderer.render(scene,camera);})();
+  threeReady=true;loadModel();return true;
+}
+function ensureThree(){if(threeReady){fitThree();return;}if(!initThree())requestAnimationFrame(()=>setTimeout(ensureThree,80));}
+function addPhotoPanel(url){
+  try{
+    const loader=new THREE.TextureLoader();loader.setCrossOrigin('anonymous');
+    loader.load(url,tex=>{
+      const m=new THREE.Mesh(new THREE.PlaneGeometry(1.7,1.05),new THREE.MeshBasicMaterial({map:tex,transparent:true}));
+      m.position.set(0,1.55,-.4);spinGroup.add(m);
+      const fr=new THREE.Mesh(new THREE.BoxGeometry(1.78,1.13,.04),mat(INK));fr.position.set(0,1.55,-.45);spinGroup.add(fr);
+    },undefined,()=>{});
+  }catch(e){}
+}
+function loadModel(){
+  const p=prototypes[idx];if(!p)return;
+  const fb=document.getElementById('viewport-fallback');fb.textContent=p.emoji||'📦';
+  if(!threeReady||!spinGroup)return;
+  while(spinGroup.children.length)spinGroup.remove(spinGroup.children[0]);
+  const fn=BUILDERS[p.kind]||BUILDERS.iot;
+  try{spinGroup.add(fn(p.accent||'#ffb020'));fb.style.display='none';}catch(e){fb.style.display='grid';}
+  if(p.photo)addPhotoPanel(p.photo);
+  rotY+=1.2;
+}
+/* ============ UI ============ */
+function buildDots(){const d=document.getElementById('proto-dots');d.innerHTML='';prototypes.forEach((_,i)=>{const s=document.createElement('i');if(i===idx)s.className='on';s.onclick=()=>go(i);d.appendChild(s);});}
+function updateCard(first){
+  const p=prototypes[idx];if(!p)return;
+  const card=document.getElementById('proto-card');
+  document.documentElement.style.setProperty('--accent',p.accent||'#ffb020');
+  document.getElementById('proto-prog').textContent=p.prog||'PROTOTYPE';
+  document.getElementById('proto-name').textContent=i18n.getLocalized(p,'name')||p.name||'Prototype';
+  document.getElementById('proto-desc').textContent=i18n.getLocalized(p,'desc')||i18n.getLocalized(p,'description')||p.desc||p.description||'';
+  const th=document.getElementById('proto-thumb');
+  if(p.photo){th.src=p.photo;th.classList.add('show');th.onerror=()=>th.classList.remove('show');}
+  else{th.removeAttribute('src');th.classList.remove('show');}
+  const vb=document.getElementById('proto-visit');
+  vb.textContent=i18n.t('proto_visit');
+  if(p.url){vb.href=p.url;vb.classList.add('show');}else{vb.classList.remove('show');}
+  document.getElementById('model-index').textContent=(idx+1)+' / '+prototypes.length;
+  document.getElementById('proto-counter').textContent=String(idx+1).padStart(2,'0')+' / '+prototypes.length;
+  [...document.getElementById('proto-dots').children].forEach((el,i)=>el.className=i===idx?'on':'');
+  [...document.querySelectorAll('.search-item')].forEach(el=>el.classList.toggle('active',el.dataset.i==idx));
+  if(!first){card.classList.remove('swap');void card.offsetWidth;card.classList.add('swap');}
+}
+function go(i){idx=(i+prototypes.length)%prototypes.length;loadModel();updateCard();}
+document.getElementById('prev-btn').onclick=e=>{e.stopPropagation();go(idx-1);};
+document.getElementById('next-btn').onclick=e=>{e.stopPropagation();go(idx+1);};
+document.addEventListener('keydown',e=>{if(document.getElementById('ar-stage').style.display==='none')return;if(e.key==='ArrowLeft')go(idx-1);if(e.key==='ArrowRight')go(idx+1);if(e.key==='Escape')document.getElementById('search-panel').classList.remove('open');});
+let sx=null;arStage.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;},{passive:true});
+arStage.addEventListener('touchend',e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>60&&(e.target.closest&&!e.target.closest('#model-viewport'))){go(idx+(dx<0?1:-1));}sx=null;},{passive:true});
+/* search */
+const panel=document.getElementById('search-panel');
+document.getElementById('search-toggle').onclick=e=>{e.stopPropagation();panel.classList.toggle('open');if(panel.classList.contains('open'))setTimeout(()=>document.getElementById('search-input').focus(),60);};
+document.getElementById('search-input').addEventListener('input',e=>renderSearch(e.target.value));
+function renderSearch(q){
+  q=(q||'').toLowerCase().trim();
+  const list=document.getElementById('search-list');list.innerHTML='';
+  const locName=function(p){return i18n.getLocalized(p,'name')||p.name||'';};
+  const locDesc=function(p){return i18n.getLocalized(p,'desc')||i18n.getLocalized(p,'description')||p.desc||p.description||'';};
+  const res=prototypes.map((p,i)=>({p,i})).filter(({p})=>!q||((p.name||'')+' '+(p.name_lv||'')+' '+(p.prog||'')+' '+(p.desc||p.description||'')+' '+(p.desc_lv||p.description_lv||'')).toLowerCase().includes(q));
+  document.getElementById('search-count').textContent=res.length+' / '+prototypes.length+' '+i18n.t('proto_items');
+  if(!res.length){list.innerHTML='<div style="padding:16px;color:rgba(255,255,255,.5);font-size:13px;">'+i18n.t('proto_no_results')+'</div>';return;}
+  res.forEach(({p,i})=>{const b=document.createElement('button');b.className='search-item'+(i===idx?' active':'');b.dataset.i=i;b.innerHTML='<span class="emoji">'+(p.emoji||'📦')+'</span><span class="t"><b>'+(locName(p)||'')+(p.url?' 🔗':'')+'</b><small>'+(p.prog||'')+'</small></span>';b.onclick=()=>{go(i);};list.appendChild(b);});
+}
+/* camera */
+async function startExperience(remote){
+  if(remote)isRemotePreviewActive=true;errorMsg.textContent='';
+  if(isRemotePreviewActive){let w=document.getElementById('preview-watermark-hud');if(!w){w=document.createElement('div');w.id='preview-watermark-hud';w.className='preview-watermark-hud';document.body.appendChild(w);}w.innerHTML='<span>⚡</span> PREVIEW MODE · '+(detectedDistanceStr||'REMOTE');}
+  const show=()=>{permissionScreen.style.display='none';arStage.style.display='block';requestAnimationFrame(()=>setTimeout(ensureThree,60));};
+  try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});videoEl.srcObject=s;videoEl.onloadedmetadata=()=>{videoEl.play();show();setTimeout(()=>videoEl.classList.add('is-ready'),140);};}
+  catch(e){show();}
+}
+startBtn.addEventListener('click',()=>startExperience(isRemotePreviewActive));
+fetchLocationData();
+</script>
+</body>
+</html>

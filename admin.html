@@ -7,7 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:ital,wght@0,500;0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="i18n.js"></script>
+    <script src="db-shim.js?v=20260928b"></script>
+    <script src="i18n.js?v=20260928b"></script>
     <style>
         :root {
             /* Neutral Obsidian Surface Palette */
@@ -1323,7 +1324,7 @@
                     </div>
                     <div class="metric-card">
                         <div class="metric-icon">🎨</div>
-                        <div class="metric-value">2</div>
+                        <div class="metric-value">3</div>
                         <div class="metric-label" data-i18n="metric_ar_templates">AR Templates</div>
                     </div>
                     <div class="metric-card">
@@ -1400,6 +1401,7 @@
                             <select id="loc-template" onchange="onTemplateChange()">
                                 <option value="designfactory">🌿 V4: Hierarchy Tree (DesignFactory)</option>
                                 <option value="swup">⚡ V5: Team Profile (SWUP)</option>
+                                <option value="prototypes">🧪 V6: Prototypes Showcase (2026)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -1526,6 +1528,21 @@
                         </div>
                         <div class="list-container" id="v5-list"></div>
                     </div>
+
+                    <!-- Dynamic Template Section: V6 Prototypes Showcase -->
+                    <div id="section-prototypes" class="template-section">
+                        <div class="section-header">
+                            <h3>🧪 Prototypes Data (2026 Showcase)</h3>
+                            <button class="btn btn-secondary" onclick="openP6Modal()">+ Add Prototype</button>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group full">
+                                <label>3D MODEL KIND</label>
+                                <small style="color:var(--text-muted)">Each prototype renders a parametric Three.js model: uav3d, antenna, iot, pen, ice, boat, locker, rover, battlebot, snow, hands, laptop, cargodrone, food, notebook, patch, shelf, lab, cabinet, vita, bin, floatbot, haps, vr, aidrone, lunar, dance, window, bench. Unknown kinds fall back to iot.</small>
+                            </div>
+                        </div>
+                        <div class="list-container" id="p6-list"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1582,6 +1599,27 @@
                                 <span class="template-feature-tag" data-i18n="tag_custom_crops">Custom Crops</span>
                             </div>
                             <button class="btn" onclick="openNewScreenModal('swup')" style="width:100%;" data-i18n="btn_create_with_template">Create Screen with This Template</button>
+                        </div>
+                    </div>
+
+                    <!-- V6: Prototypes Showcase -->
+                    <div class="template-card">
+                        <div class="template-card-visual" style="background:linear-gradient(135deg, rgba(255,176,32,0.12) 0%, rgba(10,12,18,0.9) 100%);">🧪</div>
+                        <div class="template-card-body">
+                            <h3 data-i18n="tmpl_proto_title">Prototypes Showcase</h3>
+                            <div class="template-version" data-i18n="tmpl_proto_version">V6 · Prototypes Engine</div>
+                            <p data-i18n="tmpl_proto_desc">
+                                Fullscreen AR carousel for physical prototype collections. Center-stage parametric 3D model
+                                per prototype, left/right arrows to browse, title below the model, and a bottom-left
+                                search panel with a scrollable filtered list.
+                            </p>
+                            <div class="template-features">
+                                <span class="template-feature-tag" data-i18n="tag_3d_models">Parametric 3D</span>
+                                <span class="template-feature-tag" data-i18n="tag_searchable">Searchable</span>
+                                <span class="template-feature-tag" data-i18n="tag_ar_carousel">AR Carousel</span>
+                                <span class="template-feature-tag" data-i18n="tag_gps_anchored">GPS Anchored</span>
+                            </div>
+                            <button class="btn" onclick="openNewScreenModal('prototypes')" style="width:100%;" data-i18n="btn_create_with_template">Create Screen with This Template</button>
                         </div>
                     </div>
                 </div>
@@ -1648,6 +1686,7 @@
                         <select id="new-screen-template">
                             <option value="designfactory">🌿 V4: Hierarchy Tree (DesignFactory)</option>
                             <option value="swup">⚡ V5: Team Profile Showcase (SWUP)</option>
+                            <option value="prototypes">🧪 V6: Prototypes Showcase (2026)</option>
                         </select>
                     </div>
                 </div>
@@ -1839,6 +1878,96 @@
         </div>
     </div>
 
+    <!-- V6 Prototype Modal -->
+    <div class="modal-overlay" id="p6-modal">
+        <div class="glass-card modal">
+            <div class="modal-header">
+                <h3>🧪 Prototype Profile</h3>
+                <button class="modal-close-btn" onclick="document.getElementById('p6-modal').classList.remove('visible')">✕</button>
+            </div>
+            <div class="form-grid">
+                <div class="form-group full">
+                    <label>PROTOTYPE NAME (EN)</label>
+                    <input type="text" id="p6-name" placeholder="e.g. Gravipen" onblur="autoTranslateField('p6-name', 'p6-name-lv')">
+                </div>
+                <div class="form-group full">
+                    <label><span>NOSAUKUMS (LV)</span> <span class="lang-tag lv">LV</span></label>
+                    <input type="text" id="p6-name-lv" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint">
+                </div>
+                <div class="form-group">
+                    <label>PROGRAMME / SIG</label>
+                    <input type="text" id="p6-prog" placeholder="e.g. SIG FBVV">
+                </div>
+                <div class="form-group">
+                    <label>3D MODEL KIND</label>
+                    <select id="p6-kind">
+                        <option value="uav3d">uav3d — 3D UAV</option>
+                        <option value="antenna">antenna — Antennas</option>
+                        <option value="iot">iot — CrowdState hub</option>
+                        <option value="pen">pen — Gravipen</option>
+                        <option value="ice">ice — IceSense</option>
+                        <option value="boat">boat — Hydrocontest</option>
+                        <option value="locker">locker — Velotraks</option>
+                        <option value="rover">rover — Bruntor</option>
+                        <option value="battlebot">battlebot — BBK</option>
+                        <option value="snow">snow — Baltic Snow</option>
+                        <option value="hands">hands — generic signing</option>
+                        <option value="hearme">hearme — HearMe web app</option>
+                        <option value="laptop">laptop — Priede</option>
+                        <option value="cargodrone">cargodrone — Spoks</option>
+                        <option value="food">food — generic food</option>
+                        <option value="urbn">urbn — UrbnDINE hospitality OS</option>
+                        <option value="notebook">notebook — Plusma</option>
+                        <option value="patch">patch — Pink Patch</option>
+                        <option value="shelf">shelf — Smart Store</option>
+                        <option value="lab">lab — C.O.R.E.</option>
+                        <option value="cabinet">cabinet — Smart Cabinet</option>
+                        <option value="vita">vita — VitaMatch</option>
+                        <option value="bin">bin — MedBin</option>
+                        <option value="floatbot">floatbot — Bioremediation</option>
+                        <option value="haps">haps — se-HAPS</option>
+                        <option value="vr">vr — Xrmed</option>
+                        <option value="aidrone">aidrone — UAV Robotics</option>
+                        <option value="lunar">lunar — Lunar Energy</option>
+                        <option value="dance">dance — iCoDaCo</option>
+                        <option value="window">window — Fake Window</option>
+                        <option value="bench">bench — LG Repair</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>DESCRIPTION (EN)</label>
+                    <textarea id="p6-desc" rows="2" placeholder="Short prototype description" onblur="autoTranslateField('p6-desc', 'p6-desc-lv')"></textarea>
+                </div>
+                <div class="form-group">
+                    <label><span>APRAKSTS (LV)</span> <span class="lang-tag lv">LV</span></label>
+                    <textarea id="p6-desc-lv" rows="2" placeholder="Auto-translates from EN if left empty" data-i18n-placeholder="auto_translate_hint"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>ACCENT COLOR</label>
+                    <input type="color" id="p6-accent" value="#ffb020" style="height:44px;width:100%;padding:2px;cursor:pointer;">
+                </div>
+                <div class="form-group">
+                    <label>ICON EMOJI</label>
+                    <input type="text" id="p6-emoji" placeholder="e.g. 🛸" maxlength="4">
+                </div>
+                <div class="form-group full">
+                    <label>WEBSITE URL (opens on 3D tap + Visit button)</label>
+                    <input type="url" id="p6-url" placeholder="https://… (empty = no link)">
+                </div>
+                <div class="form-group full">
+                    <label>PREVIEW PHOTO URL (card thumbnail + floating 3D panel)</label>
+                    <input type="url" id="p6-photo" placeholder="https://… (empty = model only)">
+                </div>
+            </div>
+            <input type="hidden" id="p6-index">
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="autoTranslateField('p6-name', 'p6-name-lv');autoTranslateField('p6-desc', 'p6-desc-lv')" style="margin-right:auto;" data-i18n="translate_lv_btn">✨ Translate LV</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('p6-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
+                <button type="button" class="btn" onclick="saveP6Prototype()">Save Prototype</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notifications Container -->
     <div class="toast-container" id="toast-container"></div>
 
@@ -1954,6 +2083,8 @@
                 if (loc.data) {
                     if (loc.data.inductees) totalPeople += loc.data.inductees.length;
                     if (loc.data.members) totalPeople += loc.data.members.length;
+                    if (loc.data.prototypes) totalPeople += loc.data.prototypes.length;
+                    else if (loc.data.items) totalPeople += loc.data.items.length;
                 }
             });
             document.getElementById('metric-people').textContent = totalPeople;
@@ -1977,12 +2108,14 @@
             locations.forEach(loc => {
                 const displayName = i18n.getLocalized(loc, 'title') || loc.name || loc.id;
                 const tmpl = loc.template || 'designfactory';
-                const tagLabel = tmpl === 'swup' ? '⚡ SWUP' : '🌿 Tree';
+                const tagLabel = tmpl === 'swup' ? '⚡ SWUP' : tmpl === 'prototypes' ? '🧪 Proto' : '🌿 Tree';
                 const tagClass = tmpl === 'swup' ? 'team' : 'tree';
                 let peopleCount = 0;
                 if (loc.data) {
                     if (loc.data.inductees) peopleCount = loc.data.inductees.length;
                     if (loc.data.members) peopleCount = loc.data.members.length;
+                    if (loc.data.prototypes) peopleCount = loc.data.prototypes.length;
+                    else if (loc.data.items) peopleCount = loc.data.items.length;
                 }
 
                 const card = document.createElement('div');
@@ -2001,7 +2134,7 @@
                     </div>
                     <div class="dash-card-actions">
                         <button class="btn btn-secondary" onclick="editScreenFromDash('${loc.id}')">${i18n.t('btn_edit')}</button>
-                        <a href="/view/${loc.id}" target="_blank" class="btn btn-secondary">${i18n.t('btn_live_view')}</a>
+                        <a href="${viewUrlFor(loc.id, loc.template)}" target="_blank" class="btn btn-secondary">${i18n.t('btn_live_view')}</a>
                         <button class="btn btn-secondary" onclick="switchView('qr'); setTimeout(() => generateQRFor('${loc.id}'), 100);">${i18n.t('btn_qr')}</button>
                     </div>
                 `;
@@ -2035,12 +2168,14 @@
             locations.forEach(loc => {
                 const displayName = i18n.getLocalized(loc, 'title') || loc.name || loc.id;
                 const tmpl = loc.template || 'designfactory';
-                const tagLabel = tmpl === 'swup' ? '⚡ SWUP' : '🌿 Tree';
+                const tagLabel = tmpl === 'swup' ? '⚡ SWUP' : tmpl === 'prototypes' ? '🧪 Proto' : '🌿 Tree';
                 const tagClass = tmpl === 'swup' ? 'team' : 'tree';
                 let peopleCount = 0;
                 if (loc.data) {
                     if (loc.data.inductees) peopleCount = loc.data.inductees.length;
                     if (loc.data.members) peopleCount = loc.data.members.length;
+                    if (loc.data.prototypes) peopleCount = loc.data.prototypes.length;
+                    else if (loc.data.items) peopleCount = loc.data.items.length;
                 }
 
                 const row = document.createElement('div');
@@ -2054,7 +2189,7 @@
                     <span style="font-size:12px;color:var(--text-muted);">👥 ${peopleCount} ${peopleCount === 1 ? i18n.t('person') : i18n.t('people')}</span>
                     <div class="st-actions">
                         <button class="btn btn-secondary" onclick="editScreenFromDash('${loc.id}')" style="padding:8px 14px;font-size:12px;">${i18n.t('edit')}</button>
-                        <a href="/view/${loc.id}" target="_blank" class="btn btn-secondary" style="padding:8px 14px;font-size:12px;">${i18n.t('btn_live_view')}</a>
+                        <a href="${viewUrlFor(loc.id, loc.template)}" target="_blank" class="btn btn-secondary" style="padding:8px 14px;font-size:12px;">${i18n.t('btn_live_view')}</a>
                     </div>
                 `;
                 row.dataset.name = displayName.toLowerCase() + ' ' + loc.id.toLowerCase();
@@ -2278,6 +2413,28 @@
                     }
                 }
 
+                // V6 Prototypes (name + desc, bi-directional)
+                {
+                    const arr = currentLocation.data && (currentLocation.data.prototypes || currentLocation.data.items);
+                    if (Array.isArray(arr)) {
+                        for (const proto of arr) {
+                            if (proto.name && !proto.name_lv) proto.name_lv = await translateToLV(proto.name);
+                            else if (proto.name_lv && !proto.name) proto.name = await translateToEN(proto.name_lv);
+                            const dEn = proto.desc || proto.description || '';
+                            const dLv = proto.desc_lv || proto.description_lv || '';
+                            if (dEn && !dLv) {
+                                const t = await translateToLV(dEn);
+                                if (proto.desc !== undefined) proto.desc_lv = t; else proto.description_lv = t;
+                            } else if (dLv && !dEn) {
+                                const t = await translateToEN(dLv);
+                                if (proto.desc !== undefined) proto.desc = t; else proto.description = t;
+                            }
+                            if (proto.prog && !proto.prog_lv) proto.prog_lv = proto.prog;
+                        }
+                        if (typeof renderP6List === 'function') renderP6List();
+                    }
+                }
+
                 showToast('All fields synchronized and translated!', 'success');
             } catch (err) {
                 showToast('Translation error: ' + err.message, 'error');
@@ -2374,7 +2531,7 @@
                 lat: 0,
                 lng: 0,
                 radius: 50,
-                data: tmpl === 'swup' ? { members: [] } : { inductees: [] }
+                data: tmpl === 'swup' ? { members: [] } : tmpl === 'prototypes' ? { prototypes: [] } : { inductees: [] }
             };
             isEditing = false;
             populateEditor();
@@ -2436,7 +2593,7 @@
             document.getElementById('loc-desc').value = currentLocation.description || '';
             document.getElementById('loc-desc-lv').value = currentLocation.description_lv || '';
 
-            document.getElementById('btn-view').href = `/view/${currentLocation.id}?bypass_gps=1`;
+            document.getElementById('btn-view').href = viewUrlFor(currentLocation.id, currentLocation.template) + '?bypass_gps=1';
             onTemplateChange();
         }
 
@@ -2453,6 +2610,10 @@
                 if (!currentLocation.data.inductees) currentLocation.data.inductees = [];
                 document.getElementById('section-designfactory').classList.add('active');
                 renderV4List();
+            } else if (tmpl === 'prototypes') {
+                if (!currentLocation.data.prototypes && !currentLocation.data.items) currentLocation.data.prototypes = [];
+                document.getElementById('section-prototypes').classList.add('active');
+                renderP6List();
             } else if (tmpl === 'swup') {
                 if (!currentLocation.data.members) currentLocation.data.members = [];
                 document.getElementById('section-swup').classList.add('active');
@@ -2683,6 +2844,114 @@
         }
 
         /* ═══════════════════════════════════════════════════
+           V6 PROTOTYPES LOGIC (2026 Showcase)
+           ═══════════════════════════════════════════════════ */
+        function getP6Array() {
+            if (!currentLocation || !currentLocation.data) return [];
+            if (Array.isArray(currentLocation.data.prototypes)) return currentLocation.data.prototypes;
+            if (Array.isArray(currentLocation.data.items)) return currentLocation.data.items;
+            currentLocation.data.prototypes = [];
+            return currentLocation.data.prototypes;
+        }
+
+        function renderP6List() {
+            const list = document.getElementById('p6-list');
+            if (!list) return;
+            list.innerHTML = '';
+            const data = getP6Array();
+            if (!data || data.length === 0) {
+                list.innerHTML = `<p style="color:var(--text-muted);font-size:13px;padding:8px 0;">No prototypes yet — add the first one, or import prototypes-seed.json (34 items).</p>`;
+                return;
+            }
+            data.forEach((p, i) => {
+                const name = i18n.getLocalized(p, 'name') || p.name || ('Prototype ' + (i + 1));
+                const desc = i18n.getLocalized(p, 'desc') || i18n.getLocalized(p, 'description') || p.desc || p.description || '';
+                const el = document.createElement('div');
+                el.className = 'list-item';
+                el.innerHTML = `
+                    <div class="list-avatar" style="border-color:${p.accent || '#ffb020'};font-size:20px;">${p.emoji || '📦'}</div>
+                    <div class="list-info">
+                        <h4>${name}${(p.url || p.link) ? ' 🔗' : ''}</h4>
+                        <p>
+                            <strong>${p.prog || ''}</strong>
+                            <span class="level-badge">${(p.kind || 'iot').toUpperCase()}</span>
+                        </p>
+                        ${desc ? `<p style="margin-top:4px;opacity:.75;">${desc.substring(0, 90)}${desc.length > 90 ? '…' : ''}</p>` : ''}
+                    </div>
+                    <div class="actions">
+                        <button class="btn btn-secondary" onclick="openP6Modal(${i})" style="padding:8px 12px">${i18n.t('edit')}</button>
+                        <button class="btn btn-danger" onclick="deleteP6Prototype(${i})" style="padding:8px 12px">✕</button>
+                    </div>`;
+                list.appendChild(el);
+            });
+        }
+
+        function openP6Modal(index = -1) {
+            const arr = getP6Array();
+            const p = index === -1 ? {
+                name: '', name_lv: '', prog: '', desc: '', desc_lv: '', kind: 'iot', accent: '#ffb020', emoji: '📦'
+            } : arr[index];
+
+            document.getElementById('p6-index').value = index;
+            document.getElementById('p6-name').value = p.name || '';
+            document.getElementById('p6-name-lv').value = p.name_lv || '';
+            document.getElementById('p6-prog').value = p.prog || '';
+            document.getElementById('p6-kind').value = p.kind || 'iot';
+            document.getElementById('p6-desc').value = p.desc || p.description || '';
+            document.getElementById('p6-desc-lv').value = p.desc_lv || p.description_lv || '';
+            document.getElementById('p6-accent').value = p.accent || '#ffb020';
+            document.getElementById('p6-emoji').value = p.emoji || '';
+            document.getElementById('p6-url').value = p.url || p.link || '';
+            document.getElementById('p6-photo').value = p.photo || p.image || '';
+
+            document.getElementById('p6-modal').classList.add('visible');
+        }
+
+        async function saveP6Prototype() {
+            const index = parseInt(document.getElementById('p6-index').value);
+            const arr = getP6Array();
+            const nameEn = document.getElementById('p6-name').value.trim();
+            let nameLv = document.getElementById('p6-name-lv').value.trim();
+            if (nameEn && !nameLv) {
+                try { nameLv = await translateToLV(nameEn); } catch (e) {}
+            }
+            const descEn = document.getElementById('p6-desc').value.trim();
+            let descLv = document.getElementById('p6-desc-lv').value.trim();
+            if (descEn && !descLv) {
+                try { descLv = await translateToLV(descEn); } catch (e) {}
+            }
+
+            const p = {
+                id: (arr[index] && arr[index].id) || nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || ('proto-' + Date.now()),
+                name: nameEn,
+                name_lv: nameLv,
+                prog: document.getElementById('p6-prog').value.trim(),
+                prog_lv: document.getElementById('p6-prog').value.trim(),
+                desc: descEn,
+                desc_lv: descLv,
+                kind: document.getElementById('p6-kind').value,
+                accent: document.getElementById('p6-accent').value,
+                emoji: document.getElementById('p6-emoji').value.trim() || '📦',
+                url: document.getElementById('p6-url').value.trim(),
+                photo: document.getElementById('p6-photo').value.trim()
+            };
+
+            if (index === -1) arr.push(p);
+            else arr[index] = Object.assign({}, arr[index], p);
+
+            renderP6List();
+            document.getElementById('p6-modal').classList.remove('visible');
+            showToast('Prototype saved successfully');
+        }
+
+        function deleteP6Prototype(i) {
+            if (!confirm('Delete this prototype from the showcase?')) return;
+            getP6Array().splice(i, 1);
+            renderP6List();
+            showToast('Prototype removed', 'error');
+        }
+
+        /* ═══════════════════════════════════════════════════
            SAVE / DELETE LOGIC (Enhanced with full auto-translate)
            ═══════════════════════════════════════════════════ */
         async function saveLocation() {
@@ -2835,7 +3104,7 @@
             locations.forEach(loc => {
                 const displayName = i18n.getLocalized(loc, 'title') || loc.name || loc.id;
                 const tmpl = loc.template || 'designfactory';
-                const tagLabel = tmpl === 'swup' ? '⚡' : '🌿';
+                const tagLabel = tmpl === 'swup' ? '⚡' : tmpl === 'prototypes' ? '🧪' : '🌿';
 
                 const item = document.createElement('div');
                 item.className = 'qr-screen-item';
@@ -2862,8 +3131,7 @@
 
             const loc = locations.find(l => l.id === screenId);
             const displayName = loc ? (i18n.getLocalized(loc, 'title') || loc.name || loc.id) : screenId;
-            const baseUrl = window.location.origin;
-            const viewUrl = `${baseUrl}/view/${screenId}`;
+            const viewUrl = viewUrlFor(screenId, loc ? loc.template : 'designfactory');
 
             const preview = document.getElementById('qr-preview');
             preview.innerHTML = `

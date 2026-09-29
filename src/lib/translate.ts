@@ -171,6 +171,30 @@ export async function autoTranslateScreenPayload(payload: any): Promise<any> {
       cloned.data.teamDestination_lv = await translateText(cloned.data.teamDestination);
     }
 
+    // V6: Prototypes showcase (bi-directional, programme tags copied verbatim)
+    const protoList: any[] | null = Array.isArray((cloned.data as any).prototypes)
+      ? (cloned.data as any).prototypes
+      : (Array.isArray((cloned.data as any).items) ? (cloned.data as any).items : null);
+    if (Array.isArray(protoList)) {
+      for (const proto of protoList) {
+        if (proto.name && (!proto.name_lv || !String(proto.name_lv).trim())) {
+          proto.name_lv = await translateText(proto.name);
+        } else if (proto.name_lv && (!proto.name || !String(proto.name).trim())) {
+          proto.name = await translateText(proto.name_lv, 'lv', 'en');
+        }
+        const dEn = proto.desc || proto.description || '';
+        const dLv = proto.desc_lv || proto.description_lv || '';
+        if (dEn && !String(dLv).trim()) {
+          const t = await translateText(dEn);
+          if (proto.desc !== undefined) proto.desc_lv = t; else proto.description_lv = t;
+        } else if (dLv && !String(dEn).trim()) {
+          const t = await translateText(dLv, 'lv', 'en');
+          if (proto.desc !== undefined) proto.desc = t; else proto.description = t;
+        }
+        if (proto.prog && (!proto.prog_lv || !String(proto.prog_lv).trim())) proto.prog_lv = proto.prog;
+      }
+    }
+
     // V5: SWUP Members
     if (Array.isArray(cloned.data.members)) {
       for (const member of cloned.data.members) {
