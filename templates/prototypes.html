@@ -7,7 +7,12 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600;1,700&display=swap" rel="stylesheet">
 <script src="../db-shim.js?v=20260928b"></script>
 <script src="../i18n.js?v=20260928b"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="importmap">
+{"imports":{
+"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
 <style>
 :root{ --accent:#ffb020; }
 html,body{min-height:100%;margin:0;touch-action:pan-x pan-y;overscroll-behavior:none;}
@@ -58,7 +63,7 @@ button{font:inherit;}
 .proto-thumb.show{display:block;}
 #model-viewport:active{cursor:grabbing;}
 #model-viewport canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block;}
-.viewport-fallback{position:absolute;inset:0;display:none;place-items:center;font-size:84px;}
+.viewport-fallback{position:absolute;inset:0;display:grid;place-items:center;font-size:84px;}
 .model-hint{position:absolute;left:14px;bottom:12px;font:500 9px/1 'DM Mono',monospace;letter-spacing:.1em;color:rgba(255,225,180,.6);pointer-events:none;text-transform:uppercase;}
 .model-index{position:absolute;right:14px;top:12px;font:700 11px/1 'DM Mono',monospace;color:#ffd9a0;background:rgba(0,0,0,.4);border:1px solid rgba(255,200,100,.35);padding:6px 12px;border-radius:999px;}
 .proto-card{margin-top:14px;padding:20px 22px;border:1px solid rgba(255,200,100,.3);border-radius:22px;background:rgba(12,14,22,.62);backdrop-filter:blur(18px);text-align:center;box-shadow:0 14px 50px rgba(0,0,0,.4);}
@@ -150,7 +155,10 @@ button{font:inherit;}
     <div id="search-list"></div>
   </div>
 </div>
-<script>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 /* ============ SEED: 34 prototypes 2026, fully bilingual EN+LV (used if API has no data) ============ */
 const SEED = [
 {id:"uav-3d",name:"3D UAV",name_lv:"3D UAV",prog:"SIG FBVV",desc:"Prototype of a 3D-printed unmanned aerial vehicle body.",desc_lv:"3D printēts bezpilota gaisa kuģa korpusa prototips.",kind:"uav3d",accent:"#7cf0b0",emoji:"🛸"},
@@ -276,7 +284,7 @@ function mat(c,e){return new THREE.MeshStandardMaterial({color:c||'#ffb020',roug
 function M(geo,color,x,y,z,rx,ry,rz,emissive){const m=new THREE.Mesh(geo,mat(color,emissive));m.position.set(x||0,y||0,z||0);if(rx)m.rotation.x=rx;if(ry)m.rotation.y=ry;if(rz)m.rotation.z=rz;return m;}
 /* Design Factory palette: warm-white + graphite monochrome, ONE accent per prototype */
 const PAPER='#e8ebee',INK='#23272f';
-const B=(w,h,d,c,x,y,z)=>M(new THREE.BoxGeometry(w,h,d),c,x,y,z);
+const B=(w,h,d,c,x,y,z)=>{const r=Math.max(Math.min(.05,Math.min(w,h,d)*.32),.004);return M(new RoundedBoxGeometry(w,h,d,2,r),c,x,y,z);};
 const CY=(rt,rb,h,c,x,y,z,seg)=>M(new THREE.CylinderGeometry(rt,rb,h,seg||24),c,x,y,z);
 const SP=(r,c,x,y,z)=>M(new THREE.SphereGeometry(r,20,16),c,x,y,z);
 const TO=(r,t,c,x,y,z,rx)=>M(new THREE.TorusGeometry(r,t,14,28),c,x,y,z,rx||0);
@@ -352,16 +360,29 @@ function initThree(){
   try{
     renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1.05;
     vp.insertBefore(renderer.domElement,vp.firstChild);
   }catch(e){document.getElementById('viewport-fallback').style.display='grid';return false;}
   scene=new THREE.Scene();
   camera=new THREE.PerspectiveCamera(42,1,.1,100);
   scene.add(new THREE.HemisphereLight(0xfff2dd,0x223355,.95));
-  const d=new THREE.DirectionalLight(0xffffff,.9);d.position.set(3,5,4);scene.add(d);
+  const d=new THREE.DirectionalLight(0xffffff,1.1);d.position.set(3,6,4);d.castShadow=true;
+  d.shadow.mapSize.set(2048,2048);d.shadow.camera.left=-4;d.shadow.camera.right=4;
+  d.shadow.camera.top=4;d.shadow.camera.bottom=-4;d.shadow.camera.near=1;d.shadow.camera.far=20;
+  d.shadow.bias=-0.0004;scene.add(d);
+  try{
+    const pmrem=new THREE.PMREMGenerator(renderer);
+    scene.environment=pmrem.fromScene(new RoomEnvironment(),.04).texture;
+  }catch(e){}
   const pl=new THREE.PointLight(0xffb020,.8,20);pl.position.set(-3,2,3);scene.add(pl);
   const fill=new THREE.DirectionalLight(0x88aaff,.4);fill.position.set(-4,2,-3);scene.add(fill);
   const grid=new THREE.GridHelper(6,12,0x9aa3b2,0x2a2f3a);grid.position.y=-1.35;grid.material.transparent=true;grid.material.opacity=.22;scene.add(grid);
-  const disc=CY(1.5,1.5,.04,'#ffb020',0,-1.36,0,40);disc.material.transparent=true;disc.material.opacity=.08;scene.add(disc);
+  const catcher=new THREE.Mesh(new THREE.PlaneGeometry(24,24),new THREE.ShadowMaterial({opacity:.26}));
+  catcher.rotation.x=-Math.PI/2;catcher.position.y=-1.36;catcher.receiveShadow=true;scene.add(catcher);
+  const ring=M(new THREE.TorusGeometry(1.5,.018,12,64),PAPER,0,-1.34,0,Math.PI/2);ring.material.transparent=true;ring.material.opacity=.5;scene.add(ring);
   modelGroup=new THREE.Group();spinGroup=new THREE.Group();modelGroup.add(spinGroup);scene.add(modelGroup);
   try{
     const dg=new THREE.BufferGeometry();const dp=new Float32Array(120*3);
@@ -400,7 +421,11 @@ function loadModel(){
   if(!threeReady||!spinGroup)return;
   while(spinGroup.children.length)spinGroup.remove(spinGroup.children[0]);
   const fn=BUILDERS[p.kind]||BUILDERS.iot;
-  try{spinGroup.add(fn(p.accent||'#ffb020'));fb.style.display='none';}catch(e){fb.style.display='grid';}
+  try{
+    const model=fn(p.accent||'#ffb020');
+    model.traverse(function(o){if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+    spinGroup.add(model);fb.style.display='none';
+  }catch(e){fb.style.display='grid';}
   if(p.photo)addPhotoPanel(p.photo);
   rotY+=1.2;
 }

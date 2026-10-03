@@ -257,9 +257,18 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
 // --- RENDERER ROUTE ---
 
 app.get('/view/:id', async (req, res) => {
-    const { data: location, error } = await supabase.from('locations').select('*').eq('id', req.params.id).single();
+    let location = null;
+    try {
+        const { data, error } = await supabase.from('locations').select('*').eq('id', req.params.id).single();
+        if (!error && data) location = data;
+    } catch (e) {}
+
+    if (!location) {
+        const db = readDB();
+        location = (db.locations || []).find(l => l.id === req.params.id);
+    }
     
-    if (error || !location) {
+    if (!location) {
         return res.status(404).send("<h1>Screen not found</h1>");
     }
 
