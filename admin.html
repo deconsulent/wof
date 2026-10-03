@@ -1399,9 +1399,12 @@
                         <div class="form-group">
                             <label data-i18n="display_template">DISPLAY TEMPLATE / AR ENGINE</label>
                             <select id="loc-template" onchange="onTemplateChange()">
-                                <option value="designfactory">🌿 V4: Hierarchy Tree (DesignFactory)</option>
-                                <option value="swup">⚡ V5: Team Profile (SWUP)</option>
-                                <option value="prototypes">🧪 V6: Prototypes Showcase (2026)</option>
+                                <option value="designfactory-v2">✨ V2 Studio: Spatial Directory (DesignFactory V2)</option>
+                                <option value="prototypes-v2">✨ V2 Studio: 3D Hologram Showroom (Prototypes V2)</option>
+                                <option value="swup-v2">✨ V2 Studio: Team Constellation (SWUP V2)</option>
+                                <option value="designfactory">🌿 V4: Hierarchy Tree (DesignFactory Legacy)</option>
+                                <option value="swup">⚡ V5: Team Profile (SWUP Legacy)</option>
+                                <option value="prototypes">🧪 V6: Prototypes Showcase (Legacy)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -1556,70 +1559,113 @@
                 </div>
 
                 <div class="templates-grid">
-                    <!-- V4: Hierarchy Tree -->
+                    <!-- V2 Studio: Spatial Directory (DesignFactory V2) -->
+                    <div class="template-card" style="border-color: rgba(255,255,255,0.24); background: rgba(22, 28, 42, 0.85);">
+                        <div class="template-card-visual" style="background:linear-gradient(135deg, rgba(100,210,255,0.2) 0%, rgba(10,12,18,0.95) 100%);">✨</div>
+                        <div class="template-card-body">
+                            <h3>Spatial Directory V2</h3>
+                            <div class="template-version" style="color:var(--rtu-gold);">V2 Studio · Background Biometrics Engine</div>
+                            <p>
+                                Studio-grade obsidian spatial directory with silent background face recognition, 
+                                smooth orbital spring physics, bilingual EN/LV auto-translation, and GPS geofencing.
+                            </p>
+                            <div class="template-features">
+                                <span class="template-feature-tag">Silent Face Recognition</span>
+                                <span class="template-feature-tag">3D Orbital Tree</span>
+                                <span class="template-feature-tag">Space Grotesk</span>
+                                <span class="template-feature-tag">GPS Geofence</span>
+                            </div>
+                            <button class="btn" onclick="openNewScreenModal('designfactory-v2')" style="width:100%;">Create Screen with V2 Studio</button>
+                        </div>
+                    </div>
+
+                    <!-- V2 Studio: Prototypes 3D Hologram Showroom -->
+                    <div class="template-card" style="border-color: rgba(255, 176, 32, 0.4); background: rgba(26, 22, 14, 0.85);">
+                        <div class="template-card-visual" style="background:linear-gradient(135deg, rgba(255,176,32,0.25) 0%, rgba(10,12,18,0.95) 100%);">🧪</div>
+                        <div class="template-card-body">
+                            <h3>Prototypes Showroom V2</h3>
+                            <div class="template-version" style="color:var(--rtu-gold);">V2 Studio · 5-Shader Parametric 3D</div>
+                            <p>
+                                Interactive 3D holographic lab showroom featuring 34 RTU prototypes, 4 visual shader inspection modes (Studio PBR, Holo, CAD Wireframe, Exploded X-Ray), TRL maturity gauges, and Web Audio synthesis.
+                            </p>
+                            <div class="template-features">
+                                <span class="template-feature-tag">5 Shader Modes</span>
+                                <span class="template-feature-tag">34 Parametric 3D</span>
+                                <span class="template-feature-tag">TRL Gauges</span>
+                                <span class="template-feature-tag">Synthesized Audio</span>
+                            </div>
+                            <button class="btn" onclick="openNewScreenModal('prototypes-v2')" style="width:100%;">Create Screen with V2 Studio</button>
+                        </div>
+                    </div>
+
+                    <!-- V2 Studio: Team Constellation (SWUP V2) -->
+                    <div class="template-card" style="border-color: rgba(84, 232, 255, 0.4); background: rgba(12, 26, 40, 0.85);">
+                        <div class="template-card-visual" style="background:linear-gradient(135deg, rgba(84,232,255,0.25) 0%, rgba(10,12,18,0.95) 100%);">⚡</div>
+                        <div class="template-card-body">
+                            <h3>Team Constellation V2</h3>
+                            <div class="template-version" style="color:var(--accent-cyan);">V2 Studio · Spatial Emitters</div>
+                            <p>
+                                High-contrast holographic team hub with connecting light beams, gyroscopic parallax depth cards, and direct portfolio virtual card integration.
+                            </p>
+                            <div class="template-features">
+                                <span class="template-feature-tag">Light Beam Emitters</span>
+                                <span class="template-feature-tag">Parallax Tilt</span>
+                                <span class="template-feature-tag">Constellation Hub</span>
+                                <span class="template-feature-tag">GPS Anchored</span>
+                            </div>
+                            <button class="btn" onclick="openNewScreenModal('swup-v2')" style="width:100%;">Create Screen with V2 Studio</button>
+                        </div>
+                    </div>
+
+                    <!-- V4: Hierarchy Tree Legacy -->
                     <div class="template-card">
                         <div class="template-card-visual v4-bg">🌿</div>
                         <div class="template-card-body">
                             <h3 data-i18n="tmpl_tree_title">Hierarchy Tree</h3>
-                            <div class="template-version" data-i18n="tmpl_tree_version">V4 · DesignFactory Engine</div>
+                            <div class="template-version" data-i18n="tmpl_tree_version">V4 · DesignFactory Legacy</div>
                             <p data-i18n="tmpl_tree_desc">
                                 Spatial 3D orbital tree visualization. Arranges team members in concentric tiers — 
-                                <strong>Root</strong> (Director/Head), <strong>Lead</strong> (Team Leads), and <strong>Staff</strong> (Core Members) — 
-                                orbiting a central anchor. Each inductee is represented by a floating card with photo, role, 
-                                and accent color. Supports virtual card deep links via double-tap.
+                                Root, Lead, and Staff — orbiting a central anchor.
                             </p>
                             <div class="template-features">
                                 <span class="template-feature-tag" data-i18n="tag_3d_orbit">3D Orbit Layout</span>
-                                <span class="template-feature-tag" data-i18n="tag_hierarchy_tiers">Hierarchy Tiers</span>
-                                <span class="template-feature-tag" data-i18n="tag_draggable">Draggable</span>
                                 <span class="template-feature-tag" data-i18n="tag_virtual_cards">Virtual Cards</span>
-                                <span class="template-feature-tag" data-i18n="tag_gps_anchored">GPS Anchored</span>
                             </div>
-                            <button class="btn" onclick="openNewScreenModal('designfactory')" style="width:100%;" data-i18n="btn_create_with_template">Create Screen with This Template</button>
+                            <button class="btn btn-secondary" onclick="openNewScreenModal('designfactory')" style="width:100%;" data-i18n="btn_create_with_template">Create Screen (Legacy)</button>
                         </div>
                     </div>
 
-                    <!-- V5: Team Profile -->
+                    <!-- V5: Team Profile Legacy -->
                     <div class="template-card">
                         <div class="template-card-visual v5-bg">⚡</div>
                         <div class="template-card-body">
                             <h3 data-i18n="tmpl_swup_title">Team Profile Showcase</h3>
-                            <div class="template-version" data-i18n="tmpl_swup_version">V5 · SWUP Engine</div>
+                            <div class="template-version" data-i18n="tmpl_swup_version">V5 · SWUP Legacy</div>
                             <p data-i18n="tmpl_swup_desc">
-                                Horizontal kinetic carousel with interactive hero stage. Features team members in a 
-                                swipeable horizontal strip with individual profile cards showcasing specialty, 
-                                project status, skills radar, and custom crop positioning. Includes team-level 
-                                hero photo and destination branding.
+                                Horizontal kinetic carousel with interactive hero stage and skills radar.
                             </p>
                             <div class="template-features">
                                 <span class="template-feature-tag" data-i18n="tag_horizontal_carousel">Horizontal Carousel</span>
                                 <span class="template-feature-tag" data-i18n="tag_hero_stage">Hero Stage</span>
-                                <span class="template-feature-tag" data-i18n="tag_skills_radar">Skills Radar</span>
-                                <span class="template-feature-tag" data-i18n="tag_swipeable">Swipeable</span>
-                                <span class="template-feature-tag" data-i18n="tag_custom_crops">Custom Crops</span>
                             </div>
-                            <button class="btn" onclick="openNewScreenModal('swup')" style="width:100%;" data-i18n="btn_create_with_template">Create Screen with This Template</button>
+                            <button class="btn btn-secondary" onclick="openNewScreenModal('swup')" style="width:100%;" data-i18n="btn_create_with_template">Create Screen (Legacy)</button>
                         </div>
                     </div>
 
-                    <!-- V6: Prototypes Showcase -->
+                    <!-- V6: Prototypes Showcase Legacy -->
                     <div class="template-card">
                         <div class="template-card-visual" style="background:linear-gradient(135deg, rgba(255,176,32,0.12) 0%, rgba(10,12,18,0.9) 100%);">🧪</div>
                         <div class="template-card-body">
                             <h3 data-i18n="tmpl_proto_title">Prototypes Showcase</h3>
-                            <div class="template-version" data-i18n="tmpl_proto_version">V6 · Prototypes Engine</div>
+                            <div class="template-version" data-i18n="tmpl_proto_version">V6 · Prototypes Legacy</div>
                             <p data-i18n="tmpl_proto_desc">
-                                Fullscreen AR carousel for physical prototype collections. Center-stage parametric 3D model
-                                per prototype, left/right arrows to browse, title below the model, and a bottom-left
-                                search panel with a scrollable filtered list.
+                                Fullscreen AR carousel for physical prototype collections with parametric 3D models.
                             </p>
                             <div class="template-features">
                                 <span class="template-feature-tag" data-i18n="tag_3d_models">Parametric 3D</span>
                                 <span class="template-feature-tag" data-i18n="tag_searchable">Searchable</span>
-                                <span class="template-feature-tag" data-i18n="tag_ar_carousel">AR Carousel</span>
-                                <span class="template-feature-tag" data-i18n="tag_gps_anchored">GPS Anchored</span>
                             </div>
-                            <button class="btn" onclick="openNewScreenModal('prototypes')" style="width:100%;" data-i18n="btn_create_with_template">Create Screen with This Template</button>
+                            <button class="btn btn-secondary" onclick="openNewScreenModal('prototypes')" style="width:100%;" data-i18n="btn_create_with_template">Create Screen (Legacy)</button>
                         </div>
                     </div>
                 </div>
@@ -1684,9 +1730,12 @@
                     <div class="form-group">
                         <label data-i18n="display_template">DISPLAY TEMPLATE / AR ENGINE</label>
                         <select id="new-screen-template">
-                            <option value="designfactory">🌿 V4: Hierarchy Tree (DesignFactory)</option>
-                            <option value="swup">⚡ V5: Team Profile Showcase (SWUP)</option>
-                            <option value="prototypes">🧪 V6: Prototypes Showcase (2026)</option>
+                            <option value="designfactory-v2">✨ V2 Studio: Spatial Directory (DesignFactory V2)</option>
+                            <option value="prototypes-v2">✨ V2 Studio: 3D Hologram Showroom (Prototypes V2)</option>
+                            <option value="swup-v2">✨ V2 Studio: Team Constellation (SWUP V2)</option>
+                            <option value="designfactory">🌿 V4: Hierarchy Tree (Legacy)</option>
+                            <option value="swup">⚡ V5: Team Profile (Legacy)</option>
+                            <option value="prototypes">🧪 V6: Prototypes Showcase (Legacy)</option>
                         </select>
                     </div>
                 </div>
@@ -2382,7 +2431,7 @@
                 }
 
                 // V5 SWUP Team & Members
-                if (currentLocation.data && currentLocation.template === 'swup') {
+                if (currentLocation.data && (currentLocation.template === 'swup' || currentLocation.template === 'swup-v2')) {
                     const teamNameEn = document.getElementById('v5-teamName').value.trim();
                     const teamNameLv = document.getElementById('v5-teamName-lv');
                     if (teamNameEn && !teamNameLv.value.trim()) teamNameLv.value = await translateToLV(teamNameEn);
@@ -2606,15 +2655,15 @@
             document.querySelectorAll('.template-section').forEach(el => el.classList.remove('active'));
             if (!currentLocation.data) currentLocation.data = {};
 
-            if (tmpl === 'designfactory') {
+            if (tmpl === 'designfactory' || tmpl === 'designfactory-v2') {
                 if (!currentLocation.data.inductees) currentLocation.data.inductees = [];
                 document.getElementById('section-designfactory').classList.add('active');
                 renderV4List();
-            } else if (tmpl === 'prototypes') {
+            } else if (tmpl === 'prototypes' || tmpl === 'prototypes-v2') {
                 if (!currentLocation.data.prototypes && !currentLocation.data.items) currentLocation.data.prototypes = [];
                 document.getElementById('section-prototypes').classList.add('active');
                 renderP6List();
-            } else if (tmpl === 'swup') {
+            } else if (tmpl === 'swup' || tmpl === 'swup-v2') {
                 if (!currentLocation.data.members) currentLocation.data.members = [];
                 document.getElementById('section-swup').classList.add('active');
                 
@@ -2990,7 +3039,7 @@
             currentLocation.description = descEn;
             currentLocation.description_lv = descLv;
 
-            if (currentLocation.template === 'swup') {
+            if (currentLocation.template === 'swup' || currentLocation.template === 'swup-v2') {
                 const teamNameEn = document.getElementById('v5-teamName').value.trim();
                 let teamNameLv = document.getElementById('v5-teamName-lv').value.trim();
                 if (teamNameEn && !teamNameLv) {

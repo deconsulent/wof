@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>RTU Wall of Fame · Spatial Directory V2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="../db-shim.js?v=20260928b"></script>
+    <script src="../i18n.js?v=20260928b"></script>
+    <!-- Face API (CDN WebGL accelerated) -->
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+    <style>
+        :root {
+            --bg-canvas: #080a0f;
+            --rtu-burgundy: #a6192e;
+            --rtu-gold: #e5a823;
+            --accent-cyan: #64d2ff;
+            --accent-emerald: #30d158;
+            --text-main: #f8fafc;
+            --text-dim: rgba(248, 250, 252, 0.65);
+            --text-muted: rgba(248, 250, 252, 0.4);
+            --card-glass: rgba(14, 18, 28, 0.72);
+            --card-border: rgba(255, 255, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            min-height: 100%;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg-canvas);
+            color: var(--text-main);
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* ── Canvas & Viewport ── */
+        .ar-scene, .permission-screen {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+        }
+        .ar-scene {
+            touch-action: none;
+            cursor: grab;
+        }
+        .ar-scene:active {
+            cursor: grabbing;
+        }
+
+        /* Video Feed & Ambient Lighting */
+        .camera-feed {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            filter: saturate(0.85) contrast(1.06) brightness(0.88);
+        }
+        .camera-feed.is-ready { opacity: 1; }
+
+        .camera-wash {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 40%, rgba(166, 25, 46, 0.08) 0%, rgba(8, 10, 15, 0.4) 65%, rgba(4, 5, 8, 0.88) 100%),
+                        linear-gradient(180deg, rgba(8, 10, 15, 0.6) 0%, transparent 25%, transparent 70%, rgba(8, 10, 15, 0.75) 100%);
+            pointer-events: none;
+        }
+
+        .grain {
+            position: absolute;
+            inset: 0;
+            opacity: 0.08;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.8'/%3E%3C/svg%3E");
+            mix-blend-mode: overlay;
+        }
+
+        /* ── Header HUD ── */
+        .ar-header {
+            position: absolute;
+            z-index: 20;
+            top: clamp(16px, 3.5vw, 36px);
+            left: clamp(16px, 4vw, 48px);
+            right: clamp(16px, 4vw, 48px);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            pointer-events: none;
+        }
+        .header-brand {
+            pointer-events: auto;
+        }
+        .eyebrow {
+            margin-bottom: 4px;
+            color: var(--rtu-gold);
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+        .ar-header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(22px, 3.2vw, 42px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.05;
+            background: linear-gradient(135deg, #ffffff 40%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 24px rgba(0,0,0,0.5);
+        }
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            pointer-events: auto;
+        }
+
+        /* Language Switcher */
+        .lang-switcher {
+            display: inline-flex;
+            background: rgba(14, 18, 28, 0.65);
+            border: 1px solid var(--card-border);
+            border-radius: 999px;
+            padding: 3px;
+            gap: 2px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .lang-switcher-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .lang-switcher-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .lang-switcher-btn.active {
+            background: rgba(255, 255, 255, 0.95);
+            color: #090b10;
+            box-shadow: 0 2px 12px rgba(255, 255, 255, 0.25);
+        }
+
+        .tracking-pill {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 7px 14px;
+            color: var(--text-main);
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid var(--card-border);
+            border-radius: 999px;
+            background: rgba(14, 18, 28, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .tracking-pill i {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent-emerald);
+            box-shadow: 0 0 10px rgba(48, 209, 88, 0.8);
+            animation: pulse-dot 2.5s infinite ease-in-out;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 14px rgba(48, 209, 88, 1); }
+        }
+
+        /* ── 3D Wall Field & Tree Layout ── */
+        .wall-field {
+            position: absolute;
+            z-index: 5;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            perspective: 1200px;
+        }
+
+        .wall-structure {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 1px dashed rgba(255, 255, 255, 0.08);
+            pointer-events: none;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .wall-structure-top { width: 780px; height: 780px; }
+        .wall-structure-bottom { width: 1140px; height: 1140px; }
+
+        /* Inductee Cards */
+        .wall-person {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            pointer-events: auto;
+            cursor: pointer;
+            transform-origin: center center;
+            transform: translate(
+                calc(-50% + (var(--wall-x) * 4.2px)),
+                calc(-50% + (var(--wall-y) * 4.2px))
+            ) scale(calc(0.72 + (var(--proximity, 1) * 0.38)));
+            opacity: calc(0.35 + (var(--proximity, 1) * 0.65));
+            transition: opacity 0.35s ease, filter 0.35s ease, box-shadow 0.35s ease;
+            z-index: calc(10 + round(var(--proximity, 1) * 20));
+        }
+
+        .wall-card-inner {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 18px 12px 12px;
+            border-radius: 20px;
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            min-width: 220px;
+            max-width: 290px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .wall-person:hover .wall-card-inner,
+        .wall-person.is-focused .wall-card-inner {
+            border-color: var(--person-accent, var(--rtu-gold));
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6), 0 0 32px rgba(229, 168, 35, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transform: translateY(-4px) scale(1.04);
+        }
+
+        .wall-person-avatar {
+            position: relative;
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.4));
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            font-family: 'DM Mono', monospace;
+            font-weight: 700;
+            font-size: 16px;
+            color: #ffffff;
+        }
+        .wall-person-avatar img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .wall-person-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+        .wall-person-level {
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--person-accent, var(--rtu-gold));
+        }
+        .wall-person-name {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #ffffff;
+        }
+        .wall-person-role {
+            font-size: 11px;
+            color: var(--text-dim);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ── Viewfinder & HUD ── */
+        .viewfinder {
+            position: absolute;
+            z-index: 10;
+            inset: clamp(90px, 14vh, 130px) clamp(20px, 6vw, 90px) clamp(80px, 12vh, 110px);
+            pointer-events: none;
+            display: grid;
+            place-items: center;
+        }
+        .vf-corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: rgba(255, 255, 255, 0.35);
+            border-style: solid;
+        }
+        .vf-tl { top: 0; left: 0; border-width: 1.5px 0 0 1.5px; border-top-left-radius: 4px; }
+        .vf-tr { top: 0; right: 0; border-width: 1.5px 1.5px 0 0; border-top-right-radius: 4px; }
+        .vf-bl { bottom: 0; left: 0; border-width: 0 0 1.5px 1.5px; border-bottom-left-radius: 4px; }
+        .vf-br { bottom: 0; right: 0; border-width: 0 1.5px 1.5px 0; border-bottom-right-radius: 4px; }
+
+        /* ── Footer Controls ── */
+        .ar-footer {
+            position: absolute;
+            z-index: 20;
+            left: clamp(16px, 4vw, 48px);
+            right: clamp(16px, 4vw, 48px);
+            bottom: clamp(16px, 3vw, 36px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+        .footer-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-dim);
+            pointer-events: auto;
+        }
+        .footer-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: auto;
+        }
+        .hud-btn {
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--card-border);
+            background: rgba(14, 18, 28, 0.65);
+            color: var(--text-main);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.2s ease;
+        }
+        .hud-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* ── Remote Preview Banner ── */
+        .preview-watermark-hud {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 18px;
+            border-radius: 999px;
+            background: rgba(14, 18, 28, 0.92);
+            border: 1px solid rgba(229, 168, 35, 0.55);
+            box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5), 0 0 16px rgba(229, 168, 35, 0.25);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            color: var(--rtu-gold);
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            pointer-events: none;
+            animation: watermark-pulse 3s infinite ease-in-out;
+        }
+        @keyframes watermark-pulse {
+            0%, 100% { opacity: 0.92; transform: translateX(-50%) scale(1); }
+            50% { opacity: 1; transform: translateX(-50%) scale(1.02); box-shadow: 0 4px 26px rgba(0,0,0,0.6), 0 0 24px rgba(229, 168, 35, 0.4); }
+        }
+
+        /* ── Permission / Gate Screen ── */
+        .permission-screen {
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: radial-gradient(circle at 50% 25%, #181d2e 0%, #080a0f 75%);
+            z-index: 50;
+        }
+        .permission-card {
+            width: min(100%, 420px);
+            padding: 36px 30px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 28px;
+            background: rgba(18, 23, 36, 0.72);
+            box-shadow: 0 24px 65px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(36px);
+            -webkit-backdrop-filter: blur(36px);
+            text-align: center;
+        }
+        .permission-card h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin: 12px 0 8px;
+        }
+        .permission-copy {
+            color: var(--text-dim);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .primary-cta-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px 24px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+            color: #090b10;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.25);
+            transition: all 0.2s ease;
+        }
+        .primary-cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 255, 255, 0.4);
+        }
+
+        /* GPS Status & Card */
+        .gps-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+        .gps-status-pill.is-verified {
+            background: rgba(48, 209, 88, 0.15);
+            border: 1px solid rgba(48, 209, 88, 0.4);
+            color: #30d158;
+        }
+        .gps-status-pill.is-locked {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #ff7b7b;
+        }
+        .gps-locked-card {
+            background: rgba(10, 14, 22, 0.75);
+            border: 1px solid rgba(229, 168, 35, 0.4);
+            border-radius: 20px;
+            padding: 20px 18px;
+            margin: 16px 0;
+            text-align: center;
+        }
+        .gps-distance-text {
+            font-size: 13px;
+            color: var(--text-main);
+            margin: 8px 0 4px;
+            line-height: 1.45;
+        }
+        .gps-preview-cta {
+            display: block;
+            width: 100%;
+            margin: 14px 0 8px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ffd043, #ff9f1c);
+            border: none;
+            color: #11141d;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(255, 175, 0, 0.35);
+            transition: all 0.2s ease;
+        }
+        .gps-preview-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(255, 175, 0, 0.5);
+        }
+        .gps-retry-btn {
+            margin-top: 6px;
+            padding: 7px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Permission & Proximity Screen -->
+    <div id="permission-screen" class="permission-screen">
+        <section class="permission-card">
+            <div style="display:flex; justify-content:center; margin-bottom: 16px;" id="perm-lang-container"></div>
+            <div id="gps-status-container"></div>
+            <p class="eyebrow" id="loading-eyebrow" data-i18n="app_title">Wall of Fame</p>
+            <h1 id="loading-title">Loading Screen...</h1>
+            <p class="permission-copy" data-i18n="permission_hint">Experience the spatial directory anchored to this physical installation.</p>
+            <p id="permission-error" style="color:#ff7b7b; display:none; margin-bottom:14px;"></p>
+            <div id="gps-action-area">
+                <button id="start-btn" class="primary-cta-btn" style="display:none;" data-i18n="enable_camera">Enable camera ↗</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Main Spatial AR Experience -->
+    <div id="ar-scene" class="ar-scene" style="display:none;">
+        <div id="wall-field" class="wall-field" aria-hidden="true">
+            <div class="wall-structure wall-structure-top"></div>
+            <div class="wall-structure wall-structure-bottom"></div>
+            <div id="people-container"></div>
+        </div>
+
+        <video id="camera-feed" class="camera-feed" muted playsinline></video>
+        <div class="camera-wash"></div>
+        <div class="grain"></div>
+
+        <header class="ar-header">
+            <div class="header-brand">
+                <p class="eyebrow" id="header-eyebrow">Spatial Directory · V2</p>
+                <h1 id="header-title">Design Factory</h1>
+            </div>
+            <div class="header-controls">
+                <div id="hud-lang-container"></div>
+                <div class="tracking-pill"><i></i><span data-i18n="drag_to_explore">Drag to explore</span></div>
+            </div>
+        </header>
+
+        <main class="viewfinder" aria-label="Spatial viewfinder">
+            <div class="vf-corner vf-tl"></div><div class="vf-corner vf-tr"></div>
+            <div class="vf-corner vf-bl"></div><div class="vf-corner vf-br"></div>
+        </main>
+
+        <footer class="ar-footer">
+            <div class="footer-status">
+                <span id="footer-status" data-i18n="drag_to_explore">Drag to explore</span>
+            </div>
+            <div class="footer-controls">
+                <button id="overview-btn" class="hud-btn" data-i18n="overview">Overview</button>
+                <button id="reset-btn" class="hud-btn" data-i18n="recenter">Reset view</button>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let people = [];
+        let locData = {};
+
+        let aim = { x: 0, y: 0 };
+        let aimRef = { x: 0, y: 0 };
+        let targetAim = { x: 0, y: 0 };
+        let isAutoCentering = false;
+        let overview = false;
+        let dragRef = null;
+        let dragDistance = 0;
+
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+        // Inject language switchers
+        document.getElementById('perm-lang-container').innerHTML = i18n.createSwitcherHTML();
+        document.getElementById('hud-lang-container').innerHTML = i18n.createSwitcherHTML();
+
+        i18n.subscribe(() => {
+            updateHeaderTitles();
+            if (typeof renderGpsLockedCard === 'function') renderGpsLockedCard();
+            if (typeof updatePreviewWatermark === 'function') updatePreviewWatermark();
+            renderWall(true);
+        });
+
+        // DOM Elements
+        const arScene = document.getElementById('ar-scene');
+        const permissionScreen = document.getElementById('permission-screen');
+        const startBtn = document.getElementById('start-btn');
+        const errorMsg = document.getElementById('permission-error');
+        const videoEl = document.getElementById('camera-feed');
+        const peopleContainer = document.getElementById('people-container');
+        const wallField = document.getElementById('wall-field');
+        const footerStatus = document.getElementById('footer-status');
+
+        function updateHeaderTitles() {
+            if (!locData || !locData.id) return;
+            const title = i18n.getLocalized(locData, 'title') || locData.title || locData.name;
+            const subtitle = i18n.getLocalized(locData, 'subtitle') || locData.subtitle || "";
+            document.getElementById('header-title').textContent = title;
+            document.getElementById('header-eyebrow').textContent = subtitle || "Spatial Directory";
+        }
+
+        async function fetchLocationData() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                let locId = urlParams.get('id') || window.location.pathname.split('/').pop();
+                if (!locId || locId === 'designfactory-v2.html' || locId === 'designfactory.html') locId = 'design-factory';
+
+                const res = await fetch(`/api/locations/${locId}`);
+                if (!res.ok) throw new Error("Location not found");
+                
+                locData = await res.json();
+                document.getElementById('loading-title').textContent = i18n.getLocalized(locData, 'title') || locData.title || locData.name;
+                updateHeaderTitles();
+
+                if (locData.data && locData.data.inductees) {
+                    people = locData.data.inductees;
+                }
+
+                await verifyGpsLocation();
+
+                // Initialize Face Matcher in background if photos exist
+                initBackgroundFaceMatcher();
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading-title').textContent = "Design Factory";
+                // Fallback default people
+                people = [
+                    { id: "el-na-mi-elsone", name: "Elīna Miķelsone", role: "Nodaļas vadītāja", level: "root", accent: "#e386c7", photo: "/uploads/1787635254640-355043750.jpg" },
+                    { id: "daniela-hrap-ne", name: "Daniela Hrapāne", role: "SkyLab vadītāja", level: "lead", accent: "#0069d1", photo: "/uploads/1787635246661-892771639.jpg" },
+                    { id: "gavriils-kniga", name: "Gavriils Kniga", role: "IdeaBox Coordinator", level: "lead", accent: "#e3e3e3", photo: "/uploads/1787634932296-409002653.jpg" },
+                    { id: "shiv", name: "Shiv", role: "Project Manager Assistant", level: "lead", accent: "#ffd043", photo: "https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/1787639291355-385884177.jpg" }
+                ];
+                if (startBtn) startBtn.style.display = 'inline-block';
+                initBackgroundFaceMatcher();
+            }
+        }
+
+        /* ── Haversine Distance Formula in meters ── */
+        function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const phi1 = lat1 * Math.PI / 180;
+            const phi2 = lat2 * Math.PI / 180;
+            const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+            const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                      Math.cos(phi1) * Math.cos(phi2) *
+                      Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        const GEOFENCE_RADIUS_METERS = 8;
+        let isGpsVerified = false;
+        let isRemotePreviewActive = false;
+        let detectedDistanceStr = '';
+        let lastGpsState = null;
+
+        function updatePreviewWatermark() {
+            const watermark = document.getElementById('preview-watermark-hud');
+            if (watermark && isRemotePreviewActive) {
+                const distText = detectedDistanceStr || 'REMOTE';
+                watermark.innerHTML = `<span>⚡</span> ${i18n.t('gps_preview_active_banner', { dist: distText })}`;
+            }
+        }
+
+        function renderGpsLockedCard() {
+            if (!lastGpsState) return;
+            const statusContainer = document.getElementById('gps-status-container');
+            const actionArea = document.getElementById('gps-action-area');
+            let existingCard = document.getElementById('gps-locked-card');
+
+            if (lastGpsState.type === 'verified') {
+                if (statusContainer) {
+                    statusContainer.innerHTML = `<div class="gps-status-pill is-verified">${i18n.t('gps_verified')} (${lastGpsState.distFormatted})</div>`;
+                }
+                if (startBtn) startBtn.style.display = 'inline-block';
+                if (existingCard) existingCard.remove();
+                return;
+            }
+
+            if (lastGpsState.type === 'preview_badge') {
+                if (statusContainer) {
+                    statusContainer.innerHTML = `<div class="gps-status-pill is-verified">${i18n.t('gps_preview_badge')}</div>`;
+                }
+                if (startBtn) startBtn.style.display = 'inline-block';
+                if (existingCard) existingCard.remove();
+                return;
+            }
+
+            if (lastGpsState.type === 'locked') {
+                if (statusContainer) {
+                    statusContainer.innerHTML = `<div class="gps-status-pill is-locked">📍 ${lastGpsState.distFormatted} Away</div>`;
+                }
+                if (!existingCard) {
+                    existingCard = document.createElement('div');
+                    existingCard.id = 'gps-locked-card';
+                    existingCard.className = 'gps-locked-card';
+                    if (actionArea && actionArea.parentNode) {
+                        actionArea.parentNode.insertBefore(existingCard, actionArea);
+                    }
+                }
+                existingCard.innerHTML = `
+                    <div class="gps-status-pill is-locked" style="margin-bottom:8px;">📍 ${i18n.t('gps_not_at_location_title')}</div>
+                    <p class="gps-distance-text">${i18n.t('gps_distance_away_msg', { dist: `<strong>${lastGpsState.distFormatted}</strong>` })}</p>
+                    <p style="font-size:12px; color:rgba(255,255,255,0.72); margin: 8px 0 4px;">${i18n.t('gps_preview_prompt')}</p>
+                    <button type="button" class="gps-preview-cta" onclick="enterPreviewMode()">${i18n.t('gps_enter_preview_btn')}</button>
+                    <div style="display:flex; justify-content:center; gap: 8px; margin-top: 6px;">
+                        <button type="button" class="gps-retry-btn" onclick="verifyGpsLocation()">${i18n.t('gps_retry_btn')}</button>
+                    </div>
+                `;
+            } else if (lastGpsState.type === 'denied') {
+                if (statusContainer) {
+                    statusContainer.innerHTML = `<div class="gps-status-pill is-locked">📍 ${i18n.t('gps_not_at_location_title')}</div>`;
+                }
+                if (!existingCard) {
+                    existingCard = document.createElement('div');
+                    existingCard.id = 'gps-locked-card';
+                    existingCard.className = 'gps-locked-card';
+                    if (actionArea && actionArea.parentNode) {
+                        actionArea.parentNode.insertBefore(existingCard, actionArea);
+                    }
+                }
+                existingCard.innerHTML = `
+                    <div class="gps-status-pill is-locked" style="margin-bottom:8px;">📍 ${i18n.t('gps_required_title')}</div>
+                    <p class="gps-distance-text">${i18n.t('gps_permission_denied')}</p>
+                    <p style="font-size:12px; color:rgba(255,255,255,0.72); margin: 8px 0 4px;">${i18n.t('gps_preview_prompt')}</p>
+                    <button type="button" class="gps-preview-cta" onclick="enterPreviewMode()">${i18n.t('gps_enter_preview_btn')}</button>
+                    <div style="display:flex; justify-content:center; gap: 8px; margin-top: 6px;">
+                        <button type="button" class="gps-retry-btn" onclick="verifyGpsLocation()">${i18n.t('gps_retry_btn')}</button>
+                    </div>
+                `;
+            }
+        }
+
+        function enterPreviewMode() {
+            startExperience(true);
+        }
+
+        async function verifyGpsLocation() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusContainer = document.getElementById('gps-status-container');
+            const targetLat = parseFloat(locData.lat);
+            const targetLng = parseFloat(locData.lng);
+
+            if (urlParams.get('bypass_gps') === '1' || urlParams.get('preview') === '1' || urlParams.get('admin') === '1') {
+                isGpsVerified = true;
+                isRemotePreviewActive = true;
+                detectedDistanceStr = 'PREVIEW';
+                lastGpsState = { type: 'preview_badge' };
+                renderGpsLockedCard();
+                return;
+            }
+
+            if (!targetLat || !targetLng || (targetLat === 0 && targetLng === 0)) {
+                isGpsVerified = true;
+                isRemotePreviewActive = false;
+                lastGpsState = null;
+                if (statusContainer) statusContainer.innerHTML = '';
+                if (startBtn) startBtn.style.display = 'inline-block';
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                lastGpsState = { type: 'denied' };
+                renderGpsLockedCard();
+                return;
+            }
+
+            if (statusContainer) {
+                statusContainer.innerHTML = `<div class="gps-status-pill">📡 ${i18n.t('gps_checking')}</div>`;
+            }
+            if (startBtn) startBtn.style.display = 'none';
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const userLat = pos.coords.latitude;
+                    const userLng = pos.coords.longitude;
+                    const dist = calculateDistanceMeters(targetLat, targetLng, userLat, userLng);
+                    const distFormatted = dist < 1000 
+                        ? `${Math.round(dist)}m / ${Math.round(dist * 3.28)} ft`
+                        : `${(dist / 1000).toFixed(2)} km`;
+                    detectedDistanceStr = distFormatted;
+
+                    if (dist <= GEOFENCE_RADIUS_METERS) {
+                        isGpsVerified = true;
+                        isRemotePreviewActive = false;
+                        lastGpsState = { type: 'verified', distFormatted: `${Math.round(dist)}m` };
+                    } else {
+                        isGpsVerified = false;
+                        if (startBtn) startBtn.style.display = 'none';
+                        lastGpsState = { type: 'locked', distFormatted, targetLat, targetLng };
+                    }
+                    renderGpsLockedCard();
+                },
+                (err) => {
+                    detectedDistanceStr = 'REMOTE';
+                    lastGpsState = { type: 'denied' };
+                    renderGpsLockedCard();
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        /* ── 3D Orbital Tree Layout & Rendering ── */
+        function renderWall(forceRedraw = false) {
+            if (people.length === 0) return;
+
+            const rows = { 'root': [], 'lead': [], 'member': [] };
+            people.forEach(p => rows[p.level || 'member'].push(p));
+            
+            const rowY = { 'root': -65, 'lead': 0, 'member': 65 };
+            const spacing = { 'root': 75, 'lead': 65, 'member': 55 };
+            
+            Object.keys(rows).forEach(lvl => {
+                const rowPeople = rows[lvl];
+                const count = rowPeople.length;
+                rowPeople.forEach((p, i) => {
+                    p.x = (i - (count - 1) / 2) * spacing[lvl];
+                    p.y = rowY[lvl];
+                });
+            });
+
+            // Find nearest
+            let bestDist = Infinity;
+            let nearest = people[0];
+            for (let p of people) {
+                let d = Math.hypot(aim.x - p.x, aim.y - p.y);
+                if (d < bestDist) { bestDist = d; nearest = p; }
+            }
+            const focused = bestDist < 20 ? nearest : null;
+
+            if (forceRedraw) {
+                peopleContainer.innerHTML = '';
+            }
+
+            if (peopleContainer.children.length === 0) {
+                people.forEach((person, index) => {
+                    person.level = person.level || (index === 0 ? "root" : "lead");
+                    person.accent = person.accent || (person.level === 'root' ? '#e5a823' : '#64d2ff');
+                    person.x = person.x || 0;
+                    person.y = person.y || 0;
+
+                    const el = document.createElement('div');
+                    el.className = 'wall-person';
+                    el.id = `person-${person.id || index}`;
+
+                    let initials = person.initials;
+                    if (!initials && person.name) {
+                        initials = person.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    }
+
+                    const localizedRole = i18n.getLocalized(person, 'role') || person.role || '';
+                    const levelLabel = person.level === 'root' ? 'DIRECTOR' : (person.level === 'lead' ? 'LEAD' : 'STAFF');
+
+                    el.innerHTML = `
+                        <div class="wall-card-inner">
+                            <div class="wall-person-avatar">
+                                <span>${initials || 'DF'}</span>
+                                ${person.photo ? `<img src="${person.photo}" alt="${person.name}" onerror="this.style.display='none'">` : ''}
+                            </div>
+                            <div class="wall-person-info">
+                                <span class="wall-person-level">${levelLabel}</span>
+                                <strong class="wall-person-name">${person.name}</strong>
+                                <span class="wall-person-role">${localizedRole}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    let lastTap = 0;
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const now = Date.now();
+                        if (now - lastTap < 380) {
+                            openVirtualCard(person);
+                        } else {
+                            smoothGlideTo(person.x, person.y);
+                        }
+                        lastTap = now;
+                    });
+
+                    peopleContainer.appendChild(el);
+                });
+            } else {
+                people.forEach((person, index) => {
+                    const el = document.getElementById(`person-${person.id || index}`);
+                    if (el) {
+                        const roleSpan = el.querySelector('.wall-person-role');
+                        if (roleSpan) roleSpan.textContent = i18n.getLocalized(person, 'role') || person.role || '';
+                    }
+                });
+            }
+
+            // Update transform variables
+            people.forEach((person, index) => {
+                const el = document.getElementById(`person-${person.id || index}`);
+                if (!el) return;
+
+                const relativeX = person.x - aim.x;
+                const relativeY = person.y - aim.y;
+                const dist = Math.hypot(relativeX, relativeY);
+                const proximity = clamp(1 - dist / 270, 0.2, 1);
+                
+                el.style.setProperty('--wall-x', relativeX);
+                el.style.setProperty('--wall-y', relativeY);
+                el.style.setProperty('--person-accent', person.accent);
+                el.style.setProperty('--proximity', proximity);
+
+                el.classList.toggle('is-focused', Boolean(focused && focused.id === person.id));
+            });
+
+            if (overview) {
+                footerStatus.textContent = "Overview Mode · Full Tree View";
+            } else if (focused) {
+                const role = i18n.getLocalized(focused, 'role') || focused.role || '';
+                footerStatus.textContent = `${focused.name} · ${role}`;
+            } else {
+                footerStatus.textContent = i18n.t('drag_to_explore');
+            }
+        }
+
+        function smoothGlideTo(targetX, targetY) {
+            targetAim = { x: targetX, y: targetY };
+            isAutoCentering = true;
+            overview = false;
+        }
+
+        // Animation Physics Loop
+        function animateLoop() {
+            if (isAutoCentering) {
+                const dx = targetAim.x - aim.x;
+                const dy = targetAim.y - aim.y;
+                aim.x += dx * 0.12;
+                aim.y += dy * 0.12;
+                aimRef = { ...aim };
+                if (Math.hypot(dx, dy) < 0.2) {
+                    aim.x = targetAim.x;
+                    aim.y = targetAim.y;
+                    isAutoCentering = false;
+                }
+                renderWall();
+            }
+            requestAnimationFrame(animateLoop);
+        }
+        requestAnimationFrame(animateLoop);
+
+        function openVirtualCard(person) {
+            const dest = person.virtualCardUrl || `https://df-virtual-cards.vercel.app?member=${encodeURIComponent(person.id || person.name)}`;
+            window.open(dest, '_blank');
+        }
+
+        /* ── Silent Background Face Recognition Engine ── */
+        let faceMatcher = null;
+        let isFaceDetectionActive = false;
+        let lastRecognizedPersonId = null;
+        let faceDetectInterval = null;
+
+        async function initBackgroundFaceMatcher() {
+            if (typeof faceapi === 'undefined') return;
+            try {
+                const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+                await Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+                ]);
+
+                // Enroll inductees with photos
+                const labeledDescriptors = [];
+                for (const p of people) {
+                    if (p.photo) {
+                        try {
+                            const img = await faceapi.fetchImage(p.photo);
+                            const detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+                            if (detection) {
+                                labeledDescriptors.push(new faceapi.LabeledFaceDescriptors(p.id || p.name, [detection.descriptor]));
+                            }
+                        } catch (imgErr) {}
+                    }
+                }
+
+                if (labeledDescriptors.length > 0) {
+                    faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.58);
+                }
+            } catch (err) {
+                console.warn("Face API silent init fallback:", err);
+            }
+        }
+
+        function startSilentFaceTracking() {
+            if (faceDetectInterval) clearInterval(faceDetectInterval);
+            isFaceDetectionActive = true;
+
+            // Background recognition loop (every ~350ms for high performance & zero lag)
+            faceDetectInterval = setInterval(async () => {
+                if (!isFaceDetectionActive || !videoEl || videoEl.paused || videoEl.ended || !faceMatcher) return;
+
+                try {
+                    const detection = await faceapi.detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+                        .withFaceLandmarks()
+                        .withFaceDescriptor();
+
+                    if (detection && detection.descriptor) {
+                        const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+                        if (bestMatch && bestMatch.label !== 'unknown') {
+                            const matchedPerson = people.find(p => (p.id === bestMatch.label || p.name === bestMatch.label));
+                            if (matchedPerson && matchedPerson.id !== lastRecognizedPersonId) {
+                                lastRecognizedPersonId = matchedPerson.id;
+                                // Smoothly glide into recognized person's tile!
+                                smoothGlideTo(matchedPerson.x, matchedPerson.y);
+                            }
+                        }
+                    } else {
+                        lastRecognizedPersonId = null;
+                    }
+                } catch (e) {}
+            }, 350);
+        }
+
+        /* ── Camera & Experience Launcher ── */
+        async function startExperience(isRemotePreview = false) {
+            if (isRemotePreview) isRemotePreviewActive = true;
+            errorMsg.style.display = 'none';
+
+            if (isRemotePreviewActive) {
+                let watermark = document.getElementById('preview-watermark-hud');
+                if (!watermark) {
+                    watermark = document.createElement('div');
+                    watermark.id = 'preview-watermark-hud';
+                    watermark.className = 'preview-watermark-hud';
+                    document.body.appendChild(watermark);
+                }
+                const distText = detectedDistanceStr || 'REMOTE';
+                watermark.innerHTML = `<span>⚡</span> ${i18n.t('gps_preview_active_banner', { dist: distText })}`;
+            }
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }, 
+                    audio: false 
+                });
+                videoEl.srcObject = stream;
+                videoEl.onloadedmetadata = () => {
+                    videoEl.play();
+                    permissionScreen.style.display = 'none';
+                    arScene.style.display = 'block';
+                    renderWall();
+                    setTimeout(() => {
+                        videoEl.classList.add('is-ready');
+                        startSilentFaceTracking();
+                    }, 150);
+                };
+            } catch (err) {
+                // Fallback to 3D mode seamlessly if camera is unavailable
+                permissionScreen.style.display = 'none';
+                arScene.style.display = 'block';
+                renderWall();
+            }
+        }
+
+        startBtn.addEventListener('click', () => startExperience(isRemotePreviewActive));
+
+        // Recenter / Overview Buttons
+        document.getElementById('reset-btn').addEventListener('click', () => smoothGlideTo(0, 0));
+        document.getElementById('overview-btn').addEventListener('click', () => {
+            overview = !overview;
+            if (overview) {
+                smoothGlideTo(0, 0);
+            }
+        });
+
+        // Interactive Drag Navigation
+        const startDrag = (e) => {
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+            if (e.target.closest('button, .lang-switcher, .lang-switcher-btn, .header-controls, .footer-controls, .wall-person, a')) return;
+            isAutoCentering = false;
+            dragDistance = 0;
+            arScene.setPointerCapture(e.pointerId);
+            dragRef = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, aim: { ...aimRef } };
+        };
+
+        const moveDrag = (e) => {
+            if (!dragRef || dragRef.pointerId !== e.pointerId) return;
+            dragDistance = Math.hypot(e.clientX - dragRef.startX, e.clientY - dragRef.startY);
+            const deltaX = (e.clientX - dragRef.startX) * 0.28;
+            const deltaY = (e.clientY - dragRef.startY) * 0.28;
+            aim.x = clamp(dragRef.aim.x - deltaX, -160, 160);
+            aim.y = clamp(dragRef.aim.y - deltaY, -90, 90);
+            renderWall();
+        };
+
+        const endDrag = (e) => {
+            if (!dragRef || dragRef.pointerId !== e.pointerId) return;
+            try { arScene.releasePointerCapture(e.pointerId); } catch(err) {}
+            aimRef = { ...aim };
+            dragRef = null;
+        };
+
+        arScene.addEventListener('pointerdown', startDrag);
+        arScene.addEventListener('pointermove', moveDrag);
+        arScene.addEventListener('pointerup', endDrag);
+        arScene.addEventListener('pointercancel', endDrag);
+
+        fetchLocationData();
+    </script>
+</body>
+</html>

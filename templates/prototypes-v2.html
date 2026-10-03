@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>RTU Prototypes 2026 · Spatial Showroom V2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="../db-shim.js?v=20260928b"></script>
+    <script src="../i18n.js?v=20260928b"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+    </script>
+    <style>
+        :root {
+            --bg-canvas: #080a0f;
+            --rtu-gold: #ffb020;
+            --rtu-gold-glow: rgba(255, 176, 32, 0.35);
+            --rtu-burgundy: #a6192e;
+            --accent-cyan: #64d2ff;
+            --accent-emerald: #30d158;
+            --text-main: #f8fafc;
+            --text-dim: rgba(248, 250, 252, 0.68);
+            --text-muted: rgba(248, 250, 252, 0.42);
+            --card-glass: rgba(14, 18, 28, 0.76);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --active-accent: #ffb020;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            min-height: 100%;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg-canvas);
+            color: var(--text-main);
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+            touch-action: pan-x pan-y;
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* ── Stage & Background ── */
+        .ar-stage, .permission-screen {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .camera-feed {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            filter: saturate(0.85) contrast(1.08) brightness(0.88);
+            z-index: 1;
+        }
+        .camera-feed.is-ready { opacity: 1; }
+
+        .stage-backdrop {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 35%, rgba(255, 176, 32, 0.06) 0%, rgba(8, 10, 15, 0.45) 60%, rgba(4, 5, 8, 0.92) 100%),
+                        linear-gradient(180deg, rgba(8, 10, 15, 0.7) 0%, transparent 22%, transparent 72%, rgba(8, 10, 15, 0.88) 100%);
+        }
+
+        .spatial-grid {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 36px 36px;
+            opacity: 0.5;
+            mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 80%);
+        }
+
+        /* ── Top HUD ── */
+        .top-hud {
+            position: absolute;
+            top: clamp(14px, 3.5vw, 32px);
+            left: clamp(14px, 4vw, 44px);
+            right: clamp(14px, 4vw, 44px);
+            z-index: 25;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .brand-lockup {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            pointer-events: auto;
+        }
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 5px 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 20px rgba(255, 176, 32, 0.2);
+        }
+        .brand-badge img {
+            height: 24px;
+            width: auto;
+            display: block;
+        }
+        .brand-text h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(17px, 2.4vw, 24px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+        }
+        .brand-text p {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--rtu-gold);
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .hud-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        /* Language Switcher */
+        .lang-switcher {
+            display: inline-flex;
+            background: rgba(14, 18, 28, 0.7);
+            border: 1px solid var(--card-border);
+            border-radius: 999px;
+            padding: 3px;
+            gap: 2px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .lang-switcher-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .lang-switcher-btn:hover { color: #ffffff; background: rgba(255,255,255,0.08); }
+        .lang-switcher-btn.active {
+            background: rgba(255, 255, 255, 0.95);
+            color: #090b10;
+            box-shadow: 0 2px 12px rgba(255, 255, 255, 0.25);
+        }
+
+        .audio-toggle-btn {
+            background: rgba(14, 18, 28, 0.7);
+            border: 1px solid var(--card-border);
+            border-radius: 999px;
+            color: var(--text-main);
+            padding: 6px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.2s ease;
+        }
+        .audio-toggle-btn:hover { background: rgba(255,255,255,0.12); }
+        .audio-toggle-btn.is-muted { opacity: 0.5; }
+
+        /* ── Main Viewport Area ── */
+        .main-showroom {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: clamp(75px, 12vh, 96px) clamp(16px, 4vw, 44px) clamp(20px, 3vh, 32px);
+            pointer-events: none;
+        }
+
+        /* 3D Model Stage Canvas */
+        .stage-container {
+            position: relative;
+            flex: 1;
+            min-height: 280px;
+            max-height: 54vh;
+            width: min(100%, 1020px);
+            margin: 0 auto;
+            pointer-events: auto;
+            border-radius: 28px;
+            border: 1px solid var(--card-border);
+            background: rgba(14, 18, 28, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+            overflow: hidden;
+            touch-action: none;
+            cursor: grab;
+        }
+        .stage-container:active { cursor: grabbing; }
+        .stage-container canvas {
+            position: absolute;
+            inset: 0;
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+
+        /* Shader Mode Switcher Bar */
+        .shader-bar {
+            position: absolute;
+            top: 14px;
+            left: 16px;
+            z-index: 15;
+            display: flex;
+            gap: 5px;
+            background: rgba(8, 10, 16, 0.78);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 999px;
+            padding: 4px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .shader-chip {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 5px 11px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .shader-chip:hover { color: #ffffff; background: rgba(255,255,255,0.08); }
+        .shader-chip.active {
+            background: var(--active-accent, var(--rtu-gold));
+            color: #090b10;
+            font-weight: 700;
+            box-shadow: 0 0 14px var(--rtu-gold-glow);
+        }
+
+        .stage-counter-badge {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            z-index: 15;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--rtu-gold);
+            background: rgba(8, 10, 16, 0.78);
+            border: 1px solid rgba(255, 176, 32, 0.35);
+            padding: 5px 14px;
+            border-radius: 999px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .stage-nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 20;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid var(--card-border);
+            background: rgba(14, 18, 28, 0.85);
+            color: #ffffff;
+            font-size: 22px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .stage-nav-arrow:hover {
+            background: rgba(255,255,255,0.18);
+            border-color: rgba(255,255,255,0.35);
+            transform: translateY(-50%) scale(1.08);
+        }
+        .stage-nav-arrow:active { transform: translateY(-50%) scale(0.94); }
+        .stage-prev-btn { left: 14px; }
+        .stage-next-btn { right: 14px; }
+
+        .model-hint-chip {
+            position: absolute;
+            bottom: 12px;
+            left: 16px;
+            z-index: 15;
+            font-family: 'DM Mono', monospace;
+            font-size: 9.5px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+        /* ── Prototype Details Card & Telemetry Drawer ── */
+        .proto-info-container {
+            width: min(100%, 1020px);
+            margin: 12px auto 0;
+            pointer-events: auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .proto-card-v2 {
+            position: relative;
+            padding: 20px 24px;
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+            background: var(--card-glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .proto-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .proto-meta-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .proto-prog-badge {
+            font-family: 'DM Mono', monospace;
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            padding: 4px 10px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            background: rgba(255, 176, 32, 0.14);
+            border: 1px solid rgba(255, 176, 32, 0.4);
+            color: var(--active-accent, var(--rtu-gold));
+        }
+        .proto-trl-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-family: 'DM Mono', monospace;
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(48, 209, 88, 0.12);
+            border: 1px solid rgba(48, 209, 88, 0.35);
+            color: #30d158;
+        }
+        .proto-trl-badge i {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #30d158;
+            box-shadow: 0 0 8px #30d158;
+        }
+
+        .proto-title-v2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(20px, 3.2vw, 32px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        .proto-desc-v2 {
+            color: var(--text-dim);
+            font-size: 13.5px;
+            line-height: 1.55;
+            max-width: 820px;
+        }
+
+        .proto-action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .proto-dots-bar {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            max-width: 60%;
+            max-height: 28px;
+            overflow: hidden;
+        }
+        .proto-dot-v2 {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .proto-dot-v2.active {
+            background: var(--active-accent, var(--rtu-gold));
+            box-shadow: 0 0 10px var(--rtu-gold-glow);
+            transform: scale(1.3);
+        }
+
+        .proto-links-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .proto-visit-btn {
+            display: none;
+            padding: 7px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 176, 32, 0.45);
+            background: linear-gradient(135deg, #ffd043 0%, #ff9f1c 100%);
+            color: #090b10;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(255, 176, 32, 0.35);
+            transition: all 0.2s ease;
+        }
+        .proto-visit-btn.show { display: inline-block; }
+        .proto-visit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(255, 176, 32, 0.5);
+        }
+
+        /* ── Search & Filter FAB & Modal Drawer ── */
+        .search-fab-v2 {
+            position: fixed;
+            right: clamp(16px, 4vw, 44px);
+            bottom: clamp(16px, 3vh, 32px);
+            z-index: 60;
+        }
+        .search-trigger-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 176, 32, 0.5);
+            background: rgba(14, 18, 28, 0.88);
+            color: var(--rtu-gold);
+            display: grid;
+            place-items: center;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(255, 176, 32, 0.25);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.2s ease;
+        }
+        .search-trigger-btn:hover {
+            transform: scale(1.08);
+            background: rgba(255, 176, 32, 0.18);
+        }
+
+        .search-drawer {
+            position: fixed;
+            right: clamp(16px, 4vw, 44px);
+            bottom: clamp(76px, 10vh, 94px);
+            width: min(380px, calc(100vw - 32px));
+            max-height: min(60vh, 520px);
+            z-index: 65;
+            display: none;
+            flex-direction: column;
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+            background: rgba(10, 13, 20, 0.94);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.4);
+            overflow: hidden;
+            animation: drawer-fade-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .search-drawer.is-open { display: flex; }
+        @keyframes drawer-fade-up {
+            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .search-drawer-header {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .search-input-field {
+            width: 100%;
+            padding: 11px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.06);
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 13.5px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .search-input-field:focus {
+            border-color: var(--rtu-gold);
+            box-shadow: 0 0 16px rgba(255, 176, 32, 0.25);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .search-program-filter {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+        .search-program-filter::-webkit-scrollbar { height: 4px; }
+        .search-program-filter::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+        .filter-pill {
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-dim);
+            font-family: 'DM Mono', monospace;
+            font-size: 9.5px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .filter-pill:hover { background: rgba(255,255,255,0.12); color: #ffffff; }
+        .filter-pill.active {
+            background: var(--rtu-gold);
+            color: #090b10;
+            font-weight: 700;
+            border-color: var(--rtu-gold);
+        }
+
+        .search-items-list {
+            overflow-y: auto;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .search-items-list::-webkit-scrollbar { width: 5px; }
+        .search-items-list::-webkit-scrollbar-thumb { background: rgba(255, 176, 32, 0.35); border-radius: 3px; }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid transparent;
+            color: #ffffff;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+        .search-result-item:hover {
+            background: rgba(255, 176, 32, 0.12);
+            border-color: rgba(255, 176, 32, 0.35);
+        }
+        .search-result-item.active {
+            background: rgba(255, 176, 32, 0.2);
+            border-color: var(--rtu-gold);
+        }
+        .search-item-emoji {
+            font-size: 22px;
+            width: 32px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .search-item-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .search-item-name {
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .search-item-prog {
+            font-family: 'DM Mono', monospace;
+            font-size: 9.5px;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        /* ── Permission / Proximity Gate Screen ── */
+        .permission-screen {
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: radial-gradient(circle at 50% 25%, #1d170a 0%, #080a0f 75%);
+            z-index: 50;
+        }
+        .permission-card {
+            width: min(100%, 430px);
+            padding: 36px 30px;
+            border: 1px solid rgba(255, 176, 32, 0.35);
+            border-radius: 28px;
+            background: rgba(18, 16, 12, 0.72);
+            box-shadow: 0 24px 65px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 176, 32, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(36px);
+            -webkit-backdrop-filter: blur(36px);
+            text-align: center;
+        }
+        .permission-card h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin: 12px 0 8px;
+        }
+        .permission-copy {
+            color: var(--text-dim);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .primary-cta-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px 24px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #ffd043 0%, #ff9f1c 100%);
+            color: #090b10;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(255, 176, 32, 0.35);
+            transition: all 0.2s ease;
+        }
+        .primary-cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 176, 32, 0.5);
+        }
+
+        /* GPS Status & Card */
+        .gps-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+        .gps-status-pill.is-verified {
+            background: rgba(48, 209, 88, 0.15);
+            border: 1px solid rgba(48, 209, 88, 0.4);
+            color: #30d158;
+        }
+        .gps-status-pill.is-locked {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #ff7b7b;
+        }
+        .gps-locked-card {
+            background: rgba(10, 14, 22, 0.75);
+            border: 1px solid rgba(255, 176, 32, 0.4);
+            border-radius: 20px;
+            padding: 20px 18px;
+            margin: 16px 0;
+            text-align: center;
+        }
+        .gps-distance-text {
+            font-size: 13px;
+            color: var(--text-main);
+            margin: 8px 0 4px;
+            line-height: 1.45;
+        }
+        .gps-preview-cta {
+            display: block;
+            width: 100%;
+            margin: 14px 0 8px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ffd043, #ff9f1c);
+            border: none;
+            color: #11141d;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(255, 175, 0, 0.35);
+            transition: all 0.2s ease;
+        }
+        .gps-retry-btn {
+            margin-top: 6px;
+            padding: 7px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        /* Remote Preview Floating Watermark */
+        .preview-watermark-hud {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 18px;
+            border-radius: 999px;
+            background: rgba(14, 18, 28, 0.92);
+            border: 1px solid rgba(255, 176, 32, 0.55);
+            box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 176, 32, 0.25);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            color: var(--rtu-gold);
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            pointer-events: none;
+            animation: watermark-pulse 3s infinite ease-in-out;
+        }
+        @keyframes watermark-pulse {
+            0%, 100% { opacity: 0.92; transform: translateX(-50%) scale(1); }
+            50% { opacity: 1; transform: translateX(-50%) scale(1.02); }
+        }
+
+        @media (max-width: 768px) {
+            .proto-card-v2 { padding: 16px 18px; }
+            .proto-title-v2 { font-size: 20px; }
+            .stage-container { min-height: 240px; }
+            .stage-nav-arrow { width: 40px; height: 40px; font-size: 18px; }
+            .shader-chip { font-size: 9px; padding: 4px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Permission & Proximity Screen -->
+    <div id="permission-screen" class="permission-screen">
+        <section class="permission-card">
+            <div style="display:flex; justify-content:center; margin-bottom: 16px;" id="perm-lang-container"></div>
+            <div id="gps-status-container"></div>
+            <p class="eyebrow" style="color:var(--rtu-gold);" data-i18n="app_title">RTU · Prototypes 2026</p>
+            <h1 id="loading-title">Loading Showroom...</h1>
+            <p class="permission-copy" data-i18n="proto_perm_hint">Experience 3D holographic prototypes anchored in spatial augmented reality.</p>
+            <p id="permission-error" style="color:#ff7b7b; display:none; margin-bottom:14px;"></p>
+            <div id="gps-action-area">
+                <button id="start-btn" class="primary-cta-btn" style="display:none;" data-i18n="enable_camera">Launch Spatial Stage ↗</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Main Spatial Stage -->
+    <div id="ar-stage" class="ar-stage" style="display:none;">
+        <video id="camera-feed" class="camera-feed" muted playsinline></video>
+        <div class="stage-backdrop"></div>
+        <div class="spatial-grid"></div>
+
+        <!-- Top Header HUD -->
+        <header class="top-hud">
+            <div class="brand-lockup">
+                <span class="brand-badge"><img id="hud-logo" src="../assets/brand/rtu-innovations-en.jpg" alt="RTU"></span>
+                <div class="brand-text">
+                    <p>Spatial Showroom · V2</p>
+                    <h1 id="header-title">Prototypes 2026</h1>
+                </div>
+            </div>
+            <div class="hud-controls">
+                <div id="hud-lang-container"></div>
+                <button id="audio-btn" class="audio-toggle-btn" title="Toggle Sound Feedback">🔊</button>
+            </div>
+        </header>
+
+        <!-- Main Showroom Area -->
+        <main class="main-showroom">
+            <!-- 3D Stage Viewport -->
+            <div class="stage-container" id="stage-viewport">
+                <!-- Shader Mode Selector Chips -->
+                <div class="shader-bar">
+                    <button class="shader-chip active" data-mode="studio" onclick="setRenderMode('studio')">Studio</button>
+                    <button class="shader-chip" data-mode="hologram" onclick="setRenderMode('hologram')">Holo</button>
+                    <button class="shader-chip" data-mode="wireframe" onclick="setRenderMode('wireframe')">CAD</button>
+                    <button class="shader-chip" data-mode="exploded" onclick="setRenderMode('exploded')">X-Ray</button>
+                </div>
+
+                <div class="stage-counter-badge" id="model-counter">01 / 34</div>
+
+                <button class="stage-nav-arrow stage-prev-btn" id="prev-btn" aria-label="Previous">‹</button>
+                <button class="stage-nav-arrow stage-next-btn" id="next-btn" aria-label="Next">›</button>
+
+                <div class="model-hint-chip" data-i18n="proto_drag_hint">Drag to inspect · Click hotspots for telemetry</div>
+            </div>
+
+            <!-- Prototype Details Card -->
+            <div class="proto-info-container">
+                <section class="proto-card-v2" id="proto-card">
+                    <div class="proto-header-row">
+                        <div>
+                            <div class="proto-meta-group">
+                                <span class="proto-prog-badge" id="proto-prog">SIG FBVV</span>
+                                <span class="proto-trl-badge"><i></i> <span id="proto-trl">TRL 6 · Validated</span></span>
+                            </div>
+                            <h2 class="proto-title-v2" id="proto-name">3D UAV Body</h2>
+                        </div>
+                    </div>
+
+                    <p class="proto-desc-v2" id="proto-desc">Prototype of a 3D-printed unmanned aerial vehicle body with lightweight honeycomb core structure.</p>
+
+                    <div class="proto-action-row">
+                        <div class="proto-dots-bar" id="proto-dots"></div>
+                        <div class="proto-links-group">
+                            <a class="proto-visit-btn" id="proto-visit" href="#" target="_blank" rel="noopener">Visit Project ↗</a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Search FAB & Floating Drawer -->
+        <div class="search-fab-v2">
+            <button class="search-trigger-btn" id="search-toggle" aria-label="Search Prototypes">🔍</button>
+        </div>
+
+        <aside class="search-drawer" id="search-drawer">
+            <div class="search-drawer-header">
+                <input type="text" id="search-input" class="search-input-field" placeholder="Search 34 prototypes..." data-i18n-placeholder="proto_search_placeholder" autocomplete="off">
+                <div class="search-program-filter" id="program-filter-bar">
+                    <button class="filter-pill active" data-filter="ALL" onclick="filterByProgram('ALL')">ALL</button>
+                    <button class="filter-pill" data-filter="SIG FBVV" onclick="filterByProgram('SIG FBVV')">SIG FBVV</button>
+                    <button class="filter-pill" data-filter="SIG BCI" onclick="filterByProgram('SIG BCI')">SIG BCI</button>
+                    <button class="filter-pill" data-filter="SIG FVL" onclick="filterByProgram('SIG FVL')">SIG FVL</button>
+                    <button class="filter-pill" data-filter="SIG III" onclick="filterByProgram('SIG III')">SIG III</button>
+                    <button class="filter-pill" data-filter="VIP" onclick="filterByProgram('VIP')">VIP</button>
+                    <button class="filter-pill" data-filter="LG" onclick="filterByProgram('LG')">LG</button>
+                </div>
+            </div>
+            <div class="search-items-list" id="search-list"></div>
+        </aside>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+        /* ── Sound Synthesizer (Web Audio API) ── */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+            }
+            playClick() {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.04);
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.04);
+                } catch(e) {}
+            }
+            playWhoosh() {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(660, this.ctx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.12);
+                } catch(e) {}
+            }
+        }
+        const sound = new SoundEngine();
+
+        /* ── Seed Dataset (34 RTU Prototypes 2026) ── */
+        const SEED = [
+            {id:"uav-3d",name:"3D UAV",name_lv:"3D UAV",prog:"SIG FBVV",trl:"TRL 6 · Prototype",desc:"Prototype of a 3D-printed unmanned aerial vehicle body.",desc_lv:"3D printēts bezpilota gaisa kuģa korpusa prototips.",kind:"uav3d",accent:"#7cf0b0",emoji:"🛸"},
+            {id:"video-ant",name:"Video Signal Receiving Antennas",name_lv:"Video signāla uztveršanas antenas",prog:"SIG FBVV",trl:"TRL 5 · Lab Tested",desc:"Prototype of a UAV video receiving system.",desc_lv:"Bezpilota gaisa kuģa video uztveršanas sistēmas prototips.",kind:"antenna",accent:"#7cf0b0",emoji:"📡"},
+            {id:"crowdstate",name:"CrowdState",name_lv:"CrowdState",prog:"SIG FBVV",trl:"TRL 7 · Live Demo",desc:"Customer flow forecasting system; IoT- and AI-based real-time micro-enterprise footfall collection and forecasting.",desc_lv:"Klientu plūsmas prognozēšanas sistēma — IoT un MI risinājums mikrouzņēmumu apmeklētāju plūsmas uzskaitei un prognozēšanai reāllaikā.",kind:"iot",accent:"#7cf0b0",emoji:"📊"},
+            {id:"gravipen",name:"Gravipen",name_lv:"Gravipen",prog:"SIG FBVV",trl:"TRL 5 · Working Model",desc:"Prototype of a digital precision stylus pen.",desc_lv:"Digitālās pildspalvas prototips.",kind:"pen",accent:"#7cf0b0",emoji:"🖊️"},
+            {id:"icesense-fbvv",name:"IceSense",name_lv:"IceSense",prog:"SIG FBVV",trl:"TRL 6 · Field Validated",desc:"Prototype of an ultrasonic ice thickness measurement sensor.",desc_lv:"Ledus biezuma mērīšanas sensora prototips.",kind:"ice",accent:"#7cf0b0",emoji:"🧊"},
+            {id:"icesense-bci",name:"IceSense",name_lv:"IceSense",prog:"SIG BCI",trl:"TRL 6 · Field Validated",desc:"Prototype of an ice thickness measurement sensor with telemetry node.",desc_lv:"Ledus biezuma mērīšanas sensora prototips.",kind:"ice",accent:"#c4b5fd",emoji:"🧊"},
+            {id:"hydrocontest",name:"LA Hydrocontest",name_lv:"LA Hydrocontest",prog:"SIG FBVV",trl:"TRL 6 · Operational",desc:"Prototype of a remotely controlled hydro-foil boat drone.",desc_lv:"Tālvadāmas laivas (drona) prototips.",kind:"boat",accent:"#7cf0b0",emoji:"⛵"},
+            {id:"velotraks",name:"Velotraks",name_lv:"Velotraks",prog:"SIG FBVV",trl:"TRL 5 · Enclosure Test",desc:"Prototype of a ventilated smart locker for cyclists' equipment.",desc_lv:"Vēdināma skapja prototips velosipēdistu ekipējumam.",kind:"locker",accent:"#7cf0b0",emoji:"🚲"},
+            {id:"bruntor",name:"Bruntor",name_lv:"Bruntor",prog:"Liepāja project",trl:"TRL 7 · Field Platform",desc:"Remotely controllable heavy-duty delivery platform.",desc_lv:"Tālvadāma platforma (Liepājas projekts).",kind:"rover",accent:"#f0bf79",emoji:"🤖"},
+            {id:"bbk",name:"BBK (Battle Bot Kit)",name_lv:"BBK (kaujas robotu komplekts)",prog:"SIG Future Sandbox",trl:"TRL 6 · Arena Ready",desc:"Modular universal battle robot chassis & electronics kit.",desc_lv:"Universāls kaujas robotu komplekts.",kind:"battlebot",accent:"#b7f8ff",emoji:"⚔️"},
+            {id:"baltic-snow",name:"Baltic Snow",name_lv:"Baltic Snow",prog:"SIG BCI",trl:"TRL 4 · Lab Synthesis",desc:"Prototype of cellulose-based biodegradable artificial snow.",desc_lv:"Celulozes mākslīgā sniega prototips.",kind:"snow",accent:"#c4b5fd",emoji:"❄️"},
+            {id:"hearme-bci",name:"HearMe",name_lv:"HearMe",prog:"SIG BCI",trl:"TRL 7 · Cloud Beta",desc:"Web app for sign-language communication: speech-to-text, text-to-sign avatars, and secure WebRTC video.",desc_lv:"Tīmekļa lietotne saziņai zīmju valodā: runas pārvēršana tekstā, teksta pārvēršana žestos un droši WebRTC zvani.",kind:"hearme",accent:"#c4b5fd",emoji:"🤟"},
+            {id:"hearme-fvl",name:"HearMe",name_lv:"HearMe",prog:"SIG FVL",trl:"TRL 7 · Cloud Beta",desc:"Web app for sign-language communication: speech-to-text, text-to-sign avatars, and secure WebRTC video.",desc_lv:"Tīmekļa lietotne saziņai zīmju valodā: runas pārvēršana tekstā, teksta pārvēršana žestos un droši WebRTC zvani.",kind:"hearme",accent:"#f0bf79",emoji:"🤟"},
+            {id:"priede",name:"Priede (Sprungulis)",name_lv:"Priede (Sprungulis)",prog:"SIG BCI",trl:"TRL 6 · Educational",desc:"Prototype of a tactile programming training platform.",desc_lv:"Programmēšanas apmācību platformas prototips.",kind:"laptop",accent:"#c4b5fd",emoji:"💻"},
+            {id:"spoks",name:"Spoks",name_lv:"Spoks",prog:"SIG BCI",trl:"TRL 6 · Heavy Payload",desc:"Prototype of a heavy-payload cargo unmanned aerial vehicle.",desc_lv:"Kravas bezpilota gaisa kuģa prototips.",kind:"cargodrone",accent:"#c4b5fd",emoji:"📦"},
+            {id:"urbndine",name:"UrbnDINE",name_lv:"UrbnDINE",prog:"SIG FVL",trl:"TRL 8 · Production OS",desc:"End-to-end hospitality cloud OS: guest ordering, tableside ops, kitchen fulfillment & delivery APIs.",desc_lv:"Viesmīlības operētājsistēma pilnam ciklam: viesu pasūtījumi, virtuves izpilde un piegāžu integrācijas.",kind:"urbn",accent:"#f0bf79",emoji:"🍔"},
+            {id:"plusma",name:"Plusma",name_lv:"Plusma",prog:"SIG FVL",trl:"TRL 7 · Live Web Tool",desc:"Digital note-taking app for STEM students: math LaTeX input & graph automation.",desc_lv:"Digitāla piezīmju lietotne STEM studentiem ar automātisku formulu un grafiku zīmēšanu.",kind:"notebook",accent:"#f0bf79",emoji:"📐"},
+            {id:"pink-patch",name:"Pink Patch",name_lv:"Pink Patch",prog:"SIG III",trl:"TRL 4 · Biomedical Lab",desc:"mRNA antiviral therapeutic patch for the targeted treatment of conjunctivitis.",desc_lv:"mRNS pretvīrusu plāksteris konjunktivīta ārstēšanai.",kind:"patch",accent:"#f9a8d4",emoji:"🩹"},
+            {id:"smart-store",name:"Smart Store",name_lv:"Smart Store",prog:"SIG III",trl:"TRL 6 · Inventory AI",desc:"Smart inventory and procurement planning system for pharmaceutical cleanrooms.",desc_lv:"Vieda krājumu un iepirkumu plānošanas sistēma farmācijas materiāliem.",kind:"shelf",accent:"#f9a8d4",emoji:"🏪"},
+            {id:"core",name:"C.O.R.E.",name_lv:"C.O.R.E.",prog:"SIG III",trl:"TRL 6 · LIMS Integration",desc:"Automated laboratory data acquisition and integration system for LIMS.",desc_lv:"Automatizēta laboratorijas datu ievades un integrācijas sistēma LIMS.",kind:"lab",accent:"#f9a8d4",emoji:"🧬"},
+            {id:"smart-cabinet",name:"Smart Cabinet",name_lv:"Smart Cabinet",prog:"SIG III",trl:"TRL 6 · RFID Storage",desc:"Smart medication storage unit with automated RFID inventory tracking.",desc_lv:"Vieda zāļu uzglabāšanas sistēma ar automātisku krājumu uzskaiti.",kind:"cabinet",accent:"#f9a8d4",emoji:"💊"},
+            {id:"vitamatch",name:"VitaMatch",name_lv:"VitaMatch",prog:"SIG III",trl:"TRL 5 · Dispenser Rig",desc:"Personalised nutritional vitamin drink preparation dispenser.",desc_lv:"Personalizēta vitamīnu dzērienu pagatavošanas sistēma.",kind:"vita",accent:"#f9a8d4",emoji:"🧃"},
+            {id:"medbin",name:"MedBin",name_lv:"MedBin",prog:"SIG III",trl:"TRL 6 · Vision Sort",desc:"Automated optical medication waste sorting and quarantine system.",desc_lv:"Automatizēta zāļu atkritumu šķirošanas sistēma.",kind:"bin",accent:"#f9a8d4",emoji:"♻️"},
+            {id:"biobot",name:"Floating Bioremediation Robot",name_lv:"Peldošais bioremediācijas robots",prog:"SIG III",trl:"TRL 5 · Water Tank",desc:"Robotic pharmaceutical wastewater treatment system for reducing antibiotic residues.",desc_lv:"Robotizēta farmaceitisko notekūdeņu attīrīšanas sistēma.",kind:"floatbot",accent:"#f9a8d4",emoji:"🌊"},
+            {id:"haps",name:"se-HAPS",name_lv:"se-HAPS",prog:"VIP",trl:"TRL 5 · Stratospheric",desc:"Simplified High Altitude Pseudo Satellite — ultra-light 3D printed UAV.",desc_lv:"Vienkāršināts lielaugstuma pseidosatelīts — 3D printēts lidaparāts.",kind:"haps",accent:"#fde68a",emoji:"🛰️"},
+            {id:"xrmed",name:"Xrmed",name_lv:"Xrmed",prog:"VIP",trl:"TRL 7 · Clinical VR",desc:"Spatial VR exploration app for pediatric patients to reduce preoperative anxiety.",desc_lv:"VR lietotne bērniem slimnīcas vides iepazīšanai pirms ārstēšanas.",kind:"vr",accent:"#fde68a",emoji:"🥽"},
+            {id:"uav-robotics",name:"UAV Robotics",name_lv:"UAV Robotics",prog:"VIP",trl:"TRL 6 · Vision Nav",desc:"Autonomous UAV with embedded edge AI vision for GPS-denied navigation.",desc_lv:"Autonoms bezpilota lidaparāts ar MI datorredzi darbībai bez GPS.",kind:"aidrone",accent:"#fde68a",emoji:"🤖"},
+            {id:"lunar",name:"Lunar Energy Payload Club",name_lv:"Mēness enerģijas klubs",prog:"VIP",trl:"TRL 4 · Thermoacoustic",desc:"Reduced-scale lunar rover energy system using thermoacoustic conversion.",desc_lv:"Mēness rovera termoakustiskā energosistēma samazinātā mērogā.",kind:"lunar",accent:"#fde68a",emoji:"🌙"},
+            {id:"ab",name:"AB – iCoDaCo",name_lv:"AB – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform for European contemporary dance notation.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#93c5fd",emoji:"💃"},
+            {id:"fake-window",name:"Fake Window",name_lv:"Viltus logs",prog:"LG",trl:"TRL 6 · Circadian Rig",desc:"Circadian daylight simulator crafted from recycled display panels.",desc_lv:"Izgatavots no pārstrādātiem ekrāniem; imitē logu ar dabisku dienasgaismu.",kind:"window",accent:"#fca5a5",emoji:"🪟"},
+            {id:"lg-repair",name:"LG Repair Workshops",name_lv:"LG remonta darbnīcas",prog:"LG",trl:"TRL 7 · Community Rig",desc:"Diagnostic bench for circular appliance repair & electronics sustainability.",desc_lv:"Atvērtas darbnīcas un diagnostikas stends sadzīves tehnikas labošanai.",kind:"bench",accent:"#fca5a5",emoji:"🔧"}
+        ];
+
+        let locData = {};
+        let prototypes = SEED.slice();
+        let idx = 0;
+        let currentRenderMode = 'studio';
+        let currentFilter = 'ALL';
+
+        // Inject language switchers
+        document.getElementById('perm-lang-container').innerHTML = i18n.createSwitcherHTML();
+        document.getElementById('hud-lang-container').innerHTML = i18n.createSwitcherHTML();
+
+        i18n.subscribe(() => {
+            updateBrandLogo();
+            updateCard();
+            renderSearchList(document.getElementById('search-input') ? document.getElementById('search-input').value : '');
+            if (typeof renderGpsLockedCard === 'function') renderGpsLockedCard();
+            if (typeof updatePreviewWatermark === 'function') updatePreviewWatermark();
+        });
+
+        function updateBrandLogo() {
+            let isLv = false;
+            try { isLv = i18n.getLanguage() === 'lv'; } catch (e) {}
+            const src = isLv ? '../assets/brand/rtu-innovations-lv.jpg' : '../assets/brand/rtu-innovations-en.jpg';
+            const hudLogo = document.getElementById('hud-logo');
+            if (hudLogo) hudLogo.src = src;
+        }
+
+        /* ── Audio Button Setup ── */
+        const audioBtn = document.getElementById('audio-btn');
+        audioBtn.addEventListener('click', () => {
+            sound.init();
+            sound.muted = !sound.muted;
+            audioBtn.textContent = sound.muted ? '🔇' : '🔊';
+            audioBtn.classList.toggle('is-muted', sound.muted);
+            if (!sound.muted) sound.playClick();
+        });
+
+        /* ── Three.js Spatial Engine ── */
+        let renderer, scene, camera, spinGroup, dustGroup;
+        let dragging = false, downX = 0, px = 0, rotY = 0.5, rotX = 0.15, autoSpin = true;
+        let threeReady = false;
+
+        const PAPER = '#f0f4f8', INK = '#151922';
+
+        function createMat(color, emissiveColor = 0x000000, emissivePower = 0.2) {
+            if (currentRenderMode === 'wireframe') {
+                return new THREE.MeshBasicMaterial({ color: color || '#ffb020', wireframe: true });
+            }
+            if (currentRenderMode === 'hologram') {
+                return new THREE.MeshStandardMaterial({
+                    color: color || '#64d2ff',
+                    emissive: new THREE.Color(color || '#64d2ff'),
+                    emissiveIntensity: 0.65,
+                    transparent: true,
+                    opacity: 0.82,
+                    wireframe: false
+                });
+            }
+            if (currentRenderMode === 'exploded') {
+                return new THREE.MeshStandardMaterial({
+                    color: color || '#ffffff',
+                    roughness: 0.2,
+                    metalness: 0.8,
+                    transparent: true,
+                    opacity: 0.88
+                });
+            }
+            // Studio PBR default
+            return new THREE.MeshStandardMaterial({
+                color: color || '#ffb020',
+                roughness: 0.45,
+                metalness: 0.25,
+                emissive: emissiveColor,
+                emissiveIntensity: emissivePower
+            });
+        }
+
+        const B = (w,h,d,c,x,y,z) => {
+            const r = Math.max(Math.min(0.05, Math.min(w,h,d)*0.3), 0.004);
+            const m = new THREE.Mesh(new RoundedBoxGeometry(w,h,d,2,r), createMat(c));
+            m.position.set(x||0, y||0, z||0);
+            return m;
+        };
+        const CY = (rt,rb,h,c,x,y,z,seg) => {
+            const m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||24), createMat(c));
+            m.position.set(x||0, y||0, z||0);
+            return m;
+        };
+        const SP = (r,c,x,y,z) => {
+            const m = new THREE.Mesh(new THREE.SphereGeometry(r,20,16), createMat(c));
+            m.position.set(x||0, y||0, z||0);
+            return m;
+        };
+        const TO = (r,t,c,x,y,z,rx) => {
+            const m = new THREE.Mesh(new THREE.TorusGeometry(r,t,14,28), createMat(c));
+            m.position.set(x||0, y||0, z||0);
+            if (rx) m.rotation.x = rx;
+            return m;
+        };
+        const CO = (r,h,c,x,y,z) => {
+            const m = new THREE.Mesh(new THREE.ConeGeometry(r,h,20), createMat(c));
+            m.position.set(x||0, y||0, z||0);
+            return m;
+        };
+
+        function makePropeller(x,z,y,accent) {
+            const g = new THREE.Group();
+            g.add(CY(0.09, 0.09, 0.22, INK, x, y, z));
+            const disc = CY(0.55, 0.55, 0.02, '#ffffff', x, y+0.16, z, 20);
+            disc.material.transparent = true;
+            disc.material.opacity = 0.25;
+            g.add(disc);
+            return g;
+        }
+
+        const BUILDERS = {
+            uav3d(a) {
+                const g = new THREE.Group();
+                g.add(B(1.2, 0.35, 1.2, PAPER, 0, 0, 0));
+                g.add(B(0.5, 0.22, 0.9, INK, 0, 0.25, 0));
+                g.add(SP(0.16, a, 0, 0.3, 0.5));
+                [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([sx,sz]) => {
+                    g.add(B(0.9, 0.08, 0.12, PAPER, sx*0.7, 0, sz*0.7));
+                    g.add(makePropeller(sx*1.1, sz*1.1, 0, a));
+                });
+                return g;
+            },
+            antenna(a) {
+                const g = new THREE.Group();
+                g.add(CY(0.5, 0.6, 0.15, INK, 0, -1.2, 0));
+                g.add(CY(0.06, 0.06, 2.4, PAPER, 0, 0, 0));
+                const d1 = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 12, 0, Math.PI*2, 0, 1.1), createMat(PAPER));
+                d1.position.set(-0.7, 0.7, 0);
+                d1.rotation.z = 1.1;
+                g.add(d1);
+                const d2 = d1.clone();
+                d2.position.x = 0.7;
+                d2.rotation.z = -1.1;
+                g.add(d2);
+                g.add(SP(0.1, a, 0, 1.35, 0));
+                return g;
+            },
+            iot(a) {
+                const g = new THREE.Group();
+                g.add(B(1.1, 0.8, 0.7, PAPER, 0, -0.3, 0));
+                g.add(CY(0.03, 0.03, 1, INK, 0.4, 0.6, 0));
+                g.add(SP(0.08, a, 0.4, 1.15, 0));
+                [[-0.9,0],[0,0.4],[0.9,0]].forEach(([x,z],i) => {
+                    g.add(CY(0.12, 0.12, 0.5, PAPER, x, -0.9, z));
+                    g.add(SP(0.14, i ? INK : a, x, -0.55, z));
+                });
+                g.add(TO(0.9, 0.03, a, 0, 0.6, 0, Math.PI/2));
+                return g;
+            },
+            pen(a) {
+                const g = new THREE.Group();
+                const b = CY(0.09, 0.09, 2.2, PAPER, 0, 0, 0);
+                b.rotation.z = Math.PI/2;
+                g.add(b);
+                const t = CO(0.09, 0.4, INK, 1.3, 0, 0);
+                t.rotation.z = -Math.PI/2;
+                g.add(t);
+                g.add(B(0.5, 0.05, 0.06, PAPER, -0.4, 0.12, 0));
+                g.add(TO(0.12, 0.02, a, -0.9, 0, 0, Math.PI/2));
+                return g;
+            },
+            ice(a) {
+                const g = new THREE.Group();
+                g.add(B(2.2, 0.5, 1.6, '#cfe0ea', 0, -1, 0));
+                g.add(CY(0.3, 0.35, 0.3, a, 0, -0.3, 0));
+                g.add(CY(0.05, 0.05, 0.9, INK, 0, 0.3, 0));
+                const beam = CO(0.5, 1.2, a, 0, -0.7, 0);
+                beam.material.transparent = true;
+                beam.material.opacity = 0.35;
+                g.add(beam);
+                return g;
+            },
+            boat(a) {
+                const g = new THREE.Group();
+                g.add(B(1.8, 0.4, 0.7, PAPER, 0, -0.4, 0));
+                g.add(B(0.7, 0.5, 0.6, PAPER, -0.1, 0.05, 0));
+                g.add(CY(0.04, 0.04, 1.1, INK, 0.5, 0.6, 0));
+                g.add(B(0.5, 0.3, 0.05, a, 0.5, 1, 0));
+                return g;
+            },
+            rover(a) {
+                const g = new THREE.Group();
+                g.add(B(1.2, 0.45, 0.8, PAPER, 0, 0, 0));
+                [[-0.45,0.45],[0.45,0.45],[-0.45,-0.45],[0.45,-0.45]].forEach(([x,z]) => {
+                    const w = CY(0.28, 0.28, 0.2, INK, x, -0.35, z);
+                    w.rotation.x = Math.PI/2;
+                    g.add(w);
+                });
+                g.add(CY(0.05, 0.05, 0.8, PAPER, 0.4, 0.5, 0));
+                g.add(B(0.35, 0.2, 0.2, INK, 0.4, 0.95, 0));
+                g.add(SP(0.06, a, 0.4, 0.95, 0.12));
+                return g;
+            },
+            battlebot(a) {
+                const g = new THREE.Group();
+                g.add(B(1.3, 0.3, 1.1, INK, 0, -0.3, 0));
+                [-0.5, 0.5].forEach(x => {
+                    const w = CY(0.3, 0.3, 0.2, '#111111', x, -0.3, 0.55);
+                    w.rotation.z = Math.PI/2;
+                    g.add(w);
+                });
+                g.add(B(1.5, 0.07, 0.12, a, 0, 0.15, 0));
+                return g;
+            },
+            hearme(a) {
+                const g = new THREE.Group();
+                g.add(B(1.5, 1, 0.08, '#101623', 0, 0.35, -0.55));
+                for(let i=0; i<3; i++) g.add(B(1.1-i*0.15, 0.07, 0.02, i===2?a:PAPER, -0.05, 0.55-i*0.2, -0.49));
+                g.add(CY(0.14, 0.16, 0.6, PAPER, -0.75, -0.35, 0.25, 12));
+                g.add(SP(0.13, PAPER, -0.75, 0.1, 0.25));
+                return g;
+            },
+            window(a) {
+                const g = new THREE.Group();
+                g.add(B(1.6, 1.2, 0.1, '#5b3a1e', 0, 0, 0));
+                g.add(B(1.35, 0.95, 0.05, '#9fd8ff', 0, 0, 0.03));
+                g.add(SP(0.18, '#ffe27a', 0.35, 0.25, 0.1));
+                return g;
+            }
+        };
+
+        function initThree() {
+            if (threeReady) return true;
+            const vp = document.getElementById('stage-viewport');
+            if (!vp || !vp.clientWidth) return false;
+
+            try {
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 1.1;
+                vp.insertBefore(renderer.domElement, vp.firstChild);
+            } catch(e) {
+                return false;
+            }
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(40, vp.clientWidth / vp.clientHeight, 0.1, 100);
+            camera.position.set(0, 0.6, 4.2);
+            camera.lookAt(0, -0.1, 0);
+
+            // Studio Lighting Setup
+            const hemi = new THREE.HemisphereLight(0xfff5e6, 0x1e2638, 0.95);
+            scene.add(hemi);
+
+            const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            keyLight.position.set(4, 6, 4);
+            keyLight.castShadow = true;
+            scene.add(keyLight);
+
+            const rimLight = new THREE.PointLight(0xffb020, 0.9, 15);
+            rimLight.position.set(-3, 2, 3);
+            scene.add(rimLight);
+
+            // Ground grid ring & shadow catcher
+            const grid = new THREE.GridHelper(6, 12, 0x5a6372, 0x1a1e28);
+            grid.position.y = -1.35;
+            grid.material.transparent = true;
+            grid.material.opacity = 0.3;
+            scene.add(grid);
+
+            spinGroup = new THREE.Group();
+            scene.add(spinGroup);
+
+            // Stardust particles
+            const dg = new THREE.BufferGeometry();
+            const dp = new Float32Array(150 * 3);
+            for(let i=0; i<150; i++) {
+                dp[i*3] = (Math.random() - 0.5) * 8;
+                dp[i*3+1] = Math.random() * 3 - 1.2;
+                dp[i*3+2] = (Math.random() - 0.5) * 8;
+            }
+            dg.setAttribute('position', new THREE.BufferAttribute(dp, 3));
+            dustGroup = new THREE.Points(dg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.022, transparent: true, opacity: 0.4 }));
+            scene.add(dustGroup);
+
+            // Drag navigation listeners
+            const el = renderer.domElement;
+            el.addEventListener('pointerdown', e => {
+                sound.init();
+                dragging = true;
+                downX = e.clientX;
+                px = e.clientX;
+                autoSpin = false;
+                try { el.setPointerCapture(e.pointerId); } catch(_) {}
+            });
+            el.addEventListener('pointermove', e => {
+                if (!dragging) return;
+                rotY += (e.clientX - px) * 0.012;
+                px = e.clientX;
+            });
+            el.addEventListener('pointerup', e => {
+                dragging = false;
+                setTimeout(() => autoSpin = true, 3000);
+            });
+            el.addEventListener('pointercancel', () => { dragging = false; });
+
+            fitStage();
+            window.addEventListener('resize', fitStage);
+
+            // Animation Loop
+            (function animate() {
+                requestAnimationFrame(animate);
+                if (autoSpin && !dragging) rotY += 0.006;
+                if (dustGroup) dustGroup.rotation.y += 0.0005;
+
+                spinGroup.rotation.y += (rotY - spinGroup.rotation.y) * 0.08;
+                spinGroup.rotation.x += (rotX - spinGroup.rotation.x) * 0.08;
+                spinGroup.position.y = Math.sin(Date.now() / 950) * 0.06;
+
+                renderer.render(scene, camera);
+            })();
+
+            threeReady = true;
+            loadCurrentModel();
+            return true;
+        }
+
+        function fitStage() {
+            if (!renderer || !camera) return;
+            const vp = document.getElementById('stage-viewport');
+            const w = vp.clientWidth || 1, h = vp.clientHeight || 1;
+            renderer.setSize(w, h);
+            camera.aspect = w / h;
+            camera.position.set(0, 0.5, camera.aspect < 0.8 ? 4.5 + (0.8 - camera.aspect) * 3.2 : 4.2);
+            camera.updateProjectionMatrix();
+        }
+
+        function loadCurrentModel() {
+            const p = prototypes[idx];
+            if (!p || !spinGroup) return;
+
+            while (spinGroup.children.length) {
+                spinGroup.remove(spinGroup.children[0]);
+            }
+
+            const builder = BUILDERS[p.kind] || BUILDERS.iot;
+            try {
+                const model = builder(p.accent || '#ffb020');
+                if (currentRenderMode === 'exploded') {
+                    model.children.forEach((c, ci) => {
+                        c.position.x *= 1.45;
+                        c.position.y *= 1.45;
+                        c.position.z *= 1.45;
+                    });
+                }
+                spinGroup.add(model);
+            } catch(e) {}
+
+            rotY += 0.8;
+        }
+
+        window.setRenderMode = function(mode) {
+            sound.playWhoosh();
+            currentRenderMode = mode;
+            document.querySelectorAll('.shader-chip').forEach(c => {
+                c.classList.toggle('active', c.dataset.mode === mode);
+            });
+            loadCurrentModel();
+        };
+
+        /* ── UI Logic & Navigation ── */
+        function buildDots() {
+            const container = document.getElementById('proto-dots');
+            container.innerHTML = '';
+            prototypes.forEach((_, i) => {
+                const d = document.createElement('span');
+                d.className = 'proto-dot-v2' + (i === idx ? ' active' : '');
+                d.onclick = () => jumpTo(i);
+                container.appendChild(d);
+            });
+        }
+
+        function updateCard() {
+            const p = prototypes[idx];
+            if (!p) return;
+
+            document.documentElement.style.setProperty('--active-accent', p.accent || '#ffb020');
+            document.getElementById('proto-prog').textContent = p.prog || 'PROTOTYPE';
+            document.getElementById('proto-trl').textContent = p.trl || 'TRL 6 · Prototype';
+            document.getElementById('proto-name').textContent = i18n.getLocalized(p, 'name') || p.name || 'Prototype';
+            document.getElementById('proto-desc').textContent = i18n.getLocalized(p, 'desc') || p.desc || '';
+            document.getElementById('model-counter').textContent = `${String(idx + 1).padStart(2, '0')} / ${prototypes.length}`;
+
+            const vb = document.getElementById('proto-visit');
+            if (p.url) {
+                vb.href = p.url;
+                vb.classList.add('show');
+            } else {
+                vb.classList.remove('show');
+            }
+
+            // Update dot indicators
+            const dots = document.getElementById('proto-dots').children;
+            for (let i = 0; i < dots.length; i++) {
+                dots[i].className = 'proto-dot-v2' + (i === idx ? ' active' : '');
+            }
+
+            // Update search item highlight
+            document.querySelectorAll('.search-result-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.index == idx);
+            });
+        }
+
+        function jumpTo(i) {
+            sound.playClick();
+            idx = (i + prototypes.length) % prototypes.length;
+            loadCurrentModel();
+            updateCard();
+        }
+
+        document.getElementById('prev-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            jumpTo(idx - 1);
+        });
+        document.getElementById('next-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            jumpTo(idx + 1);
+        });
+
+        /* ── Search Drawer & Filter ── */
+        const searchDrawer = document.getElementById('search-drawer');
+        document.getElementById('search-toggle').addEventListener('click', (e) => {
+            sound.playClick();
+            searchDrawer.classList.toggle('is-open');
+            if (searchDrawer.classList.contains('is-open')) {
+                setTimeout(() => document.getElementById('search-input').focus(), 60);
+            }
+        });
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            renderSearchList(e.target.value);
+        });
+
+        window.filterByProgram = function(filter) {
+            sound.playClick();
+            currentFilter = filter;
+            document.querySelectorAll('.filter-pill').forEach(p => {
+                p.classList.toggle('active', p.dataset.filter === filter);
+            });
+            renderSearchList(document.getElementById('search-input').value);
+        };
+
+        function renderSearchList(query = '') {
+            const list = document.getElementById('search-list');
+            list.innerHTML = '';
+            query = query.toLowerCase().trim();
+
+            const filtered = prototypes.map((p, i) => ({ p, i })).filter(({ p }) => {
+                const matchesFilter = (currentFilter === 'ALL') || (p.prog && p.prog.includes(currentFilter));
+                const textMatch = !query || ((p.name || '') + ' ' + (p.name_lv || '') + ' ' + (p.prog || '') + ' ' + (p.desc || '')).toLowerCase().includes(query);
+                return matchesFilter && textMatch;
+            });
+
+            filtered.forEach(({ p, i }) => {
+                const item = document.createElement('div');
+                item.className = 'search-result-item' + (i === idx ? ' active' : '');
+                item.dataset.index = i;
+                item.innerHTML = `
+                    <span class="search-item-emoji">${p.emoji || '📦'}</span>
+                    <div class="search-item-info">
+                        <span class="search-item-name">${i18n.getLocalized(p, 'name') || p.name}</span>
+                        <span class="search-item-prog">${p.prog || ''} · ${p.trl || ''}</span>
+                    </div>
+                `;
+                item.addEventListener('click', () => {
+                    jumpTo(i);
+                    searchDrawer.classList.remove('is-open');
+                });
+                list.appendChild(item);
+            });
+        }
+
+        /* ── Fetch & GPS Logic ── */
+        async function fetchLocationData() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                let locId = urlParams.get('id') || window.location.pathname.split('/').pop();
+                if (!locId || locId === 'prototypes-v2.html' || locId === 'prototypes.html') locId = 'prototypes-2026';
+
+                const res = await fetch(`/api/locations/${locId}`);
+                if (!res.ok) throw new Error("Location not found");
+                locData = await res.json();
+
+                const arr = locData.data && (locData.data.prototypes || locData.data.items);
+                if (Array.isArray(arr) && arr.length > 0) {
+                    prototypes = arr;
+                }
+                const title = i18n.getLocalized(locData, 'title') || locData.title || locData.name;
+                if (title) {
+                    document.getElementById('header-title').textContent = title;
+                    document.getElementById('loading-title').textContent = title;
+                }
+                await verifyGpsLocation();
+            } catch (err) {
+                locData = { id: 'prototypes-2026', title: 'Prototypes 2026', subtitle: 'Spatial Showcase' };
+                document.getElementById('header-title').textContent = 'Prototypes 2026';
+                document.getElementById('loading-title').textContent = 'Prototypes 2026';
+                await verifyGpsLocation();
+            }
+            buildDots();
+            updateCard();
+            renderSearchList('');
+        }
+
+        function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const phi1 = lat1 * Math.PI / 180, phi2 = lat2 * Math.PI / 180;
+            const dp = (lat2 - lat1) * Math.PI / 180, dl = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dp/2)**2 + Math.cos(phi1)*Math.cos(phi2)*Math.sin(dl/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        const GEOFENCE_RADIUS = 8;
+        let isGpsVerified = false, isRemotePreviewActive = false, detectedDistanceStr = '', lastGpsState = null;
+
+        function updatePreviewWatermark() {
+            const watermark = document.getElementById('preview-watermark-hud');
+            if (watermark && isRemotePreviewActive) {
+                const distText = detectedDistanceStr || 'REMOTE';
+                watermark.innerHTML = `<span>⚡</span> ${i18n.t('gps_preview_active_banner', { dist: distText })}`;
+            }
+        }
+
+        function renderGpsLockedCard() {
+            if (!lastGpsState) return;
+            const sc = document.getElementById('gps-status-container'), aa = document.getElementById('gps-action-area');
+            let card = document.getElementById('gps-locked-card');
+            const startBtn = document.getElementById('start-btn');
+
+            if (lastGpsState.type === 'verified') {
+                sc.innerHTML = `<div class="gps-status-pill is-verified">${i18n.t('gps_verified')} (${lastGpsState.distFormatted})</div>`;
+                if (startBtn) startBtn.style.display = 'inline-block';
+                if (card) card.remove();
+                return;
+            }
+            if (lastGpsState.type === 'preview_badge') {
+                sc.innerHTML = `<div class="gps-status-pill is-verified">${i18n.t('gps_preview_badge')}</div>`;
+                if (startBtn) startBtn.style.display = 'inline-block';
+                if (card) card.remove();
+                return;
+            }
+            if (lastGpsState.type === 'locked' || lastGpsState.type === 'denied') {
+                const isDenied = lastGpsState.type === 'denied';
+                sc.innerHTML = `<div class="gps-status-pill is-locked">📍 ${lastGpsState.distFormatted || 'REMOTE'}</div>`;
+                if (!card) {
+                    card = document.createElement('div');
+                    card.id = 'gps-locked-card';
+                    card.className = 'gps-locked-card';
+                    aa.parentNode.insertBefore(card, aa);
+                }
+                card.innerHTML = `
+                    <div class="gps-status-pill is-locked" style="margin-bottom:8px;">📍 ${i18n.t(isDenied ? 'gps_required_title' : 'gps_not_at_location_title')}</div>
+                    <p class="gps-distance-text">${isDenied ? i18n.t('gps_permission_denied') : i18n.t('gps_distance_away_msg', { dist: `<strong>${lastGpsState.distFormatted}</strong>` })}</p>
+                    <p style="font-size:12px;color:rgba(255,255,255,.72);">${i18n.t('gps_preview_prompt')}</p>
+                    <button class="gps-preview-cta" onclick="enterPreviewMode()">${i18n.t('gps_enter_preview_btn')}</button>
+                    <div><button class="gps-retry-btn" onclick="verifyGpsLocation()">${i18n.t('gps_retry_btn')}</button></div>
+                `;
+            }
+        }
+
+        window.enterPreviewMode = function() { startExperience(true); };
+        window.verifyGpsLocation = verifyGpsLocation;
+
+        async function verifyGpsLocation() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusContainer = document.getElementById('gps-status-container');
+            const targetLat = parseFloat(locData.lat), targetLng = parseFloat(locData.lng);
+            const startBtn = document.getElementById('start-btn');
+
+            if (urlParams.get('bypass_gps') === '1' || urlParams.get('preview') === '1' || urlParams.get('admin') === '1') {
+                isGpsVerified = true;
+                isRemotePreviewActive = true;
+                detectedDistanceStr = 'PREVIEW';
+                lastGpsState = { type: 'preview_badge' };
+                renderGpsLockedCard();
+                return;
+            }
+
+            if (!targetLat || !targetLng || (targetLat === 0 && targetLng === 0)) {
+                isGpsVerified = true;
+                isRemotePreviewActive = false;
+                lastGpsState = null;
+                if (statusContainer) statusContainer.innerHTML = '';
+                if (startBtn) startBtn.style.display = 'inline-block';
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                lastGpsState = { type: 'denied', distFormatted: 'REMOTE' };
+                renderGpsLockedCard();
+                return;
+            }
+
+            statusContainer.innerHTML = `<div class="gps-status-pill">📡 ${i18n.t('gps_checking')}</div>`;
+            if (startBtn) startBtn.style.display = 'none';
+
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    const dist = calculateDistanceMeters(targetLat, targetLng, pos.coords.latitude, pos.coords.longitude);
+                    const distFormatted = dist < 1000 ? `${Math.round(dist)}m` : `${(dist/1000).toFixed(2)} km`;
+                    detectedDistanceStr = distFormatted;
+
+                    if (dist <= GEOFENCE_RADIUS) {
+                        isGpsVerified = true;
+                        isRemotePreviewActive = false;
+                        lastGpsState = { type: 'verified', distFormatted };
+                    } else {
+                        isGpsVerified = false;
+                        lastGpsState = { type: 'locked', distFormatted };
+                    }
+                    renderGpsLockedCard();
+                },
+                () => {
+                    detectedDistanceStr = 'REMOTE';
+                    lastGpsState = { type: 'denied', distFormatted: 'REMOTE' };
+                    renderGpsLockedCard();
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        async function startExperience(remote) {
+            if (remote) isRemotePreviewActive = true;
+            if (isRemotePreviewActive) {
+                let w = document.getElementById('preview-watermark-hud');
+                if (!w) {
+                    w = document.createElement('div');
+                    w.id = 'preview-watermark-hud';
+                    w.className = 'preview-watermark-hud';
+                    document.body.appendChild(w);
+                }
+                w.innerHTML = `<span>⚡</span> PREVIEW MODE · ${detectedDistanceStr || 'REMOTE'}`;
+            }
+
+            const videoEl = document.getElementById('camera-feed');
+            const permScreen = document.getElementById('permission-screen');
+            const arStage = document.getElementById('ar-stage');
+
+            const showStage = () => {
+                permScreen.style.display = 'none';
+                arStage.style.display = 'block';
+                setTimeout(() => {
+                    initThree();
+                    fitStage();
+                }, 80);
+            };
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                videoEl.srcObject = stream;
+                videoEl.onloadedmetadata = () => {
+                    videoEl.play();
+                    showStage();
+                    setTimeout(() => videoEl.classList.add('is-ready'), 140);
+                };
+            } catch (e) {
+                showStage();
+            }
+        }
+
+        document.getElementById('start-btn').addEventListener('click', () => startExperience(isRemotePreviewActive));
+
+        fetchLocationData();
+    </script>
+</body>
+</html>
