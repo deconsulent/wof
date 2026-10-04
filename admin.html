@@ -2676,7 +2676,7 @@
                 const photoPreview = document.getElementById('v5-teamPhoto-preview');
                 photoInput.value = currentLocation.data.teamPhoto || '';
                 if (photoInput.value) {
-                    photoPreview.src = photoInput.value;
+                    photoPreview.src = resolvePhotoUrl(photoInput.value);
                     photoPreview.style.display = 'block';
                 } else {
                     photoPreview.style.display = 'none';
@@ -2699,11 +2699,12 @@
                 const roleEn = ind.role || '';
                 const roleLv = ind.role_lv || '';
                 const currentRole = i18n.getLocalized(ind, 'role') || ind.role || 'Member';
+                const resolvedPhoto = resolvePhotoUrl(ind.photo);
 
                 const el = document.createElement('div');
                 el.className = 'list-item';
                 el.innerHTML = `
-                    <div class="list-avatar" style="border-color:${ind.accent || 'var(--rtu-cyan)'}">${ind.photo ? `<img src="${ind.photo}">` : '👤'}</div>
+                    <div class="list-avatar" style="border-color:${ind.accent || 'var(--rtu-cyan)'}">${resolvedPhoto ? `<img src="${resolvedPhoto}" onerror="handlePhotoError(this)">` : '👤'}</div>
                     <div class="list-info">
                         <h4>${ind.name}</h4>
                         <p>
@@ -2736,7 +2737,7 @@
 
             document.getElementById('v4-photo').value = ind.photo || '';
             const prev = document.getElementById('v4-photo-preview');
-            prev.src = ind.photo || '';
+            prev.src = resolvePhotoUrl(ind.photo) || '';
             prev.style.display = ind.photo ? 'block' : 'none';
             
             document.getElementById('v4-modal').classList.add('visible');
@@ -2788,10 +2789,11 @@
 
             data.forEach((m, i) => {
                 const currentRole = i18n.getLocalized(m, 'role') || m.role || 'Member';
+                const resolvedPhoto = resolvePhotoUrl(m.photo);
                 const el = document.createElement('div');
                 el.className = 'list-item';
                 el.innerHTML = `
-                    <div class="list-avatar" style="border-color:${m.accent || 'var(--rtu-lavender)'}">${m.photo ? `<img src="${m.photo}" style="object-position:${m.crop||'center'}">` : '👤'}</div>
+                    <div class="list-avatar" style="border-color:${m.accent || 'var(--rtu-lavender)'}">${resolvedPhoto ? `<img src="${resolvedPhoto}" style="object-position:${m.crop||'center'}" onerror="handlePhotoError(this)">` : '👤'}</div>
                     <div class="list-info">
                         <h4>${m.name}</h4>
                         <p>
@@ -2829,7 +2831,7 @@
             
             document.getElementById('v5-photo').value = m.photo || '';
             const prev = document.getElementById('v5-photo-preview');
-            prev.src = m.photo || '';
+            prev.src = resolvePhotoUrl(m.photo) || '';
             prev.style.display = m.photo ? 'block' : 'none';
             
             document.getElementById('v5-modal').classList.add('visible');
@@ -3098,44 +3100,116 @@
         }
 
         /* ═══════════════════════════════════════════════════
-           IMAGE UPLOAD (PRESERVED EXACTLY)
+           IMAGE RESOLUTION & 3-TIER RESILIENT UPLOAD
            ═══════════════════════════════════════════════════ */
         const supabaseUrl = 'https://vbscjdjzisdyohurjsro.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZic2NqZGp6aXNkeW9odXJqc3JvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2MjcwMjAsImV4cCI6MjEwMzIwMzAyMH0.c3iLIPXleuclBgy0B9Qe8U9kIyVHgOyNLLbbI_jpkr4';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = (typeof supabase !== 'undefined' && supabase.createClient) ? supabase.createClient(supabaseUrl, supabaseKey) : null;
+
+        function resolvePhotoUrl(photoPath) {
+            if (!photoPath) return '';
+            if (photoPath.startsWith('data:') || photoPath.startsWith('blob:') || photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+                return photoPath;
+            }
+            const cleanPath = photoPath.replace(/^\/?(uploads\/)?/, '');
+            if (window.location.protocol === 'file:') {
+                return `uploads/${cleanPath}`;
+            }
+            return `/uploads/${cleanPath}`;
+        }
+
+        function handlePhotoError(img, fallbackText) {
+            const raw = img.getAttribute('data-raw-src') || img.src || '';
+            const clean = raw.replace(/^.*\/uploads\//, '').replace(/^.*[\\\/]/, '');
+            if (!img.dataset.triedRel && clean) {
+                img.dataset.triedRel = '1';
+                img.src = `uploads/${clean}`;
+                return;
+            }
+            if (!img.dataset.triedCdn && clean) {
+                img.dataset.triedCdn = '1';
+                img.src = `https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/${clean}`;
+                return;
+            }
+            img.style.display = 'none';
+            if (img.parentElement) {
+                img.parentElement.classList.remove('has-photo');
+                if (fallbackText) img.parentElement.textContent = fallbackText;
+            }
+        }
 
         async function uploadImage(input, hiddenId) {
-            const file = input.files[0];
+            const file = input.files && input.files[0];
             if (!file) return;
             
-            const fileExt = file.name.split('.').pop();
+            const fileExt = file.name.split('.').pop() || 'jpg';
             const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}.${fileExt}`;
             const filePath = `uploads/${fileName}`;
 
             const preview = document.getElementById(hiddenId + '-preview');
-            preview.src = '';
-            preview.style.display = 'block';
+            const localBlobUrl = URL.createObjectURL(file);
+            if (preview) {
+                preview.src = localBlobUrl;
+                preview.style.display = 'block';
+            }
             
             showToast('Uploading image...', 'success');
 
+            // 1. Try local Express API upload (/api/upload)
             try {
-                const { data, error } = await supabaseClient.storage
-                    .from('images')
-                    .upload(filePath, file, { cacheControl: '3600', upsert: false });
-
-                if (error) {
-                    showToast("Upload Error: " + error.message, 'error');
-                    return;
+                const formData = new FormData();
+                formData.append('image', file);
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json && (json.url || json.localUrl)) {
+                        const finalUrl = json.localUrl || json.url;
+                        document.getElementById(hiddenId).value = finalUrl;
+                        if (preview) preview.src = resolvePhotoUrl(finalUrl);
+                        showToast('Image uploaded successfully', 'success');
+                        return;
+                    }
                 }
-
-                const { data: publicUrlData } = supabaseClient.storage.from('images').getPublicUrl(filePath);
-                
-                document.getElementById(hiddenId).value = publicUrlData.publicUrl;
-                preview.src = publicUrlData.publicUrl;
-                showToast('Image uploaded successfully', 'success');
-            } catch (err) {
-                showToast("Upload exception: " + err.message, 'error');
+            } catch (apiErr) {
+                console.warn('/api/upload endpoint skipped:', apiErr);
             }
+
+            // 2. Try direct Supabase storage upload if available
+            try {
+                if (supabaseClient && supabaseClient.storage) {
+                    const { data, error } = await supabaseClient.storage
+                        .from('images')
+                        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+                    if (!error) {
+                        const { data: publicUrlData } = supabaseClient.storage.from('images').getPublicUrl(filePath);
+                        if (publicUrlData && publicUrlData.publicUrl) {
+                            document.getElementById(hiddenId).value = publicUrlData.publicUrl;
+                            if (preview) preview.src = publicUrlData.publicUrl;
+                            showToast('Image uploaded to cloud storage', 'success');
+                            return;
+                        }
+                    }
+                }
+            } catch (sbErr) {
+                console.warn('Direct Supabase upload error:', sbErr);
+            }
+
+            // 3. Fallback: Base64 data URL (works 100% offline & without backend)
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Url = e.target.result;
+                document.getElementById(hiddenId).value = base64Url;
+                if (preview) preview.src = base64Url;
+                showToast('Image saved locally', 'success');
+            };
+            reader.onerror = function() {
+                showToast('Could not read image file', 'error');
+            };
+            reader.readAsDataURL(file);
         }
 
         /* ═══════════════════════════════════════════════════

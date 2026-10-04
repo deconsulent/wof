@@ -425,11 +425,37 @@
 
         function resolvePhotoUrl(photoPath) {
             if (!photoPath) return '';
-            if (photoPath.startsWith('http://') || photoPath.startsWith('https://') || photoPath.startsWith('data:')) {
+            if (photoPath.startsWith('data:') || photoPath.startsWith('blob:') || photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
                 return photoPath;
             }
             const cleanPath = photoPath.replace(/^\/?(uploads\/)?/, '');
-            return `https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/${cleanPath}`;
+            if (window.location.protocol === 'file:') {
+                return `../uploads/${cleanPath}`;
+            }
+            if (window.location.hostname.includes('vercel.app')) {
+                return `https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/${cleanPath}`;
+            }
+            return `/uploads/${cleanPath}`;
+        }
+
+        function handlePhotoError(img, fallbackText) {
+            const raw = img.getAttribute('data-raw-src') || img.src || '';
+            const clean = raw.replace(/^.*\/uploads\//, '').replace(/^.*[\\\/]/, '');
+            if (!img.dataset.triedRel && clean) {
+                img.dataset.triedRel = '1';
+                img.src = `../uploads/${clean}`;
+                return;
+            }
+            if (!img.dataset.triedCdn && clean) {
+                img.dataset.triedCdn = '1';
+                img.src = `https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/${clean}`;
+                return;
+            }
+            img.style.display = 'none';
+            if (img.parentElement) {
+                img.parentElement.classList.remove('has-photo');
+                if (fallbackText) img.parentElement.textContent = fallbackText;
+            }
         }
 
         function updateHeaderTitles() {
@@ -473,10 +499,10 @@
                 console.warn("Location fetch fallback (offline/file mode):", err);
                 document.getElementById('loading-title').textContent = "Design Factory";
                 people = [
-                    { id: "el-na-mi-elsone", name: "Elīna Miķelsone", role: "Nodaļas vadītāja", level: "root", accent: "#e386c7", photo: "https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/1787635254640-355043750.jpg" },
-                    { id: "daniela-hrap-ne", name: "Daniela Hrapāne", role: "SkyLab vadītāja", level: "lead", accent: "#0069d1", photo: "https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/1787635246661-892771639.jpg" },
-                    { id: "gavriils-kniga", name: "Gavriils Kniga", role: "IdeaBox Coordinator", level: "lead", accent: "#e3e3e3", photo: "https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/1787634932296-409002653.jpg" },
-                    { id: "shiv", name: "Shiv", role: "Project Manager Assistant", level: "lead", accent: "#ffd043", photo: "https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/1787639291355-385884177.jpg" }
+                    { id: "el-na-mi-elsone", name: "Elīna Miķelsone", role: "Nodaļas vadītāja", level: "root", accent: "#e386c7", photo: "/uploads/1787635254640-355043750.jpg" },
+                    { id: "daniela-hrap-ne", name: "Daniela Hrapāne", role: "SkyLab vadītāja", level: "lead", accent: "#0069d1", photo: "/uploads/1787635246661-892771639.jpg" },
+                    { id: "gavriils-kniga", name: "Gavriils Kniga", role: "IdeaBox Coordinator", level: "lead", accent: "#e3e3e3", photo: "/uploads/1787634932296-409002653.jpg" },
+                    { id: "shiv", name: "Shiv", role: "Project Manager Assistant", level: "lead", accent: "#ffd043", photo: "/uploads/1787634932296-409002653.jpg" }
                 ];
                 if (startBtn) startBtn.style.display = 'inline-block';
                 initBackgroundFaceMatcher();
@@ -667,11 +693,7 @@
                     if (resolvedPhoto) {
                         const img = document.createElement('img');
                         img.src = resolvedPhoto;
-                        img.alt = person.name;
-                        img.onerror = () => {
-                            orb.classList.remove('has-photo');
-                            orb.textContent = person.initials;
-                        };
+                        img.onerror = () => handlePhotoError(img, person.initials);
                         orb.appendChild(img);
                     } else {
                         orb.textContent = person.initials;

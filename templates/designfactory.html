@@ -465,6 +465,41 @@
             if (headEyebrow) headEyebrow.textContent = subtitle;
         }
 
+        function resolvePhotoUrl(photoPath) {
+            if (!photoPath) return '';
+            if (photoPath.startsWith('data:') || photoPath.startsWith('blob:') || photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+                return photoPath;
+            }
+            const cleanPath = photoPath.replace(/^\/?(uploads\/)?/, '');
+            if (window.location.protocol === 'file:') {
+                return `../uploads/${cleanPath}`;
+            }
+            if (window.location.hostname.includes('vercel.app')) {
+                return `https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/${cleanPath}`;
+            }
+            return `/uploads/${cleanPath}`;
+        }
+
+        function handlePhotoError(img, fallbackText) {
+            const raw = img.getAttribute('data-raw-src') || img.src || '';
+            const clean = raw.replace(/^.*\/uploads\//, '').replace(/^.*[\\\/]/, '');
+            if (!img.dataset.triedRel && clean) {
+                img.dataset.triedRel = '1';
+                img.src = `../uploads/${clean}`;
+                return;
+            }
+            if (!img.dataset.triedCdn && clean) {
+                img.dataset.triedCdn = '1';
+                img.src = `https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/${clean}`;
+                return;
+            }
+            img.style.display = 'none';
+            if (img.parentElement) {
+                img.parentElement.classList.remove('has-photo');
+                if (fallbackText) img.parentElement.textContent = fallbackText;
+            }
+        }
+
         function getPersonCardUrl(person) {
             if (person.cardUrl && person.cardUrl.trim()) {
                 return person.cardUrl.trim();
@@ -727,10 +762,13 @@
                     el.setAttribute('title', `Double click to open ${person.name}'s virtual card`);
                     
                     const orb = document.createElement('span');
-                    orb.className = `wall-person-orb ${person.photo ? "has-photo" : ""}`;
-                    if (person.photo) {
+                    const resolvedPhoto = resolvePhotoUrl(person.photo);
+                    orb.className = `wall-person-orb ${resolvedPhoto ? "has-photo" : ""}`;
+                    if (resolvedPhoto) {
                         const img = document.createElement('img');
-                        img.src = person.photo;
+                        img.src = resolvedPhoto;
+                        img.alt = person.name || 'Inductee';
+                        img.onerror = () => handlePhotoError(img, person.initials);
                         orb.appendChild(img);
                     } else {
                         orb.textContent = person.initials;

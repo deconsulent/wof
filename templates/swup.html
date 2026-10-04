@@ -548,18 +548,50 @@
             }, 520);
         }
 
+        function resolvePhotoUrl(photoPath) {
+            if (!photoPath) return '';
+            if (photoPath.startsWith('data:') || photoPath.startsWith('blob:') || photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+                return photoPath;
+            }
+            const cleanPath = photoPath.replace(/^\/?(uploads\/)?/, '');
+            if (window.location.protocol === 'file:') {
+                return `../uploads/${cleanPath}`;
+            }
+            if (window.location.hostname.includes('vercel.app')) {
+                return `https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/${cleanPath}`;
+            }
+            return `/uploads/${cleanPath}`;
+        }
+
+        function handlePhotoError(img, fallbackText) {
+            const raw = img.getAttribute('data-raw-src') || img.src || '';
+            const clean = raw.replace(/^.*\/uploads\//, '').replace(/^.*[\\\/]/, '');
+            if (!img.dataset.triedRel && clean) {
+                img.dataset.triedRel = '1';
+                img.src = `../uploads/${clean}`;
+                return;
+            }
+            if (!img.dataset.triedCdn && clean) {
+                img.dataset.triedCdn = '1';
+                img.src = `https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/${clean}`;
+                return;
+            }
+            img.style.display = 'none';
+        }
+
         function renderConstellation() {
             if (!locData || !locData.data) return;
             const container = document.getElementById('constellation');
             const data = locData.data;
             const teamName = i18n.getLocalized(data, 'teamName') || data.teamName || "SWUP";
-            const teamPhoto = data.teamPhoto || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80";
+            const teamPhotoRaw = data.teamPhoto || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80";
+            const teamPhoto = resolvePhotoUrl(teamPhotoRaw);
             const members = data.members || [];
 
             let html = `
                 <button id="node-team" class="team-node" onclick="project('team')" aria-label="Project Team">
                     <span class="team-beam" aria-hidden="true"></span>
-                    <span class="team-photo-wrap"><img src="${teamPhoto}" alt="Team photo" onerror="this.style.display='none'"><span class="team-photo-scan" aria-hidden="true"></span></span>
+                    <span class="team-photo-wrap"><img src="${teamPhoto}" alt="Team photo" onerror="handlePhotoError(this)"><span class="team-photo-scan" aria-hidden="true"></span></span>
                     <span class="team-copy"><small>FEATURED PROFILE</small><strong>${teamName}</strong><span>${members.length} ${i18n.t('team_members')}</span></span>
                     <span class="team-status">TRANSMISSION <b>✦</b></span>
                 </button>
@@ -572,6 +604,7 @@
                 const role = i18n.getLocalized(m, 'role') || m.role || 'Maker';
                 const specialty = i18n.getLocalized(m, 'specialty') || m.specialty || '';
                 const projectStatus = i18n.getLocalized(m, 'project') || m.project || '';
+                const memberPhoto = resolvePhotoUrl(m.photo);
 
                 html += `
                     <div class="member-wrap">
@@ -581,7 +614,7 @@
                             <span class="holo-corner holo-corner-tl" aria-hidden="true"></span>
                             <span class="holo-corner holo-corner-br" aria-hidden="true"></span>
                             <span class="portrait-frame">
-                                <img src="${m.photo || ''}" alt="${m.name}" style="object-position:${m.crop || 'center'}" onerror="this.style.display='none'">
+                                ${memberPhoto ? `<img src="${memberPhoto}" alt="${m.name}" style="object-position:${m.crop || 'center'}" onerror="handlePhotoError(this)">` : ''}
                                 <span class="portrait-scan" aria-hidden="true"></span>
                             </span>
                             <span class="member-copy">

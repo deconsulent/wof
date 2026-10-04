@@ -653,18 +653,50 @@
             }
         }
 
+        function resolvePhotoUrl(photoPath) {
+            if (!photoPath) return '';
+            if (photoPath.startsWith('data:') || photoPath.startsWith('blob:') || photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+                return photoPath;
+            }
+            const cleanPath = photoPath.replace(/^\/?(uploads\/)?/, '');
+            if (window.location.protocol === 'file:') {
+                return `../uploads/${cleanPath}`;
+            }
+            if (window.location.hostname.includes('vercel.app')) {
+                return `https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/${cleanPath}`;
+            }
+            return `/uploads/${cleanPath}`;
+        }
+
+        function handlePhotoError(img, fallbackText) {
+            const raw = img.getAttribute('data-raw-src') || img.src || '';
+            const clean = raw.replace(/^.*\/uploads\//, '').replace(/^.*[\\\/]/, '');
+            if (!img.dataset.triedRel && clean) {
+                img.dataset.triedRel = '1';
+                img.src = `../uploads/${clean}`;
+                return;
+            }
+            if (!img.dataset.triedCdn && clean) {
+                img.dataset.triedCdn = '1';
+                img.src = `https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/${clean}`;
+                return;
+            }
+            img.style.display = 'none';
+        }
+
         function renderConstellation() {
             if (!locData || !locData.data) return;
             const container = document.getElementById('constellation-container');
             const data = locData.data;
             const teamName = i18n.getLocalized(data, 'teamName') || data.teamName || "SWUP";
-            const teamPhoto = data.teamPhoto || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80";
+            const teamPhotoRaw = data.teamPhoto || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80";
+            const teamPhoto = resolvePhotoUrl(teamPhotoRaw);
             const members = data.members || [];
 
             let html = `
                 <div class="hub-node" onclick="projectTeam()">
                     <div class="hub-photo-frame">
-                        <img src="${teamPhoto}" alt="${teamName}" onerror="this.style.display='none'">
+                        <img src="${teamPhoto}" alt="${teamName}" onerror="handlePhotoError(this)">
                     </div>
                     <div class="hub-title">${teamName}</div>
                     <div class="hub-subtitle">${members.length} ${i18n.t('team_members')} · TRANSMISSION READY ↗</div>
@@ -680,12 +712,13 @@
                 const role = i18n.getLocalized(m, 'role') || m.role || 'Maker';
                 const specialty = i18n.getLocalized(m, 'specialty') || m.specialty || '';
                 let initials = m.name ? m.name.substring(0, 2).toUpperCase() : 'SW';
+                const memberPhoto = resolvePhotoUrl(m.photo);
 
                 html += `
                     <div class="member-card-v2" style="--member-accent: ${m.accent || '#54e8ff'}" onclick="openMemberCard('${m.id || m.name}')">
                         <div class="member-portrait-frame">
                             <span>${initials}</span>
-                            ${m.photo ? `<img src="${m.photo}" alt="${m.name}" onerror="this.style.display='none'">` : ''}
+                            ${memberPhoto ? `<img src="${memberPhoto}" alt="${m.name}" onerror="handlePhotoError(this)">` : ''}
                         </div>
                         <div class="member-name">${m.name}</div>
                         <div class="member-role">${role}</div>

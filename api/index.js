@@ -220,37 +220,54 @@ app.post('/api/translate', async (req, res) => {
     }
 });
 
-// 6. Upload image directly to Supabase Storage
+// 6. Upload image (Local Disk + Supabase Storage Sync)
 app.post('/api/upload', upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
     try {
-        const fileExt = path.extname(req.file.originalname);
+        const fileExt = path.extname(req.file.originalname) || '.jpg';
         const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileExt}`;
         const filePath = `uploads/${fileName}`;
 
-        const { data, error } = await supabase.storage
-            .from('images')
-            .upload(filePath, req.file.buffer, {
-                contentType: req.file.mimetype,
-                cacheControl: '3600',
-                upsert: false
-            });
+        // 1. Save to local disk in /uploads folder
+        const uploadsDir = path.join(__dirname, '../uploads');
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const localFilePath = path.join(uploadsDir, fileName);
+        fs.writeFileSync(localFilePath, req.file.buffer);
 
-        if (error) {
-            console.error("Supabase Upload Error:", error);
-            return res.status(500).json({ error: error.message });
+        let finalUrl = `/uploads/${fileName}`;
+
+        // 2. Attempt remote Supabase Storage upload
+        try {
+            const { data, error } = await supabase.storage
+                .from('images')
+                .upload(filePath, req.file.buffer, {
+                    contentType: req.file.mimetype || 'image/jpeg',
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (!error) {
+                const { data: publicUrlData } = supabase.storage
+                    .from('images')
+                    .getPublicUrl(filePath);
+                if (publicUrlData && publicUrlData.publicUrl) {
+                    finalUrl = publicUrlData.publicUrl;
+                }
+            } else {
+                console.warn("Supabase storage sync skipped:", error.message);
+            }
+        } catch (sbErr) {
+            console.warn("Supabase storage connection skipped:", sbErr.message);
         }
 
-        const { data: publicUrlData } = supabase.storage
-            .from('images')
-            .getPublicUrl(filePath);
-
-        res.json({ url: publicUrlData.publicUrl });
+        res.json({ url: finalUrl, localUrl: `/uploads/${fileName}`, fileName });
 
     } catch (err) {
         console.error("Upload exception:", err);
-        res.status(500).json({ error: 'Internal Server Error during upload' });
+        res.status(500).json({ error: 'Internal Server Error during upload: ' + err.message });
     }
 });
 

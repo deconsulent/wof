@@ -33,6 +33,23 @@
             encodeURIComponent(tmpl || 'designfactory') + '.html?id=' + encodeURIComponent(id);
     };
 
+    window.resolvePhotoUrl = function (photoPath) {
+        if (!photoPath) return '';
+        if (photoPath.startsWith('data:') || photoPath.startsWith('blob:') || photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+            return photoPath;
+        }
+        var cleanPath = photoPath.replace(/^\/?(uploads\/)?/, '');
+        if (window.location.protocol === 'file:') {
+            return (window.location.pathname.indexOf('/templates/') !== -1 || window.location.pathname.indexOf('\\templates\\') !== -1)
+                ? '../uploads/' + cleanPath
+                : 'uploads/' + cleanPath;
+        }
+        if (window.location.hostname.indexOf('vercel.app') !== -1) {
+            return 'https://vbscjdjzisdyohurjsro.supabase.co/storage/v1/object/public/images/uploads/' + cleanPath;
+        }
+        return '/uploads/' + cleanPath;
+    };
+
     var _fetch = window.fetch.bind(window);
 
     function jsonResp(obj, status) {
