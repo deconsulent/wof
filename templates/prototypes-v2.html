@@ -1889,7 +1889,19 @@
             );
         }
 
+        function ensureThree() {
+            if (threeReady) {
+                fitStage();
+                loadCurrentModel();
+                return;
+            }
+            if (!initThree()) {
+                requestAnimationFrame(() => setTimeout(ensureThree, 50));
+            }
+        }
+
         async function startExperience(remote) {
+            sound.init();
             if (remote) isRemotePreviewActive = true;
             if (isRemotePreviewActive) {
                 let w = document.getElementById('preview-watermark-hud');
@@ -1899,34 +1911,42 @@
                     w.className = 'preview-watermark-hud';
                     document.body.appendChild(w);
                 }
-                w.innerHTML = `<span>⚡</span> PREVIEW MODE · ${detectedDistanceStr || 'REMOTE'}`;
+                const distText = detectedDistanceStr || 'REMOTE';
+                w.innerHTML = `<span>⚡</span> ${i18n.t('gps_preview_active_banner', { dist: distText })}`;
             }
 
             const videoEl = document.getElementById('camera-feed');
             const permScreen = document.getElementById('permission-screen');
             const arStage = document.getElementById('ar-stage');
 
-            const showStage = () => {
-                permScreen.style.display = 'none';
-                arStage.style.display = 'block';
-                setTimeout(() => {
-                    initThree();
-                    fitStage();
-                }, 80);
-            };
+            // Switch to 3D stage immediately so preview exploration and start are instantaneous
+            permScreen.style.display = 'none';
+            arStage.style.display = 'block';
+            ensureThree();
 
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                videoEl.srcObject = stream;
-                videoEl.onloadedmetadata = () => {
-                    videoEl.play();
-                    showStage();
-                    setTimeout(() => videoEl.classList.add('is-ready'), 140);
-                };
-            } catch (e) {
-                showStage();
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { ideal: 'environment' } },
+                        audio: false
+                    });
+                    if (videoEl) {
+                        videoEl.srcObject = stream;
+                        videoEl.onloadedmetadata = () => {
+                            videoEl.play().catch(() => {});
+                            setTimeout(() => videoEl.classList.add('is-ready'), 140);
+                        };
+                        videoEl.play().catch(() => {});
+                    }
+                } catch (e) {
+                    // Running in studio 3D mode without camera background (normal in preview)
+                }
             }
         }
+
+        window.startExperience = startExperience;
+        window.enterPreviewMode = function() { startExperience(true); };
+        window.verifyGpsLocation = verifyGpsLocation;
 
         document.getElementById('start-btn').addEventListener('click', () => startExperience(isRemotePreviewActive));
 

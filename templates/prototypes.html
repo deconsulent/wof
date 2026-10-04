@@ -472,12 +472,35 @@ function renderSearch(q){
 }
 /* camera */
 async function startExperience(remote){
-  if(remote)isRemotePreviewActive=true;errorMsg.textContent='';
-  if(isRemotePreviewActive){let w=document.getElementById('preview-watermark-hud');if(!w){w=document.createElement('div');w.id='preview-watermark-hud';w.className='preview-watermark-hud';document.body.appendChild(w);}w.innerHTML='<span>⚡</span> PREVIEW MODE · '+(detectedDistanceStr||'REMOTE');}
-  const show=()=>{permissionScreen.style.display='none';arStage.style.display='block';requestAnimationFrame(()=>setTimeout(ensureThree,60));};
-  try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});videoEl.srcObject=s;videoEl.onloadedmetadata=()=>{videoEl.play();show();setTimeout(()=>videoEl.classList.add('is-ready'),140);};}
-  catch(e){show();}
+  if(remote)isRemotePreviewActive=true;
+  if(errorMsg)errorMsg.textContent='';
+  if(isRemotePreviewActive){
+    let w=document.getElementById('preview-watermark-hud');
+    if(!w){
+      w=document.createElement('div');
+      w.id='preview-watermark-hud';
+      w.className='preview-watermark-hud';
+      document.body.appendChild(w);
+    }
+    const distText=detectedDistanceStr||'REMOTE';
+    w.innerHTML='<span>⚡</span> '+(typeof i18n!=='undefined'?i18n.t('gps_preview_active_banner',{dist:distText}):('PREVIEW MODE · '+distText));
+  }
+  permissionScreen.style.display='none';
+  arStage.style.display='block';
+  requestAnimationFrame(()=>setTimeout(ensureThree,50));
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    try{
+      const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+      if(videoEl){
+        videoEl.srcObject=s;
+        videoEl.onloadedmetadata=()=>{videoEl.play().catch(()=>{});setTimeout(()=>videoEl.classList.add('is-ready'),140);};
+        videoEl.play().catch(()=>{});
+      }
+    }catch(e){}
+  }
 }
+window.startExperience=startExperience;
+window.enterPreviewMode=function(){startExperience(true);};
 startBtn.addEventListener('click',()=>startExperience(isRemotePreviewActive));
 fetchLocationData();
 </script>
