@@ -6,7 +6,7 @@
     <title>RTU Prototypes 2026 · Spatial Showroom V2</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Montserrat:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,500;0,600;0,700;0,800;1,600&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="../db-shim.js?v=20260928b"></script>
     <script src="../i18n.js?v=20260928b"></script>
     <script type="importmap">
@@ -19,17 +19,17 @@
     </script>
     <style>
         :root {
-            --bg-canvas: #080a0f;
+            --bg-canvas: #06080d;
             --rtu-gold: #ffb020;
             --rtu-gold-glow: rgba(255, 176, 32, 0.35);
             --rtu-burgundy: #a6192e;
             --accent-cyan: #64d2ff;
             --accent-emerald: #30d158;
             --text-main: #f8fafc;
-            --text-dim: rgba(248, 250, 252, 0.68);
-            --text-muted: rgba(248, 250, 252, 0.42);
-            --card-glass: rgba(14, 18, 28, 0.76);
-            --card-border: rgba(255, 255, 255, 0.12);
+            --text-dim: rgba(248, 250, 252, 0.72);
+            --text-muted: rgba(248, 250, 252, 0.45);
+            --card-glass: rgba(12, 16, 26, 0.78);
+            --card-border: rgba(255, 255, 255, 0.1);
             --active-accent: #ffb020;
         }
 
@@ -41,14 +41,14 @@
             overflow: hidden;
             background: var(--bg-canvas);
             color: var(--text-main);
-            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             touch-action: pan-x pan-y;
             overscroll-behavior: none;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        /* ── Stage & Background ── */
+        /* ── Stage & Atmospheric Background ── */
         .ar-stage, .permission-screen {
             position: fixed;
             inset: 0;
@@ -73,8 +73,9 @@
             inset: 0;
             z-index: 2;
             pointer-events: none;
-            background: radial-gradient(circle at 50% 35%, rgba(255, 176, 32, 0.06) 0%, rgba(8, 10, 15, 0.45) 60%, rgba(4, 5, 8, 0.92) 100%),
-                        linear-gradient(180deg, rgba(8, 10, 15, 0.7) 0%, transparent 22%, transparent 72%, rgba(8, 10, 15, 0.88) 100%);
+            background: radial-gradient(circle at 50% 38%, rgba(255, 176, 32, 0.08) 0%, rgba(8, 11, 18, 0.55) 60%, rgba(3, 4, 7, 0.95) 100%),
+                        linear-gradient(180deg, rgba(6, 8, 13, 0.85) 0%, transparent 22%, transparent 70%, rgba(6, 8, 13, 0.95) 100%);
+            transition: background 0.6s ease;
         }
 
         .spatial-grid {
@@ -82,24 +83,25 @@
             inset: 0;
             z-index: 3;
             pointer-events: none;
-            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 36px 36px;
-            opacity: 0.5;
-            mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 80%);
-            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 80%);
+            background-image: linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+            background-size: 32px 32px;
+            opacity: 0.6;
+            mask-image: radial-gradient(circle at 50% 50%, black 35%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at 50% 50%, black 35%, transparent 80%);
         }
 
-        /* ── Top HUD ── */
+        /* ── Top HUD Navigation Bar (No Overlaps!) ── */
         .top-hud {
             position: absolute;
-            top: clamp(14px, 3.5vw, 32px);
-            left: clamp(14px, 4vw, 44px);
-            right: clamp(14px, 4vw, 44px);
+            top: clamp(14px, 3.2vw, 28px);
+            left: clamp(16px, 4vw, 44px);
+            right: clamp(16px, 4vw, 44px);
             z-index: 25;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
             pointer-events: none;
         }
 
@@ -123,19 +125,46 @@
             display: block;
         }
         .brand-text h1 {
-            font-family: 'Montserrat', sans-serif;
-            font-size: clamp(17px, 2.4vw, 24px);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(16px, 2.2vw, 22px);
             font-weight: 800;
             letter-spacing: -0.03em;
             color: #ffffff;
+            line-height: 1.15;
         }
         .brand-text p {
-            font-family: 'DM Mono', monospace;
+            font-family: 'Space Grotesk', monospace;
             font-size: 10px;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--rtu-gold);
-            letter-spacing: 0.16em;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
+        }
+
+        /* Remote Preview HUD Pill (Integrated in top bar - never collides) */
+        .preview-watermark-hud {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 999px;
+            background: rgba(14, 18, 28, 0.88);
+            border: 1px solid rgba(255, 176, 32, 0.5);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45), 0 0 14px rgba(255, 176, 32, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--rtu-gold);
+            font-family: 'Space Grotesk', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            pointer-events: none;
+            white-space: nowrap;
+            animation: watermark-pulse 3s infinite ease-in-out;
+        }
+        @keyframes watermark-pulse {
+            0%, 100% { opacity: 0.95; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.03); }
         }
 
         .hud-controls {
@@ -148,7 +177,7 @@
         /* Language Switcher */
         .lang-switcher {
             display: inline-flex;
-            background: rgba(14, 18, 28, 0.7);
+            background: rgba(14, 18, 28, 0.72);
             border: 1px solid var(--card-border);
             border-radius: 999px;
             padding: 3px;
@@ -160,7 +189,7 @@
             background: transparent;
             border: none;
             color: var(--text-dim);
-            font-family: 'DM Mono', monospace;
+            font-family: 'Space Grotesk', monospace;
             font-size: 11px;
             font-weight: 700;
             padding: 5px 12px;
@@ -176,7 +205,7 @@
         }
 
         .audio-toggle-btn {
-            background: rgba(14, 18, 28, 0.7);
+            background: rgba(14, 18, 28, 0.72);
             border: 1px solid var(--card-border);
             border-radius: 999px;
             color: var(--text-main);
@@ -190,7 +219,24 @@
         .audio-toggle-btn:hover { background: rgba(255,255,255,0.12); }
         .audio-toggle-btn.is-muted { opacity: 0.5; }
 
-        /* ── Main Viewport Area ── */
+        .cam-toggle-btn {
+            background: rgba(14, 18, 28, 0.72);
+            border: 1px solid var(--card-border);
+            border-radius: 999px;
+            color: var(--text-main);
+            padding: 6px 14px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.2s ease;
+        }
+        .cam-toggle-btn:hover { background: rgba(255,255,255,0.12); color: #ffffff; border-color: rgba(255,255,255,0.3); }
+        .cam-toggle-btn.active { background: rgba(48, 209, 88, 0.18); border-color: #30d158; color: #30d158; }
+
+        /* ── Main Showroom Viewport Area ── */
         .main-showroom {
             position: absolute;
             inset: 0;
@@ -198,7 +244,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: clamp(75px, 12vh, 96px) clamp(16px, 4vw, 44px) clamp(20px, 3vh, 32px);
+            padding: clamp(75px, 12vh, 92px) clamp(16px, 4vw, 44px) clamp(20px, 3vh, 32px);
             pointer-events: none;
         }
 
@@ -207,16 +253,16 @@
             position: relative;
             flex: 1;
             min-height: 280px;
-            max-height: 54vh;
-            width: min(100%, 1020px);
+            max-height: 55vh;
+            width: min(100%, 1060px);
             margin: 0 auto;
             pointer-events: auto;
             border-radius: 28px;
             border: 1px solid var(--card-border);
-            background: rgba(14, 18, 28, 0.45);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+            background: rgba(12, 16, 26, 0.45);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            box-shadow: 0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12);
             overflow: hidden;
             touch-action: none;
             cursor: grab;
@@ -237,9 +283,9 @@
             left: 16px;
             z-index: 15;
             display: flex;
-            gap: 5px;
-            background: rgba(8, 10, 16, 0.78);
-            border: 1px solid rgba(255,255,255,0.1);
+            gap: 4px;
+            background: rgba(8, 10, 16, 0.82);
+            border: 1px solid rgba(255,255,255,0.12);
             border-radius: 999px;
             padding: 4px;
             backdrop-filter: blur(16px);
@@ -249,10 +295,10 @@
             background: transparent;
             border: none;
             color: var(--text-dim);
-            font-family: 'DM Mono', monospace;
-            font-size: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 11px;
             font-weight: 600;
-            padding: 5px 11px;
+            padding: 5px 12px;
             border-radius: 999px;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -270,11 +316,11 @@
             top: 14px;
             right: 16px;
             z-index: 15;
-            font-family: 'DM Mono', monospace;
-            font-size: 11px;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 12px;
             font-weight: 700;
             color: var(--rtu-gold);
-            background: rgba(8, 10, 16, 0.78);
+            background: rgba(8, 10, 16, 0.82);
             border: 1px solid rgba(255, 176, 32, 0.35);
             padding: 5px 14px;
             border-radius: 999px;
@@ -282,25 +328,49 @@
             -webkit-backdrop-filter: blur(16px);
         }
 
+        .stage-reset-btn {
+            position: absolute;
+            top: 14px;
+            right: 95px;
+            z-index: 15;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-dim);
+            background: rgba(8, 10, 16, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 5px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.2s ease;
+        }
+        .stage-reset-btn:hover {
+            color: #ffffff;
+            border-color: var(--rtu-gold);
+            background: rgba(255, 176, 32, 0.15);
+        }
+
         .stage-nav-arrow {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
             z-index: 20;
-            width: 48px;
-            height: 48px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             border: 1px solid var(--card-border);
             background: rgba(14, 18, 28, 0.85);
             color: #ffffff;
-            font-size: 22px;
+            font-size: 24px;
             display: grid;
             place-items: center;
             cursor: pointer;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.45);
         }
         .stage-nav-arrow:hover {
             background: rgba(255,255,255,0.18);
@@ -316,34 +386,38 @@
             bottom: 12px;
             left: 16px;
             z-index: 15;
-            font-family: 'DM Mono', monospace;
-            font-size: 9.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: rgba(8, 10, 16, 0.7);
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 10.5px;
             font-weight: 500;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.04em;
             color: var(--text-dim);
-            text-transform: uppercase;
             pointer-events: none;
         }
 
-        /* ── Prototype Details Card & Telemetry Drawer ── */
+        /* ── Prototype Details Card & Integrated Scrubber ── */
         .proto-info-container {
-            width: min(100%, 1020px);
+            width: min(100%, 1060px);
             margin: 12px auto 0;
             pointer-events: auto;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
         }
 
         .proto-card-v2 {
             position: relative;
-            padding: 20px 24px;
+            padding: 22px 28px;
             border-radius: 24px;
             border: 1px solid var(--card-border);
             background: var(--card-glass);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            box-shadow: 0 16px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 20px 54px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -363,107 +437,77 @@
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
+            margin-bottom: 4px;
         }
         .proto-prog-badge {
-            font-family: 'DM Mono', monospace;
-            font-size: 9.5px;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 10.5px;
             font-weight: 700;
-            letter-spacing: 0.12em;
-            padding: 4px 10px;
+            letter-spacing: 0.08em;
+            padding: 4px 12px;
             border-radius: 999px;
             text-transform: uppercase;
-            background: rgba(255, 176, 32, 0.14);
+            background: rgba(255, 176, 32, 0.12);
             border: 1px solid rgba(255, 176, 32, 0.4);
             color: var(--active-accent, var(--rtu-gold));
         }
         .proto-trl-badge {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            font-family: 'DM Mono', monospace;
-            font-size: 9.5px;
+            gap: 6px;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 10.5px;
             font-weight: 600;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 999px;
             background: rgba(48, 209, 88, 0.12);
             border: 1px solid rgba(48, 209, 88, 0.35);
             color: #30d158;
         }
         .proto-trl-badge i {
-            width: 5px;
-            height: 5px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: #30d158;
             box-shadow: 0 0 8px #30d158;
+            animation: pulse-dot 2s infinite ease-in-out;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.3); }
         }
 
         .proto-title-v2 {
-            font-family: 'Montserrat', sans-serif;
-            font-size: clamp(20px, 3.2vw, 32px);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(22px, 3.2vw, 34px);
             font-weight: 800;
-            letter-spacing: -0.03em;
+            letter-spacing: -0.035em;
             color: #ffffff;
-            line-height: 1.1;
+            line-height: 1.12;
         }
 
         .proto-desc-v2 {
             color: var(--text-dim);
-            font-size: 13.5px;
-            line-height: 1.55;
-            max-width: 820px;
+            font-size: 14px;
+            line-height: 1.62;
+            max-width: 860px;
         }
 
-        .proto-action-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-            padding-top: 6px;
-            border-top: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .proto-dots-bar {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            max-width: 60%;
-            max-height: 28px;
-            overflow: hidden;
-        }
-        .proto-dot-v2 {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .proto-dot-v2.active {
-            background: var(--active-accent, var(--rtu-gold));
-            box-shadow: 0 0 10px var(--rtu-gold-glow);
-            transform: scale(1.3);
-        }
-
-        .proto-links-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
         .proto-visit-btn {
             display: none;
-            padding: 7px 18px;
+            padding: 8px 20px;
             border-radius: 999px;
             border: 1px solid rgba(255, 176, 32, 0.45);
             background: linear-gradient(135deg, #ffd043 0%, #ff9f1c 100%);
             color: #090b10;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 12px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 12.5px;
             font-weight: 700;
             text-decoration: none;
             cursor: pointer;
             box-shadow: 0 4px 16px rgba(255, 176, 32, 0.35);
             transition: all 0.2s ease;
+            white-space: nowrap;
         }
         .proto-visit-btn.show { display: inline-block; }
         .proto-visit-btn:hover {
@@ -471,74 +515,148 @@
             box-shadow: 0 6px 22px rgba(255, 176, 32, 0.5);
         }
 
-        /* ── Search & Filter FAB & Modal Drawer ── */
-        .search-fab-v2 {
-            position: fixed;
-            right: clamp(16px, 4vw, 44px);
-            bottom: clamp(16px, 3vh, 32px);
-            z-index: 60;
+        /* ── Modern Integrated Navigation Bar (Replaces 34 messy dots!) ── */
+        .proto-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            user-select: none;
         }
-        .search-trigger-btn {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 176, 32, 0.5);
-            background: rgba(14, 18, 28, 0.88);
-            color: var(--rtu-gold);
-            display: grid;
-            place-items: center;
-            font-size: 20px;
+        .proto-scrubber-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+            max-width: 620px;
+        }
+        .proto-scrubber-index {
+            font-family: 'Space Grotesk', monospace;
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+            white-space: nowrap;
+        }
+        .proto-scrubber-index small {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .proto-scrubber-track {
+            position: relative;
+            flex: 1;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.1);
             cursor: pointer;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(255, 176, 32, 0.25);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            transition: all 0.2s ease;
+            transition: height 0.2s ease;
         }
-        .search-trigger-btn:hover {
-            transform: scale(1.08);
-            background: rgba(255, 176, 32, 0.18);
+        .proto-scrubber-track:hover {
+            height: 8px;
+        }
+        .proto-scrubber-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255, 176, 32, 0.4), var(--active-accent, var(--rtu-gold)));
+            pointer-events: none;
+            transition: width 0.15s ease-out;
+        }
+        .proto-scrubber-thumb {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid var(--active-accent, var(--rtu-gold));
+            box-shadow: 0 0 12px var(--rtu-gold-glow);
+            pointer-events: none;
+            transition: left 0.15s ease-out, transform 0.2s ease;
+        }
+        .proto-scrubber-track:hover .proto-scrubber-thumb {
+            transform: translate(-50%, -50%) scale(1.25);
+        }
+        .proto-catalog-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(14px);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .proto-catalog-btn:hover {
+            background: rgba(255, 176, 32, 0.16);
+            border-color: rgba(255, 176, 32, 0.5);
+            color: var(--rtu-gold);
+            transform: translateY(-1px);
+        }
+        .cat-count {
+            display: inline-block;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: rgba(255, 176, 32, 0.2);
+            color: var(--rtu-gold);
+            font-size: 10px;
+            font-weight: 700;
         }
 
+        /* ── Search & Catalog Drawer ── */
         .search-drawer {
             position: fixed;
             right: clamp(16px, 4vw, 44px);
-            bottom: clamp(76px, 10vh, 94px);
-            width: min(380px, calc(100vw - 32px));
-            max-height: min(60vh, 520px);
+            bottom: clamp(90px, 12vh, 110px);
+            width: min(440px, calc(100vw - 32px));
+            max-height: min(65vh, 560px);
             z-index: 65;
             display: none;
             flex-direction: column;
             border-radius: 24px;
             border: 1px solid var(--card-border);
-            background: rgba(10, 13, 20, 0.94);
-            backdrop-filter: blur(32px);
-            -webkit-backdrop-filter: blur(32px);
-            box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.4);
+            background: rgba(10, 14, 22, 0.95);
+            backdrop-filter: blur(36px);
+            -webkit-backdrop-filter: blur(36px);
+            box-shadow: 0 28px 72px rgba(0,0,0,0.75), 0 0 40px rgba(0,0,0,0.5);
             overflow: hidden;
             animation: drawer-fade-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .search-drawer.is-open { display: flex; }
         @keyframes drawer-fade-up {
-            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            from { opacity: 0; transform: translateY(14px) scale(0.97); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .search-drawer-header {
-            padding: 16px;
+            padding: 18px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
         }
         .search-input-field {
             width: 100%;
-            padding: 11px 16px;
+            padding: 12px 18px;
             border-radius: 14px;
             border: 1px solid rgba(255,255,255,0.14);
             background: rgba(255,255,255,0.06);
             color: #ffffff;
             font-family: inherit;
-            font-size: 13.5px;
+            font-size: 14px;
             outline: none;
             transition: all 0.2s ease;
         }
@@ -562,10 +680,10 @@
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.1);
             color: var(--text-dim);
-            font-family: 'DM Mono', monospace;
-            font-size: 9.5px;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 10px;
             font-weight: 600;
-            padding: 4px 10px;
+            padding: 4px 11px;
             border-radius: 999px;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -580,7 +698,7 @@
 
         .search-items-list {
             overflow-y: auto;
-            padding: 10px 12px;
+            padding: 12px 14px;
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -592,238 +710,189 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 12px;
+            padding: 10px 14px;
             border-radius: 14px;
             background: rgba(255,255,255,0.03);
             border: 1px solid transparent;
             color: #ffffff;
             cursor: pointer;
-            text-align: left;
             transition: all 0.2s ease;
         }
-        .search-result-item:hover {
+        .search-result-item:hover, .search-result-item.active {
             background: rgba(255, 176, 32, 0.12);
             border-color: rgba(255, 176, 32, 0.35);
         }
-        .search-result-item.active {
-            background: rgba(255, 176, 32, 0.2);
-            border-color: var(--rtu-gold);
-        }
-        .search-item-emoji {
-            font-size: 22px;
-            width: 32px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .search-item-info {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        .search-item-emoji { font-size: 20px; line-height: 1; }
+        .search-item-text { display: flex; flex-direction: column; gap: 2px; }
         .search-item-name {
-            font-size: 13px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 13.5px;
         }
         .search-item-prog {
-            font-family: 'DM Mono', monospace;
-            font-size: 9.5px;
-            color: var(--text-dim);
-            letter-spacing: 0.05em;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
         }
 
-        /* ── Permission / Proximity Gate Screen ── */
+        /* ── Permission / Remote Geofence Card ── */
         .permission-screen {
             display: grid;
             place-items: center;
             padding: 24px;
-            background: radial-gradient(circle at 50% 25%, #1d170a 0%, #080a0f 75%);
             z-index: 50;
+            background: radial-gradient(circle at 50% 30%, #1c150b 0%, #080a10 70%);
         }
         .permission-card {
-            width: min(100%, 430px);
-            padding: 36px 30px;
-            border: 1px solid rgba(255, 176, 32, 0.35);
-            border-radius: 28px;
-            background: rgba(18, 16, 12, 0.72);
-            box-shadow: 0 24px 65px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 176, 32, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(36px);
-            -webkit-backdrop-filter: blur(36px);
+            position: relative;
+            max-width: 480px;
+            width: 100%;
+            padding: 38px 32px;
             text-align: center;
+            border: 1px solid rgba(255, 176, 32, 0.4);
+            border-radius: 28px;
+            background: rgba(14, 18, 28, 0.88);
+            box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 60px rgba(255, 176, 32, 0.15);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
         }
         .permission-card h1 {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 32px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(24px, 4vw, 32px);
             font-weight: 800;
             letter-spacing: -0.03em;
-            margin: 12px 0 8px;
+            margin: 10px 0 12px;
         }
         .permission-copy {
             color: var(--text-dim);
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 24px;
+            font-size: 14.5px;
+            line-height: 1.55;
+            margin-bottom: 20px;
         }
+
         .primary-cta-btn {
             display: inline-block;
-            width: 100%;
-            padding: 14px 24px;
+            padding: 13px 28px;
             border-radius: 999px;
-            border: none;
             background: linear-gradient(135deg, #ffd043 0%, #ff9f1c 100%);
-            color: #090b10;
-            font-family: 'Montserrat', sans-serif;
+            color: #080a10;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 14px;
-            font-weight: 700;
+            font-weight: 800;
+            border: 1px solid #ffe1ae;
+            box-shadow: 0 8px 24px rgba(255, 176, 32, 0.45);
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(255, 176, 32, 0.35);
             transition: all 0.2s ease;
         }
         .primary-cta-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(255, 176, 32, 0.5);
+            box-shadow: 0 12px 32px rgba(255, 176, 32, 0.6);
         }
 
-        /* GPS Status & Card */
+        .gps-locked-card {
+            background: rgba(255, 176, 32, 0.08);
+            border: 1px solid rgba(255, 176, 32, 0.35);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
         .gps-status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
+            display: inline-block;
+            padding: 4px 12px;
             border-radius: 999px;
-            font-family: 'DM Mono', monospace;
+            font-family: 'Space Grotesk', monospace;
             font-size: 11px;
             font-weight: 700;
-            margin-bottom: 14px;
-        }
-        .gps-status-pill.is-verified {
-            background: rgba(48, 209, 88, 0.15);
-            border: 1px solid rgba(48, 209, 88, 0.4);
-            color: #30d158;
-        }
-        .gps-status-pill.is-locked {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #ff7b7b;
-        }
-        .gps-locked-card {
-            background: rgba(10, 14, 22, 0.75);
-            border: 1px solid rgba(255, 176, 32, 0.4);
-            border-radius: 20px;
-            padding: 20px 18px;
-            margin: 16px 0;
-            text-align: center;
+            color: var(--rtu-gold);
+            background: rgba(255, 176, 32, 0.16);
+            margin-bottom: 6px;
         }
         .gps-distance-text {
             font-size: 13px;
-            color: var(--text-main);
-            margin: 8px 0 4px;
+            color: var(--text-dim);
+            margin: 6px 0 12px;
             line-height: 1.45;
         }
         .gps-preview-cta {
-            display: block;
-            width: 100%;
-            margin: 14px 0 8px;
-            padding: 12px 20px;
+            display: inline-block;
+            margin-top: 10px;
+            padding: 11px 24px;
             border-radius: 999px;
-            background: linear-gradient(135deg, #ffd043, #ff9f1c);
-            border: none;
-            color: #11141d;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 13px;
-            font-weight: 700;
+            border: 1px solid rgba(255, 176, 32, 0.5);
+            background: linear-gradient(135deg, #ffd043 0%, #ff9f1c 100%);
+            color: #080a10;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 13.5px;
+            font-weight: 800;
             cursor: pointer;
-            box-shadow: 0 4px 18px rgba(255, 175, 0, 0.35);
+            box-shadow: 0 4px 20px rgba(255, 176, 32, 0.4);
             transition: all 0.2s ease;
+        }
+        .gps-preview-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(255, 176, 32, 0.6);
         }
         .gps-retry-btn {
-            margin-top: 6px;
-            padding: 7px 16px;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            font-size: 11px;
-            font-weight: 600;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 12px;
+            margin-top: 12px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            text-decoration: underline;
         }
-
-        /* Remote Preview Floating Watermark */
-        .preview-watermark-hud {
-            position: fixed;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 18px;
-            border-radius: 999px;
-            background: rgba(14, 18, 28, 0.92);
-            border: 1px solid rgba(255, 176, 32, 0.55);
-            box-shadow: 0 4px 22px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 176, 32, 0.25);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            color: var(--rtu-gold);
-            font-family: 'DM Mono', monospace;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.04em;
-            pointer-events: none;
-            animation: watermark-pulse 3s infinite ease-in-out;
-        }
-        @keyframes watermark-pulse {
-            0%, 100% { opacity: 0.92; transform: translateX(-50%) scale(1); }
-            50% { opacity: 1; transform: translateX(-50%) scale(1.02); }
-        }
+        .gps-retry-btn:hover { color: #ffffff; }
 
         @media (max-width: 768px) {
-            .proto-card-v2 { padding: 16px 18px; }
+            .top-hud { flex-wrap: wrap; gap: 8px; }
+            .preview-watermark-hud { order: 3; width: 100%; justify-content: center; margin-top: 4px; }
+            .proto-card-v2 { padding: 18px 20px; }
             .proto-title-v2 { font-size: 20px; }
-            .stage-container { min-height: 240px; }
-            .stage-nav-arrow { width: 40px; height: 40px; font-size: 18px; }
-            .shader-chip { font-size: 9px; padding: 4px 8px; }
+            .stage-container { min-height: 250px; }
+            .stage-nav-arrow { width: 42px; height: 42px; font-size: 20px; }
+            .shader-chip { font-size: 9.5px; padding: 4px 9px; }
+            .proto-scrubber-wrap { max-width: 100%; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Permission & Proximity Screen -->
-    <div id="permission-screen" class="permission-screen">
+    <!-- Permission & Proximity Screen (shown only if remote geofence strictly enforced and not in preview) -->
+    <div id="permission-screen" class="permission-screen" style="display:none;">
         <section class="permission-card">
             <div style="display:flex; justify-content:center; margin-bottom: 16px;" id="perm-lang-container"></div>
             <div id="gps-status-container"></div>
-            <p class="eyebrow" style="color:var(--rtu-gold);" data-i18n="app_title">RTU · Prototypes 2026</p>
-            <h1 id="loading-title">Loading Showroom...</h1>
-            <p class="permission-copy" data-i18n="proto_perm_hint">Experience 3D holographic prototypes anchored in spatial augmented reality.</p>
+            <p class="eyebrow" style="color:var(--rtu-gold); font-family:'Space Grotesk', monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase;">RTU DESIGN FACTORY · SPATIAL SHOWROOM</p>
+            <h1 id="loading-title">Prototypes 2026</h1>
+            <p class="permission-copy" data-i18n="proto_perm_hint">Experience 34 interactive 3D engineering prototypes created at Riga Technical University.</p>
             <p id="permission-error" style="color:#ff7b7b; display:none; margin-bottom:14px;"></p>
             <div id="gps-action-area">
-                <button id="start-btn" class="primary-cta-btn" style="display:none;" data-i18n="enable_camera">Launch Spatial Stage ↗</button>
+                <button id="start-btn" class="primary-cta-btn">Enter 3D Showroom ↗</button>
             </div>
         </section>
     </div>
 
-    <!-- Main Spatial Stage -->
-    <div id="ar-stage" class="ar-stage" style="display:none;">
+    <!-- Main Spatial Stage (Visible by default) -->
+    <div id="ar-stage" class="ar-stage">
         <video id="camera-feed" class="camera-feed" muted playsinline></video>
-        <div class="stage-backdrop"></div>
+        <div class="stage-backdrop" id="stage-backdrop"></div>
         <div class="spatial-grid"></div>
 
-        <!-- Top Header HUD -->
+        <!-- Top Header HUD (Integrated center banner - no overlaps) -->
         <header class="top-hud">
             <div class="brand-lockup">
                 <span class="brand-badge"><img id="hud-logo" src="../assets/brand/rtu-innovations-en.jpg" alt="RTU"></span>
                 <div class="brand-text">
-                    <p>Spatial Showroom · V2</p>
+                    <p>RTU Design Factory · Spatial Showroom</p>
                     <h1 id="header-title">Prototypes 2026</h1>
                 </div>
             </div>
+            <div id="preview-watermark-hud" class="preview-watermark-hud" style="display:none;"></div>
             <div class="hud-controls">
                 <div id="hud-lang-container"></div>
+                <button id="cam-toggle-btn" class="cam-toggle-btn" title="Toggle Live Camera AR Passthrough">📷 AR</button>
                 <button id="audio-btn" class="audio-toggle-btn" title="Toggle Sound Feedback">🔊</button>
             </div>
         </header>
@@ -840,12 +909,13 @@
                     <button class="shader-chip" data-mode="exploded" onclick="setRenderMode('exploded')">X-Ray</button>
                 </div>
 
+                <button class="stage-reset-btn" id="reset-angle-btn" title="Reset view angle">⟲ Reset Angle</button>
                 <div class="stage-counter-badge" id="model-counter">01 / 34</div>
 
                 <button class="stage-nav-arrow stage-prev-btn" id="prev-btn" aria-label="Previous">‹</button>
                 <button class="stage-nav-arrow stage-next-btn" id="next-btn" aria-label="Next">›</button>
 
-                <div class="model-hint-chip" data-i18n="proto_drag_hint">Drag to inspect · Click hotspots for telemetry</div>
+                <div class="model-hint-chip" data-i18n="proto_drag_hint">⤹ Drag in any direction to orbit 360° · Scroll to zoom</div>
             </div>
 
             <!-- Prototype Details Card -->
@@ -859,25 +929,32 @@
                             </div>
                             <h2 class="proto-title-v2" id="proto-name">3D UAV Body</h2>
                         </div>
+                        <div class="proto-links-group">
+                            <a class="proto-visit-btn" id="proto-visit" href="#" target="_blank" rel="noopener">Visit Project ↗</a>
+                        </div>
                     </div>
 
                     <p class="proto-desc-v2" id="proto-desc">Prototype of a 3D-printed unmanned aerial vehicle body with lightweight honeycomb core structure.</p>
 
-                    <div class="proto-action-row">
-                        <div class="proto-dots-bar" id="proto-dots"></div>
-                        <div class="proto-links-group">
-                            <a class="proto-visit-btn" id="proto-visit" href="#" target="_blank" rel="noopener">Visit Project ↗</a>
+                    <!-- Refined Navigation Bar with Scrubber & Catalog Button -->
+                    <div class="proto-nav-bar">
+                        <div class="proto-scrubber-wrap">
+                            <span class="proto-scrubber-index" id="scrubber-counter">01 <small>/ 34</small></span>
+                            <div class="proto-scrubber-track" id="proto-scrubber" title="Click or drag to scrub prototypes">
+                                <div class="proto-scrubber-fill" id="proto-scrubber-fill" style="width: 3%;"></div>
+                                <div class="proto-scrubber-thumb" id="proto-scrubber-thumb" style="left: 3%;"></div>
+                            </div>
                         </div>
+                        <button class="proto-catalog-btn" id="catalog-trigger-btn" aria-label="Open Catalog">
+                            <span>☰ Catalog</span>
+                            <span class="cat-count">34</span>
+                        </button>
                     </div>
                 </section>
             </div>
         </main>
 
-        <!-- Search FAB & Floating Drawer -->
-        <div class="search-fab-v2">
-            <button class="search-trigger-btn" id="search-toggle" aria-label="Search Prototypes">🔍</button>
-        </div>
-
+        <!-- Search & Catalog Drawer -->
         <aside class="search-drawer" id="search-drawer">
             <div class="search-drawer-header">
                 <input type="text" id="search-input" class="search-input-field" placeholder="Search 34 prototypes..." data-i18n-placeholder="proto_search_placeholder" autocomplete="off">
@@ -888,6 +965,7 @@
                     <button class="filter-pill" data-filter="SIG FVL" onclick="filterByProgram('SIG FVL')">SIG FVL</button>
                     <button class="filter-pill" data-filter="SIG III" onclick="filterByProgram('SIG III')">SIG III</button>
                     <button class="filter-pill" data-filter="VIP" onclick="filterByProgram('VIP')">VIP</button>
+                    <button class="filter-pill" data-filter="iCoDaCo" onclick="filterByProgram('iCoDaCo')">iCoDaCo</button>
                     <button class="filter-pill" data-filter="LG" onclick="filterByProgram('LG')">LG</button>
                 </div>
             </div>
@@ -898,7 +976,23 @@
     <script type="module">
         import * as THREE from 'three';
         import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+        // Direct global hooks so preview mode and click handlers never fail
+        window.enterPreviewMode = function() {
+            startExperience(true);
+        };
+        window.startExperience = function(remote) {
+            startExperience(remote);
+        };
+
+        // Click delegation on document so dynamic buttons (e.g. from GPS check) always work
+        document.addEventListener('click', (e) => {
+            const btn = e.target && e.target.closest('.gps-preview-cta');
+            if (btn) {
+                e.preventDefault();
+                startExperience(true);
+            }
+        });
 
         /* ── Sound Synthesizer (Web Audio API) ── */
         class SoundEngine {
@@ -947,42 +1041,42 @@
         }
         const sound = new SoundEngine();
 
-        /* ── Seed Dataset (34 RTU Prototypes 2026) ── */
+        /* ── Seed Dataset (All 34 RTU Prototypes 2026 - 100% Unique Kinds) ── */
         const SEED = [
-            {id:"uav-3d",name:"3D UAV",name_lv:"3D UAV",prog:"SIG FBVV",trl:"TRL 6 · Prototype",desc:"Prototype of a 3D-printed unmanned aerial vehicle body.",desc_lv:"3D printēts bezpilota gaisa kuģa korpusa prototips.",kind:"uav3d",accent:"#7cf0b0",emoji:"🛸"},
-            {id:"video-ant",name:"Video Signal Receiving Antennas",name_lv:"Video signāla uztveršanas antenas",prog:"SIG FBVV",trl:"TRL 5 · Lab Tested",desc:"Prototype of a UAV video receiving system.",desc_lv:"Bezpilota gaisa kuģa video uztveršanas sistēmas prototips.",kind:"antenna",accent:"#7cf0b0",emoji:"📡"},
-            {id:"crowdstate",name:"CrowdState",name_lv:"CrowdState",prog:"SIG FBVV",trl:"TRL 7 · Live Demo",desc:"Customer flow forecasting system; IoT- and AI-based real-time micro-enterprise footfall collection and forecasting.",desc_lv:"Klientu plūsmas prognozēšanas sistēma — IoT un MI risinājums mikrouzņēmumu apmeklētāju plūsmas uzskaitei un prognozēšanai reāllaikā.",kind:"iot",accent:"#7cf0b0",emoji:"📊"},
-            {id:"gravipen",name:"Gravipen",name_lv:"Gravipen",prog:"SIG FBVV",trl:"TRL 5 · Working Model",desc:"Prototype of a digital precision stylus pen.",desc_lv:"Digitālās pildspalvas prototips.",kind:"pen",accent:"#7cf0b0",emoji:"🖊️"},
-            {id:"icesense-fbvv",name:"IceSense",name_lv:"IceSense",prog:"SIG FBVV",trl:"TRL 6 · Field Validated",desc:"Prototype of an ultrasonic ice thickness measurement sensor.",desc_lv:"Ledus biezuma mērīšanas sensora prototips.",kind:"ice",accent:"#7cf0b0",emoji:"🧊"},
-            {id:"icesense-bci",name:"IceSense",name_lv:"IceSense",prog:"SIG BCI",trl:"TRL 6 · Field Validated",desc:"Prototype of an ice thickness measurement sensor with telemetry node.",desc_lv:"Ledus biezuma mērīšanas sensora prototips.",kind:"ice",accent:"#c4b5fd",emoji:"🧊"},
-            {id:"hydrocontest",name:"LA Hydrocontest",name_lv:"LA Hydrocontest",prog:"SIG FBVV",trl:"TRL 6 · Operational",desc:"Prototype of a remotely controlled hydro-foil boat drone.",desc_lv:"Tālvadāmas laivas (drona) prototips.",kind:"boat",accent:"#7cf0b0",emoji:"⛵"},
-            {id:"velotraks",name:"Velotraks",name_lv:"Velotraks",prog:"SIG FBVV",trl:"TRL 5 · Enclosure Test",desc:"Prototype of a ventilated smart locker for cyclists' equipment.",desc_lv:"Vēdināma skapja prototips velosipēdistu ekipējumam.",kind:"locker",accent:"#7cf0b0",emoji:"🚲"},
-            {id:"bruntor",name:"Bruntor",name_lv:"Bruntor",prog:"Liepāja project",trl:"TRL 7 · Field Platform",desc:"Remotely controllable heavy-duty delivery platform.",desc_lv:"Tālvadāma platforma (Liepājas projekts).",kind:"rover",accent:"#f0bf79",emoji:"🤖"},
-            {id:"bbk",name:"BBK (Battle Bot Kit)",name_lv:"BBK (kaujas robotu komplekts)",prog:"SIG Future Sandbox",trl:"TRL 6 · Arena Ready",desc:"Modular universal battle robot chassis & electronics kit.",desc_lv:"Universāls kaujas robotu komplekts.",kind:"battlebot",accent:"#b7f8ff",emoji:"⚔️"},
-            {id:"baltic-snow",name:"Baltic Snow",name_lv:"Baltic Snow",prog:"SIG BCI",trl:"TRL 4 · Lab Synthesis",desc:"Prototype of cellulose-based biodegradable artificial snow.",desc_lv:"Celulozes mākslīgā sniega prototips.",kind:"snow",accent:"#c4b5fd",emoji:"❄️"},
-            {id:"hearme-bci",name:"HearMe",name_lv:"HearMe",prog:"SIG BCI",trl:"TRL 7 · Cloud Beta",desc:"Web app for sign-language communication: speech-to-text, text-to-sign avatars, and secure WebRTC video.",desc_lv:"Tīmekļa lietotne saziņai zīmju valodā: runas pārvēršana tekstā, teksta pārvēršana žestos un droši WebRTC zvani.",kind:"hearme",accent:"#c4b5fd",emoji:"🤟"},
-            {id:"hearme-fvl",name:"HearMe",name_lv:"HearMe",prog:"SIG FVL",trl:"TRL 7 · Cloud Beta",desc:"Web app for sign-language communication: speech-to-text, text-to-sign avatars, and secure WebRTC video.",desc_lv:"Tīmekļa lietotne saziņai zīmju valodā: runas pārvēršana tekstā, teksta pārvēršana žestos un droši WebRTC zvani.",kind:"hearme",accent:"#f0bf79",emoji:"🤟"},
-            {id:"priede",name:"Priede (Sprungulis)",name_lv:"Priede (Sprungulis)",prog:"SIG BCI",trl:"TRL 6 · Educational",desc:"Prototype of a tactile programming training platform.",desc_lv:"Programmēšanas apmācību platformas prototips.",kind:"laptop",accent:"#c4b5fd",emoji:"💻"},
-            {id:"spoks",name:"Spoks",name_lv:"Spoks",prog:"SIG BCI",trl:"TRL 6 · Heavy Payload",desc:"Prototype of a heavy-payload cargo unmanned aerial vehicle.",desc_lv:"Kravas bezpilota gaisa kuģa prototips.",kind:"cargodrone",accent:"#c4b5fd",emoji:"📦"},
+            {id:"uav-3d",name:"3D UAV",name_lv:"3D UAV",prog:"SIG FBVV",trl:"TRL 6 · Prototype",desc:"Prototype of a 3D-printed unmanned aerial vehicle body with lightweight core structure.",desc_lv:"3D printēts bezpilota gaisa kuģa korpusa prototips.",kind:"uav3d",accent:"#7cf0b0",emoji:"🛸"},
+            {id:"video-ant",name:"Video Signal Receiving Antennas",name_lv:"Video signāla uztveršanas antenas",prog:"SIG FBVV",trl:"TRL 5 · Lab Tested",desc:"Prototype of a UAV video receiving antenna array system.",desc_lv:"Bezpilota gaisa kuģa video uztveršanas sistēmas prototips.",kind:"antenna",accent:"#7cf0b0",emoji:"📡"},
+            {id:"crowdstate",name:"CrowdState",name_lv:"CrowdState",prog:"SIG FBVV",trl:"TRL 7 · Live Demo",desc:"Customer flow forecasting system; IoT- and AI-based real-time micro-enterprise footfall collection.",desc_lv:"Klientu plūsmas prognozēšanas sistēma — IoT un MI risinājums mikrouzņēmumu apmeklētāju plūsmas uzskaitei.",kind:"iot",accent:"#7cf0b0",emoji:"📊"},
+            {id:"gravipen",name:"Gravipen",name_lv:"Gravipen",prog:"SIG FBVV",trl:"TRL 5 · Working Model",desc:"Prototype of a digital precision stylus pen with integrated pressure sensors.",desc_lv:"Digitālās pildspalvas prototips ar spiediena sensoriem.",kind:"pen",accent:"#7cf0b0",emoji:"🖊️"},
+            {id:"icesense-fbvv",name:"IceSense",name_lv:"IceSense",prog:"SIG FBVV",trl:"TRL 6 · Field Validated",desc:"Prototype of an ultrasonic ice thickness measurement sensor drill.",desc_lv:"Ledus biezuma mērīšanas sensora prototips ar ultraskaņas zondi.",kind:"ice",accent:"#7cf0b0",emoji:"🧊"},
+            {id:"icesense-bci",name:"IceSense",name_lv:"IceSense",prog:"SIG BCI",trl:"TRL 6 · Field Validated",desc:"Remote polar ultrasonic ice telemetry beacon & solar communications mast.",desc_lv:"Ledus biezuma mērīšanas sensora telemetrijas stacija ar saules moduli.",kind:"icesense_beacon",accent:"#c4b5fd",emoji:"🧊"},
+            {id:"hydrocontest",name:"LA Hydrocontest",name_lv:"LA Hydrocontest",prog:"SIG FBVV",trl:"TRL 6 · Operational",desc:"Prototype of a remotely controlled hydrofoil racing drone boat.",desc_lv:"Tālvadāmas laivas (drona) prototips.",kind:"boat",accent:"#7cf0b0",emoji:"⛵"},
+            {id:"velotraks",name:"Velotraks",name_lv:"Velotraks",prog:"SIG FBVV",trl:"TRL 5 · Enclosure Test",desc:"Prototype of a ventilated smart locker for cyclists' equipment and helmets.",desc_lv:"Vēdināma skapja prototips velosipēdistu ekipējumam.",kind:"locker",accent:"#7cf0b0",emoji:"🚲"},
+            {id:"bruntor",name:"Bruntor",name_lv:"Bruntor",prog:"Liepāja project",trl:"TRL 7 · Field Platform",desc:"Remotely controllable heavy-duty electric cargo delivery platform.",desc_lv:"Tālvadāma platforma (Liepājas projekts).",kind:"rover",accent:"#f0bf79",emoji:"🤖"},
+            {id:"bbk",name:"BBK (Battle Bot Kit)",name_lv:"BBK (kaujas robotu komplekts)",prog:"SIG Future Sandbox",trl:"TRL 6 · Arena Ready",desc:"Modular universal combat robot chassis & kinetic electronics kit.",desc_lv:"Universāls kaujas robotu komplekts.",kind:"battlebot",accent:"#b7f8ff",emoji:"⚔️"},
+            {id:"baltic-snow",name:"Baltic Snow",name_lv:"Baltic Snow",prog:"SIG BCI",trl:"TRL 4 · Lab Synthesis",desc:"Prototype of cellulose-based biodegradable artificial snow compounding reactor.",desc_lv:"Celulozes mākslīgā sniega prototips.",kind:"snow",accent:"#c4b5fd",emoji:"❄️"},
+            {id:"hearme-bci",name:"HearMe",name_lv:"HearMe",prog:"SIG BCI",trl:"TRL 7 · Cloud Beta",desc:"Web kiosk for sign-language communication: speech-to-text, text-to-sign avatars.",desc_lv:"Tīmekļa lietotne saziņai zīmju valodā: runas pārvēršana tekstā, teksta pārvēršana žestos.",kind:"hearme",accent:"#c4b5fd",emoji:"🤟"},
+            {id:"hearme-fvl",name:"HearMe",name_lv:"HearMe",prog:"SIG FVL",trl:"TRL 7 · Cloud Beta",desc:"Dual-screen mobile tablet interface for deaf-hearing interactive communication.",desc_lv:"Divu ekrānu mobilā saskarne saziņai starp nedzirdīgajiem un dzirdīgajiem.",kind:"hearme_mobile",accent:"#f0bf79",emoji:"🤟"},
+            {id:"priede",name:"Priede (Sprungulis)",name_lv:"Priede (Sprungulis)",prog:"SIG BCI",trl:"TRL 6 · Educational",desc:"Prototype of a tactile programming training platform console.",desc_lv:"Programmēšanas apmācību platformas prototips.",kind:"laptop",accent:"#c4b5fd",emoji:"💻"},
+            {id:"spoks",name:"Spoks",name_lv:"Spoks",prog:"SIG BCI",trl:"TRL 6 · Heavy Payload",desc:"Prototype of a heavy-payload cargo unmanned aerial hexacopter with suspended bay.",desc_lv:"Kravas bezpilota gaisa kuģa prototips ar piekārtu konteineru.",kind:"cargodrone",accent:"#c4b5fd",emoji:"📦"},
             {id:"urbndine",name:"UrbnDINE",name_lv:"UrbnDINE",prog:"SIG FVL",trl:"TRL 8 · Production OS",desc:"End-to-end hospitality cloud OS: guest ordering, tableside ops, kitchen fulfillment & delivery APIs.",desc_lv:"Viesmīlības operētājsistēma pilnam ciklam: viesu pasūtījumi, virtuves izpilde un piegāžu integrācijas.",kind:"urbn",accent:"#f0bf79",emoji:"🍔"},
-            {id:"plusma",name:"Plusma",name_lv:"Plusma",prog:"SIG FVL",trl:"TRL 7 · Live Web Tool",desc:"Digital note-taking app for STEM students: math LaTeX input & graph automation.",desc_lv:"Digitāla piezīmju lietotne STEM studentiem ar automātisku formulu un grafiku zīmēšanu.",kind:"notebook",accent:"#f0bf79",emoji:"📐"},
+            {id:"plusma",name:"Plusma",name_lv:"Plusma",prog:"SIG FVL",trl:"TRL 7 · Live Web Tool",desc:"Digital note-taking app for STEM students: math LaTeX input & graph automation tablet.",desc_lv:"Digitāla piezīmju lietotne STEM studentiem ar automātisku formulu un grafiku zīmēšanu.",kind:"notebook",accent:"#f0bf79",emoji:"📐"},
             {id:"pink-patch",name:"Pink Patch",name_lv:"Pink Patch",prog:"SIG III",trl:"TRL 4 · Biomedical Lab",desc:"mRNA antiviral therapeutic patch for the targeted treatment of conjunctivitis.",desc_lv:"mRNS pretvīrusu plāksteris konjunktivīta ārstēšanai.",kind:"patch",accent:"#f9a8d4",emoji:"🩹"},
             {id:"smart-store",name:"Smart Store",name_lv:"Smart Store",prog:"SIG III",trl:"TRL 6 · Inventory AI",desc:"Smart inventory and procurement planning system for pharmaceutical cleanrooms.",desc_lv:"Vieda krājumu un iepirkumu plānošanas sistēma farmācijas materiāliem.",kind:"shelf",accent:"#f9a8d4",emoji:"🏪"},
             {id:"core",name:"C.O.R.E.",name_lv:"C.O.R.E.",prog:"SIG III",trl:"TRL 6 · LIMS Integration",desc:"Automated laboratory data acquisition and integration system for LIMS.",desc_lv:"Automatizēta laboratorijas datu ievades un integrācijas sistēma LIMS.",kind:"lab",accent:"#f9a8d4",emoji:"🧬"},
-            {id:"smart-cabinet",name:"Smart Cabinet",name_lv:"Smart Cabinet",prog:"SIG III",trl:"TRL 6 · RFID Storage",desc:"Smart medication storage unit with automated RFID inventory tracking.",desc_lv:"Vieda zāļu uzglabāšanas sistēma ar automātisku krājumu uzskaiti.",kind:"cabinet",accent:"#f9a8d4",emoji:"💊"},
-            {id:"vitamatch",name:"VitaMatch",name_lv:"VitaMatch",prog:"SIG III",trl:"TRL 5 · Dispenser Rig",desc:"Personalised nutritional vitamin drink preparation dispenser.",desc_lv:"Personalizēta vitamīnu dzērienu pagatavošanas sistēma.",kind:"vita",accent:"#f9a8d4",emoji:"🧃"},
-            {id:"medbin",name:"MedBin",name_lv:"MedBin",prog:"SIG III",trl:"TRL 6 · Vision Sort",desc:"Automated optical medication waste sorting and quarantine system.",desc_lv:"Automatizēta zāļu atkritumu šķirošanas sistēma.",kind:"bin",accent:"#f9a8d4",emoji:"♻️"},
+            {id:"smart-cabinet",name:"Smart Cabinet",name_lv:"Smart Cabinet",prog:"SIG III",trl:"TRL 6 · RFID Storage",desc:"Smart medication storage unit with automated RFID inventory tracking drawers.",desc_lv:"Vieda zāļu uzglabāšanas sistēma ar automātisku krājumu uzskaiti.",kind:"cabinet",accent:"#f9a8d4",emoji:"💊"},
+            {id:"vitamatch",name:"VitaMatch",name_lv:"VitaMatch",prog:"SIG III",trl:"TRL 5 · Dispenser Rig",desc:"Personalised nutritional vitamin drink compounding preparation dispenser.",desc_lv:"Personalizēta vitamīnu dzērienu pagatavošanas sistēma.",kind:"vita",accent:"#f9a8d4",emoji:"🧃"},
+            {id:"medbin",name:"MedBin",name_lv:"MedBin",prog:"SIG III",trl:"TRL 6 · Vision Sort",desc:"Automated optical medication waste sorting and quarantine container.",desc_lv:"Automatizēta zāļu atkritumu šķirošanas sistēma.",kind:"bin",accent:"#f9a8d4",emoji:"♻️"},
             {id:"biobot",name:"Floating Bioremediation Robot",name_lv:"Peldošais bioremediācijas robots",prog:"SIG III",trl:"TRL 5 · Water Tank",desc:"Robotic pharmaceutical wastewater treatment system for reducing antibiotic residues.",desc_lv:"Robotizēta farmaceitisko notekūdeņu attīrīšanas sistēma.",kind:"floatbot",accent:"#f9a8d4",emoji:"🌊"},
-            {id:"haps",name:"se-HAPS",name_lv:"se-HAPS",prog:"VIP",trl:"TRL 5 · Stratospheric",desc:"Simplified High Altitude Pseudo Satellite — ultra-light 3D printed UAV.",desc_lv:"Vienkāršināts lielaugstuma pseidosatelīts — 3D printēts lidaparāts.",kind:"haps",accent:"#fde68a",emoji:"🛰️"},
-            {id:"xrmed",name:"Xrmed",name_lv:"Xrmed",prog:"VIP",trl:"TRL 7 · Clinical VR",desc:"Spatial VR exploration app for pediatric patients to reduce preoperative anxiety.",desc_lv:"VR lietotne bērniem slimnīcas vides iepazīšanai pirms ārstēšanas.",kind:"vr",accent:"#fde68a",emoji:"🥽"},
+            {id:"haps",name:"se-HAPS",name_lv:"se-HAPS",prog:"VIP",trl:"TRL 5 · Stratospheric",desc:"Simplified High Altitude Pseudo Satellite — ultra-light high-aspect 3D printed UAV.",desc_lv:"Vienkāršināts lielaugstuma pseidosatelīts — 3D printēts lidaparāts.",kind:"haps",accent:"#fde68a",emoji:"🛰️"},
+            {id:"xrmed",name:"Xrmed",name_lv:"Xrmed",prog:"VIP",trl:"TRL 7 · Clinical VR",desc:"Spatial VR exploration headset for pediatric patients to reduce preoperative anxiety.",desc_lv:"VR lietotne bērniem slimnīcas vides iepazīšanai pirms ārstēšanas.",kind:"vr",accent:"#fde68a",emoji:"🥽"},
             {id:"uav-robotics",name:"UAV Robotics",name_lv:"UAV Robotics",prog:"VIP",trl:"TRL 6 · Vision Nav",desc:"Autonomous UAV with embedded edge AI vision for GPS-denied navigation.",desc_lv:"Autonoms bezpilota lidaparāts ar MI datorredzi darbībai bez GPS.",kind:"aidrone",accent:"#fde68a",emoji:"🤖"},
             {id:"lunar",name:"Lunar Energy Payload Club",name_lv:"Mēness enerģijas klubs",prog:"VIP",trl:"TRL 4 · Thermoacoustic",desc:"Reduced-scale lunar rover energy system using thermoacoustic conversion.",desc_lv:"Mēness rovera termoakustiskā energosistēma samazinātā mērogā.",kind:"lunar",accent:"#fde68a",emoji:"🌙"},
-            {id:"ab",name:"AB – iCoDaCo",name_lv:"AB – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform prototype for European contemporary dance notation.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#93c5fd",emoji:"💃"},
-            {id:"pd",name:"PD – iCoDaCo",name_lv:"PD – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform prototype for European contemporary dance community.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#c4b5fd",emoji:"🕺"},
-            {id:"rj",name:"RJ – iCoDaCo",name_lv:"RJ – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform prototype for European contemporary dance community.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#f9a8d4",emoji:"🎭"},
-            {id:"sd",name:"SD – iCoDaCo",name_lv:"SD – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform prototype for European contemporary dance community.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#67e8f3",emoji:"🎶"},
-            {id:"fake-window",name:"Fake Window",name_lv:"Viltus logs",prog:"LG",trl:"TRL 6 · Circadian Rig",desc:"Circadian daylight simulator crafted from recycled display panels.",desc_lv:"Izgatavots no pārstrādātiem ekrāniem; imitē logu ar dabisku dienasgaismu.",kind:"window",accent:"#fca5a5",emoji:"🪟"},
-            {id:"lg-repair",name:"LG Repair Workshops",name_lv:"LG remonta darbnīcas",prog:"LG",trl:"TRL 7 · Community Rig",desc:"Diagnostic bench for circular appliance repair & electronics sustainability.",desc_lv:"Atvērtas darbnīcas un diagnostikas stends sadzīves tehnikas labošanai.",kind:"bench",accent:"#fca5a5",emoji:"🔧"}
+            {id:"ab",name:"AB – iCoDaCo",name_lv:"AB – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform prototype: dynamic kinetic ribbon sculpture & floating notation nodes.",desc_lv:"Digitālās platformas prototips: dinamiska kinētiska lente un dejas notācijas punkti.",kind:"dance_kinetic",accent:"#93c5fd",emoji:"💃"},
+            {id:"pd",name:"PD – iCoDaCo",name_lv:"PD – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Spatial acoustic staging grid & motion capture sensor beacon array for contemporary dance.",desc_lv:"Telpiska akustiskā skatuve un kustību uztveršanas sensoru sistēma.",kind:"dance_spatial",accent:"#c4b5fd",emoji:"🕺"},
+            {id:"rj",name:"RJ – iCoDaCo",name_lv:"RJ – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Crystalline choreographic refraction prism with expressive motion trajectory blades.",desc_lv:"Kristālisks horeogrāfijas refrakcijas prizmas prototips ar kustību asīm.",kind:"dance_prism",accent:"#f9a8d4",emoji:"🎭"},
+            {id:"sd",name:"SD – iCoDaCo",name_lv:"SD – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Choreographic harmonic metronome & sonic wave pendulum for spatial dancers.",desc_lv:"Horeogrāfiskais harmoniskais metronoms un skaņas viļņu svārsts.",kind:"dance_tempo",accent:"#67e8f3",emoji:"🎶"},
+            {id:"fake-window",name:"Fake Window",name_lv:"Viltus logs",prog:"LG",trl:"TRL 6 · Circadian Rig",desc:"Circadian daylight simulator crafted from upcycled circular display panels.",desc_lv:"Izgatavots no pārstrādātiem ekrāniem; imitē logu ar dabisku dienasgaismu.",kind:"window",accent:"#fca5a5",emoji:"🪟"},
+            {id:"lg-repair",name:"LG Repair Workshops",name_lv:"LG remonta darbnīcas",prog:"LG",trl:"TRL 7 · Community Rig",desc:"Diagnostic workstation & tool bench for circular appliance repair & sustainability.",desc_lv:"Atvērtas darbnīcas un diagnostikas stends sadzīves tehnikas labošanai.",kind:"bench",accent:"#fca5a5",emoji:"🔧"}
         ];
 
         let locData = {};
@@ -992,16 +1086,21 @@
         let currentFilter = 'ALL';
 
         // Inject language switchers
-        document.getElementById('perm-lang-container').innerHTML = i18n.createSwitcherHTML();
-        document.getElementById('hud-lang-container').innerHTML = i18n.createSwitcherHTML();
+        const permLang = document.getElementById('perm-lang-container');
+        if (permLang) permLang.innerHTML = i18n.createSwitcherHTML();
+        const hudLang = document.getElementById('hud-lang-container');
+        if (hudLang) hudLang.innerHTML = i18n.createSwitcherHTML();
 
-        i18n.subscribe(() => {
-            updateBrandLogo();
-            updateCard();
-            renderSearchList(document.getElementById('search-input') ? document.getElementById('search-input').value : '');
-            if (typeof renderGpsLockedCard === 'function') renderGpsLockedCard();
-            if (typeof updatePreviewWatermark === 'function') updatePreviewWatermark();
-        });
+        const subscribeLanguage = typeof i18n.subscribe === 'function' ? i18n.subscribe.bind(i18n) : (typeof i18n.onLanguageChange === 'function' ? i18n.onLanguageChange.bind(i18n) : null);
+        if (subscribeLanguage) {
+            subscribeLanguage(() => {
+                updateBrandLogo();
+                updateCard();
+                renderSearchList(document.getElementById('search-input') ? document.getElementById('search-input').value : '');
+                if (typeof renderGpsLockedCard === 'function') renderGpsLockedCard();
+                if (typeof updatePreviewWatermark === 'function') updatePreviewWatermark();
+            });
+        }
 
         function updateBrandLogo() {
             let isLv = false;
@@ -1022,9 +1121,17 @@
         });
 
         /* ── Three.js Spatial Engine ── */
-        let renderer, scene, camera, spinGroup, dustGroup;
-        let dragging = false, downX = 0, px = 0, rotY = 0.5, rotX = 0.15, autoSpin = true;
+        let renderer, scene, camera, spinGroup, dustGroup, rimLight, ringMat1;
+        let dragging = false, px = 0, py = 0, autoSpin = true;
+        let velX = 0, velY = 0; // inertia velocities
+        let camDist = 4.2, camDistTarget = 4.2; // zoom control
+        const CAM_DIST_MIN = 1.8, CAM_DIST_MAX = 8.5;
+        let pinchDist0 = 0; // touch pinch-to-zoom
         let threeReady = false;
+
+        const targetQuat = new THREE.Quaternion();
+        const defaultQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.2, 0.45, 0));
+        targetQuat.copy(defaultQuat);
 
         const PAPER = '#f0f4f8', INK = '#151922';
 
@@ -1037,9 +1144,9 @@
                 return new THREE.MeshStandardMaterial({
                     color: color || '#64d2ff',
                     emissive: new THREE.Color(color || '#64d2ff'),
-                    emissiveIntensity: 0.65,
+                    emissiveIntensity: 0.68,
                     transparent: true,
-                    opacity: isTrans ? opacity * 0.8 : 0.82,
+                    opacity: isTrans ? opacity * 0.8 : 0.84,
                     wireframe: false
                 });
             }
@@ -1055,8 +1162,8 @@
             // Studio PBR default
             return new THREE.MeshStandardMaterial({
                 color: color || '#ffb020',
-                roughness: 0.45,
-                metalness: 0.25,
+                roughness: 0.42,
+                metalness: 0.28,
                 emissive: emissiveColor,
                 emissiveIntensity: emissivePower,
                 transparent: isTrans,
@@ -1100,6 +1207,7 @@
             return g;
         }
 
+        /* ── All 34 Bespoke 3D Model Builders ── */
         const BUILDERS = {
             uav3d(a) {
                 const g = new THREE.Group();
@@ -1165,6 +1273,20 @@
                 g.add(CY(0.05, 0.05, 0.9, INK, 0, 0.3, 0));
                 g.add(CO(0.5, 1.2, a, 0, -0.7, 0, 0.35));
                 g.add(TO(0.55, 0.03, a, 0, -0.95, 0, Math.PI/2));
+                return g;
+            },
+            icesense_beacon(a) {
+                const g = new THREE.Group();
+                g.add(B(2.2, 0.4, 1.6, '#cfe0ea', 0, -1.0, 0));
+                g.add(CY(0.45, 0.5, 0.25, INK, 0, -0.7, 0, 18));
+                g.add(CY(0.05, 0.05, 1.6, PAPER, 0, 0.2, 0));
+                const solar = B(0.7, 0.45, 0.04, '#152538', 0, 0.65, -0.2);
+                solar.rotation.x = -0.55;
+                g.add(solar);
+                g.add(CY(0.06, 0.06, 1.0, a, 0, -0.9, 0));
+                g.add(B(0.38, 0.35, 0.32, INK, 0, 0.15, 0));
+                g.add(SP(0.16, a, 0, 1.05, 0));
+                g.add(TO(0.45, 0.03, a, 0, 1.05, 0, Math.PI / 2));
                 return g;
             },
             boat(a) {
@@ -1250,6 +1372,26 @@
                 g.add(B(0.5, 0.35, 0.05, '#0e2a38', 0.78, 0.35, -0.2));
                 g.add(SP(0.09, a, 0.78, 0.12, -0.13));
                 g.add(TO(0.6, 0.025, a, 0, 1.2, -0.5));
+                return g;
+            },
+            hearme_mobile(a) {
+                const g = new THREE.Group();
+                g.add(CY(0.5, 0.55, 0.08, INK, 0, -0.85, 0, 24));
+                g.add(CY(0.04, 0.04, 0.6, '#8b93a7', 0, -0.55, 0));
+                const tab = B(1.5, 1.0, 0.07, '#0e1420', 0, 0.1, 0);
+                tab.rotation.x = -0.2;
+                g.add(tab);
+                const scr = B(1.35, 0.85, 0.02, '#182234', 0, 0.12, 0.04);
+                scr.rotation.x = -0.2;
+                g.add(scr);
+                const leftPane = B(0.58, 0.72, 0.02, INK, -0.32, 0.12, 0.05);
+                leftPane.rotation.x = -0.2;
+                g.add(leftPane);
+                const rightPane = B(0.58, 0.72, 0.02, a, 0.32, 0.12, 0.05);
+                rightPane.rotation.x = -0.2;
+                g.add(rightPane);
+                g.add(SP(0.04, a, 0, 0.58, 0.08));
+                g.add(TO(0.85, 0.025, a, 0, 0.1, 0, Math.PI / 2));
                 return g;
             },
             laptop(a) {
@@ -1433,16 +1575,78 @@
                 g.add(CY(1.1, 1.1, 0.05, '#8b93a7', 0, -0.62, 0, 30));
                 return g;
             },
-            dance(a) {
+            dance_kinetic(a) {
                 const g = new THREE.Group();
-                g.add(CY(0.9, 0.9, 0.12, INK, 0, -0.8, 0, 26));
-                [[-0.4, 0], [0, 0.3], [0.4, 0]].forEach(([x, z], i) => {
-                    g.add(CY(0.1, 0.1, 0.55, PAPER, x, -0.35, z, 10));
-                    g.add(SP(0.13, i === 1 ? a : INK, x, 0, z));
-                });
-                g.add(CO(0.5, 1.4, PAPER, -0.6, 0.4, -0.6, 0.25));
-                g.add(CO(0.5, 1.4, PAPER, 0.6, 0.4, -0.6, 0.25));
+                g.add(CY(0.9, 0.9, 0.08, INK, 0, -0.85, 0, 32));
+                g.add(TO(0.92, 0.03, a, 0, -0.85, 0, Math.PI / 2));
+                for (let i = 0; i < 4; i++) {
+                    const angle = i * (Math.PI / 2);
+                    const arc = TO(0.55 + i * 0.12, 0.04, i % 2 === 0 ? a : PAPER, Math.cos(angle) * 0.2, -0.4 + i * 0.35, Math.sin(angle) * 0.2, 0.8 + i * 0.4);
+                    arc.rotation.y = angle;
+                    g.add(arc);
+                    g.add(SP(0.08, i % 2 === 0 ? '#ffffff' : a, Math.cos(angle + 0.8) * 0.5, -0.3 + i * 0.35, Math.sin(angle + 0.8) * 0.5));
+                }
+                g.add(CY(0.04, 0.04, 1.6, '#8b93a7', 0, 0, 0));
+                g.add(SP(0.14, a, 0, 0.9, 0));
                 return g;
+            },
+            dance_spatial(a) {
+                const g = new THREE.Group();
+                g.add(B(1.6, 0.1, 1.6, INK, 0, -0.85, 0));
+                g.add(B(1.4, 0.02, 1.4, '#1b2234', 0, -0.79, 0));
+                [[-0.65, -0.65], [0.65, -0.65], [-0.65, 0.65], [0.65, 0.65]].forEach(([mx, mz]) => {
+                    g.add(CY(0.025, 0.025, 1.4, PAPER, mx, -0.15, mz));
+                    g.add(SP(0.07, a, mx, 0.55, mz));
+                    g.add(TO(0.12, 0.02, a, mx, 0.55, mz, Math.PI / 2));
+                });
+                [0.35, 0.65].forEach((rad, idx) => {
+                    const ring = TO(rad, 0.035, idx === 0 ? a : PAPER, 0, -0.4 + idx * 0.3, 0, Math.PI / 2);
+                    g.add(ring);
+                });
+                g.add(CY(0.09, 0.06, 0.9, PAPER, 0, -0.2, 0));
+                g.add(SP(0.12, a, 0, 0.35, 0));
+                return g;
+            },
+            dance_prism(a) {
+                const g = new THREE.Group();
+                g.add(CY(0.85, 0.85, 0.08, INK, 0, -0.85, 0, 28));
+                const prism = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.3, 3), createMat(PAPER, 0x000000, 0.2, 0.85));
+                prism.position.set(0, 0, 0);
+                prism.rotation.y = 0.5;
+                g.add(prism);
+                for (let i = 0; i < 3; i++) {
+                    const rot = i * (Math.PI * 2 / 3);
+                    const blade = B(0.7, 0.04, 0.35, a, Math.cos(rot) * 0.55, -0.1 + i * 0.25, Math.sin(rot) * 0.55);
+                    blade.rotation.y = rot + 0.4;
+                    blade.rotation.z = 0.3;
+                    g.add(blade);
+                    g.add(SP(0.08, '#ffffff', Math.cos(rot) * 0.85, 0.1 + i * 0.2, Math.sin(rot) * 0.85));
+                }
+                g.add(TO(0.75, 0.03, a, 0, 0.75, 0, Math.PI / 2));
+                return g;
+            },
+            dance_tempo(a) {
+                const g = new THREE.Group();
+                g.add(B(1.2, 0.12, 0.9, INK, 0, -0.85, 0));
+                const frame1 = CY(0.03, 0.03, 1.6, PAPER, -0.3, 0, 0);
+                frame1.rotation.z = -0.25;
+                g.add(frame1);
+                const frame2 = CY(0.03, 0.03, 1.6, PAPER, 0.3, 0, 0);
+                frame2.rotation.z = 0.25;
+                g.add(frame2);
+                g.add(B(0.55, 0.06, 0.06, INK, 0, 0.75, 0));
+                const pendulum = CY(0.02, 0.02, 1.3, '#ffffff', 0, 0.1, 0);
+                pendulum.rotation.z = 0.35;
+                g.add(pendulum);
+                g.add(B(0.24, 0.24, 0.16, a, 0.25, 0.35, 0));
+                [0.2, 0.45, 0.7].forEach((r, i) => {
+                    const wave = TO(r, 0.025, i === 1 ? a : '#8b93a7', 0, -0.2, -0.3, 0);
+                    g.add(wave);
+                });
+                return g;
+            },
+            dance(a) {
+                return (BUILDERS.dance_kinetic || BUILDERS.dance_spatial)(a);
             },
             window(a) {
                 const g = new THREE.Group();
@@ -1497,72 +1701,146 @@
                 renderer.shadowMap.enabled = true;
                 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
                 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                renderer.toneMappingExposure = 1.1;
+                renderer.toneMappingExposure = 1.15;
                 vp.insertBefore(renderer.domElement, vp.firstChild);
             } catch(e) {
                 return false;
             }
 
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(40, vp.clientWidth / vp.clientHeight, 0.1, 100);
+            camera = new THREE.PerspectiveCamera(38, vp.clientWidth / vp.clientHeight, 0.1, 100);
             camera.position.set(0, 0.6, 4.2);
             camera.lookAt(0, -0.1, 0);
 
             // Studio Lighting Setup
-            const hemi = new THREE.HemisphereLight(0xfff5e6, 0x1e2638, 0.95);
+            const hemi = new THREE.HemisphereLight(0xfff8ee, 0x141a26, 0.9);
             scene.add(hemi);
 
-            const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            const keyLight = new THREE.DirectionalLight(0xffffff, 1.35);
             keyLight.position.set(4, 6, 4);
             keyLight.castShadow = true;
             scene.add(keyLight);
 
-            const rimLight = new THREE.PointLight(0xffb020, 0.9, 15);
-            rimLight.position.set(-3, 2, 3);
+            rimLight = new THREE.PointLight(0xffb020, 1.2, 16);
+            rimLight.position.set(-3, 2.5, 3);
             scene.add(rimLight);
 
-            // Ground grid ring & shadow catcher
-            const grid = new THREE.GridHelper(6, 12, 0x5a6372, 0x1a1e28);
-            grid.position.y = -1.35;
+            const backLight = new THREE.DirectionalLight(0x64d2ff, 0.5);
+            backLight.position.set(0, 4, -5);
+            scene.add(backLight);
+
+            // Holographic Projection Floor Base
+            const baseGroup = new THREE.Group();
+            baseGroup.position.y = -1.35;
+            scene.add(baseGroup);
+
+            const ringGeo1 = new THREE.RingGeometry(0.35, 0.39, 48);
+            ringGeo1.rotateX(-Math.PI / 2);
+            ringMat1 = new THREE.MeshBasicMaterial({ color: 0xffb020, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+            const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
+            baseGroup.add(ring1);
+
+            const ringGeo2 = new THREE.RingGeometry(1.2, 1.24, 64);
+            ringGeo2.rotateX(-Math.PI / 2);
+            const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x64d2ff, transparent: true, opacity: 0.28, side: THREE.DoubleSide });
+            const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+            baseGroup.add(ring2);
+
+            const ringGeo3 = new THREE.RingGeometry(2.1, 2.14, 64);
+            ringGeo3.rotateX(-Math.PI / 2);
+            const ringMat3 = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.14, side: THREE.DoubleSide });
+            const ring3 = new THREE.Mesh(ringGeo3, ringMat3);
+            baseGroup.add(ring3);
+
+            const grid = new THREE.GridHelper(5.5, 14, 0x5a6372, 0x141824);
+            grid.position.y = 0.01;
             grid.material.transparent = true;
-            grid.material.opacity = 0.3;
-            scene.add(grid);
+            grid.material.opacity = 0.35;
+            baseGroup.add(grid);
 
             spinGroup = new THREE.Group();
             scene.add(spinGroup);
 
-            // Stardust particles
+            // Stardust cosmic particles
             const dg = new THREE.BufferGeometry();
-            const dp = new Float32Array(150 * 3);
-            for(let i=0; i<150; i++) {
-                dp[i*3] = (Math.random() - 0.5) * 8;
-                dp[i*3+1] = Math.random() * 3 - 1.2;
-                dp[i*3+2] = (Math.random() - 0.5) * 8;
+            const dp = new Float32Array(160 * 3);
+            for(let i=0; i<160; i++) {
+                dp[i*3] = (Math.random() - 0.5) * 8.5;
+                dp[i*3+1] = Math.random() * 3.2 - 1.2;
+                dp[i*3+2] = (Math.random() - 0.5) * 8.5;
             }
             dg.setAttribute('position', new THREE.BufferAttribute(dp, 3));
-            dustGroup = new THREE.Points(dg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.022, transparent: true, opacity: 0.4 }));
+            dustGroup = new THREE.Points(dg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.024, transparent: true, opacity: 0.45 }));
             scene.add(dustGroup);
 
-            // Drag navigation listeners
+            // ── Full 360° Multi-Axis Free Orbit: drag in ANY angle, scroll zoom, pinch zoom, inertia ──
             const el = renderer.domElement;
+            let lastMoveTime = 0;
+
             el.addEventListener('pointerdown', e => {
                 sound.init();
                 dragging = true;
-                downX = e.clientX;
                 px = e.clientX;
+                py = e.clientY;
+                velX = 0; velY = 0;
                 autoSpin = false;
+                lastMoveTime = performance.now();
                 try { el.setPointerCapture(e.pointerId); } catch(_) {}
             });
             el.addEventListener('pointermove', e => {
                 if (!dragging) return;
-                rotY += (e.clientX - px) * 0.012;
+                const dx = e.clientX - px;
+                const dy = e.clientY - py;
+                const now = performance.now();
+                const dt = Math.max(now - lastMoveTime, 1);
+                velX = dx / dt * 14;
+                velY = dy / dt * 14;
+
+                const rotDist = Math.hypot(dx, dy);
+                if (rotDist > 0.0001) {
+                    const rotAngle = rotDist * 0.009;
+                    const axis = new THREE.Vector3(dy, dx, 0).normalize();
+                    axis.applyQuaternion(camera.quaternion);
+                    const deltaQ = new THREE.Quaternion().setFromAxisAngle(axis, rotAngle);
+                    targetQuat.premultiply(deltaQ);
+                }
+
                 px = e.clientX;
+                py = e.clientY;
+                lastMoveTime = now;
             });
-            el.addEventListener('pointerup', e => {
+            el.addEventListener('pointerup', () => {
                 dragging = false;
-                setTimeout(() => autoSpin = true, 3000);
+                setTimeout(() => { if (!dragging) autoSpin = true; }, 4000);
             });
             el.addEventListener('pointercancel', () => { dragging = false; });
+
+            // Scroll-to-zoom (mouse wheel)
+            el.addEventListener('wheel', e => {
+                e.preventDefault();
+                camDistTarget += e.deltaY * 0.005;
+                camDistTarget = Math.max(CAM_DIST_MIN, Math.min(CAM_DIST_MAX, camDistTarget));
+            }, { passive: false });
+
+            // Touch pinch-to-zoom
+            el.addEventListener('touchstart', e => {
+                if (e.touches.length === 2) {
+                    const t = e.touches;
+                    pinchDist0 = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+                }
+            }, { passive: true });
+            el.addEventListener('touchmove', e => {
+                if (e.touches.length === 2) {
+                    const t = e.touches;
+                    const dist = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+                    if (pinchDist0 > 0) {
+                        const scale = pinchDist0 / dist;
+                        camDistTarget *= scale;
+                        camDistTarget = Math.max(CAM_DIST_MIN, Math.min(CAM_DIST_MAX, camDistTarget));
+                    }
+                    pinchDist0 = dist;
+                }
+            }, { passive: true });
 
             fitStage();
             window.addEventListener('resize', fitStage);
@@ -1570,11 +1848,33 @@
             // Animation Loop
             (function animate() {
                 requestAnimationFrame(animate);
-                if (autoSpin && !dragging) rotY += 0.006;
-                if (dustGroup) dustGroup.rotation.y += 0.0005;
 
-                spinGroup.rotation.y += (rotY - spinGroup.rotation.y) * 0.08;
-                spinGroup.rotation.x += (rotX - spinGroup.rotation.x) * 0.08;
+                // Inertia decay in any angle
+                if (!dragging && (Math.abs(velX) > 0.001 || Math.abs(velY) > 0.001)) {
+                    const vLen = Math.hypot(velX, velY);
+                    if (vLen > 0.001) {
+                        const axis = new THREE.Vector3(velY, velX, 0).normalize();
+                        axis.applyQuaternion(camera.quaternion);
+                        const deltaQ = new THREE.Quaternion().setFromAxisAngle(axis, vLen * 0.0007);
+                        targetQuat.premultiply(deltaQ);
+                    }
+                    velX *= 0.94;
+                    velY *= 0.94;
+                }
+
+                if (autoSpin && !dragging) {
+                    const spinQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0.005);
+                    targetQuat.premultiply(spinQ);
+                }
+                if (dustGroup) dustGroup.rotation.y += 0.0006;
+
+                // Smooth zoom interpolation
+                camDist += (camDistTarget - camDist) * 0.1;
+                const aspect = camera.aspect || 1;
+                const baseZ = aspect < 0.8 ? camDist + (0.8 - aspect) * 3.2 : camDist;
+                camera.position.set(0, 0.5, baseZ);
+
+                spinGroup.quaternion.slerp(targetQuat, 0.14);
                 spinGroup.position.y = Math.sin(Date.now() / 950) * 0.06;
 
                 renderer.render(scene, camera);
@@ -1591,7 +1891,8 @@
             const w = vp.clientWidth || 1, h = vp.clientHeight || 1;
             renderer.setSize(w, h);
             camera.aspect = w / h;
-            camera.position.set(0, 0.5, camera.aspect < 0.8 ? 4.5 + (0.8 - camera.aspect) * 3.2 : 4.2);
+            const baseZ = camera.aspect < 0.8 ? camDist + (0.8 - camera.aspect) * 3.2 : camDist;
+            camera.position.set(0, 0.5, baseZ);
             camera.updateProjectionMatrix();
         }
 
@@ -1607,7 +1908,7 @@
             try {
                 const model = builder(p.accent || '#ffb020');
                 if (currentRenderMode === 'exploded') {
-                    model.children.forEach((c, ci) => {
+                    model.children.forEach((c) => {
                         c.position.x *= 1.45;
                         c.position.y *= 1.45;
                         c.position.z *= 1.45;
@@ -1616,7 +1917,19 @@
                 spinGroup.add(model);
             } catch(e) {}
 
-            rotY += 0.8;
+            // Dynamic rim lighting matching prototype accent
+            if (rimLight && p.accent) {
+                rimLight.color.set(p.accent);
+            }
+            if (ringMat1 && p.accent) {
+                ringMat1.color.set(p.accent);
+            }
+
+            targetQuat.copy(defaultQuat);
+            const entranceSpin = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0.65);
+            targetQuat.premultiply(entranceSpin);
+            velX = 0; velY = 0;
+            camDistTarget = 4.2;
         }
 
         window.setRenderMode = function(mode) {
@@ -1629,75 +1942,110 @@
         };
 
         /* ── UI Logic & Navigation ── */
-        function buildDots() {
-            const container = document.getElementById('proto-dots');
-            container.innerHTML = '';
-            prototypes.forEach((_, i) => {
-                const d = document.createElement('span');
-                d.className = 'proto-dot-v2' + (i === idx ? ' active' : '');
-                d.onclick = () => jumpTo(i);
-                container.appendChild(d);
-            });
-        }
-
         function updateCard() {
             const p = prototypes[idx];
             if (!p) return;
 
-            document.documentElement.style.setProperty('--active-accent', p.accent || '#ffb020');
-            document.getElementById('proto-prog').textContent = p.prog || 'PROTOTYPE';
-            document.getElementById('proto-trl').textContent = p.trl || 'TRL 6 · Prototype';
-            document.getElementById('proto-name').textContent = i18n.getLocalized(p, 'name') || p.name || 'Prototype';
+            const accent = p.accent || '#ffb020';
+            document.documentElement.style.setProperty('--active-accent', accent);
+
+            document.getElementById('proto-name').textContent = i18n.getLocalized(p, 'name') || p.name;
             document.getElementById('proto-desc').textContent = i18n.getLocalized(p, 'desc') || p.desc || '';
-            document.getElementById('model-counter').textContent = `${String(idx + 1).padStart(2, '0')} / ${prototypes.length}`;
+            document.getElementById('proto-prog').textContent = p.prog || 'PROTOTYPE';
+            document.getElementById('proto-trl').textContent = p.trl || 'TRL 6 · Validated';
 
-            const vb = document.getElementById('proto-visit');
+            const numStr = String(idx + 1).padStart(2, '0');
+            const totalStr = String(prototypes.length).padStart(2, '0');
+
+            document.getElementById('model-counter').textContent = `${numStr} / ${totalStr}`;
+            document.getElementById('scrubber-counter').innerHTML = `${numStr} <small>/ ${totalStr}</small>`;
+
+            // Update interactive scrubber
+            const pct = (idx / (prototypes.length - 1)) * 100;
+            const fill = document.getElementById('proto-scrubber-fill');
+            const thumb = document.getElementById('proto-scrubber-thumb');
+            if (fill) fill.style.width = `${Math.max(2, pct)}%`;
+            if (thumb) thumb.style.left = `${pct}%`;
+
+            const visitBtn = document.getElementById('proto-visit');
             if (p.url) {
-                vb.href = p.url;
-                vb.classList.add('show');
+                visitBtn.href = p.url;
+                visitBtn.classList.add('show');
             } else {
-                vb.classList.remove('show');
+                visitBtn.classList.remove('show');
             }
 
-            // Update dot indicators
-            const dots = document.getElementById('proto-dots').children;
-            for (let i = 0; i < dots.length; i++) {
-                dots[i].className = 'proto-dot-v2' + (i === idx ? ' active' : '');
-            }
-
-            // Update search item highlight
+            // Sync search drawer active item
             document.querySelectorAll('.search-result-item').forEach(el => {
-                el.classList.toggle('active', el.dataset.index == idx);
+                el.classList.toggle('active', parseInt(el.dataset.idx) === idx);
             });
+
+            loadCurrentModel();
         }
 
-        function jumpTo(i) {
+        function jumpTo(targetIdx) {
             sound.playClick();
-            idx = (i + prototypes.length) % prototypes.length;
-            loadCurrentModel();
+            idx = (targetIdx + prototypes.length) % prototypes.length;
             updateCard();
         }
 
-        document.getElementById('prev-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            jumpTo(idx - 1);
-        });
-        document.getElementById('next-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            jumpTo(idx + 1);
+        document.getElementById('prev-btn').addEventListener('click', () => jumpTo(idx - 1));
+        document.getElementById('next-btn').addEventListener('click', () => jumpTo(idx + 1));
+
+        // Interactive Scrubber seeking
+        const scrubberTrack = document.getElementById('proto-scrubber');
+        let scrubberDragging = false;
+
+        function seekScrubber(e) {
+            const rect = scrubberTrack.getBoundingClientRect();
+            const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+            const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+            const targetIdx = Math.round(pos * (prototypes.length - 1));
+            if (targetIdx !== idx) {
+                jumpTo(targetIdx);
+            }
+        }
+
+        if (scrubberTrack) {
+            scrubberTrack.addEventListener('pointerdown', (e) => {
+                scrubberDragging = true;
+                seekScrubber(e);
+            });
+            window.addEventListener('pointermove', (e) => {
+                if (scrubberDragging) seekScrubber(e);
+            });
+            window.addEventListener('pointerup', () => { scrubberDragging = false; });
+        }
+
+        // Keyboard arrows
+        window.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft') jumpTo(idx - 1);
+            if (e.key === 'ArrowRight') jumpTo(idx + 1);
+            if (e.key === 'Escape') searchDrawer.classList.remove('is-open');
         });
 
-        /* ── Search Drawer & Filter ── */
+        /* ── Search & Filter Drawer ── */
         const searchDrawer = document.getElementById('search-drawer');
-        document.getElementById('search-toggle').addEventListener('click', (e) => {
+        const catalogBtn = document.getElementById('catalog-trigger-btn');
+        const searchInput = document.getElementById('search-input');
+
+        catalogBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             sound.playClick();
             searchDrawer.classList.toggle('is-open');
             if (searchDrawer.classList.contains('is-open')) {
-                setTimeout(() => document.getElementById('search-input').focus(), 60);
+                searchInput.focus();
             }
         });
 
-        document.getElementById('search-input').addEventListener('input', (e) => {
+        // Close drawer on outside click
+        document.addEventListener('click', (e) => {
+            if (searchDrawer.classList.contains('is-open') && !searchDrawer.contains(e.target) && !catalogBtn.contains(e.target)) {
+                searchDrawer.classList.remove('is-open');
+            }
+        });
+
+        searchInput.addEventListener('input', e => {
             renderSearchList(e.target.value);
         });
 
@@ -1707,27 +2055,29 @@
             document.querySelectorAll('.filter-pill').forEach(p => {
                 p.classList.toggle('active', p.dataset.filter === filter);
             });
-            renderSearchList(document.getElementById('search-input').value);
+            renderSearchList(searchInput.value);
         };
 
-        function renderSearchList(query = '') {
+        function renderSearchList(query) {
             const list = document.getElementById('search-list');
             list.innerHTML = '';
-            query = query.toLowerCase().trim();
+            const q = (query || '').toLowerCase().trim();
 
-            const filtered = prototypes.map((p, i) => ({ p, i })).filter(({ p }) => {
+            const filtered = prototypes.filter(p => {
                 const matchesFilter = (currentFilter === 'ALL') || (p.prog && p.prog.includes(currentFilter));
-                const textMatch = !query || ((p.name || '') + ' ' + (p.name_lv || '') + ' ' + (p.prog || '') + ' ' + (p.desc || '')).toLowerCase().includes(query);
-                return matchesFilter && textMatch;
+                const text = (p.name + ' ' + (p.name_lv || '') + ' ' + (p.prog || '') + ' ' + (p.desc || '')).toLowerCase();
+                const matchesQuery = !q || text.includes(q);
+                return matchesFilter && matchesQuery;
             });
 
-            filtered.forEach(({ p, i }) => {
+            filtered.forEach((p) => {
+                const i = prototypes.indexOf(p);
                 const item = document.createElement('div');
                 item.className = 'search-result-item' + (i === idx ? ' active' : '');
-                item.dataset.index = i;
+                item.dataset.idx = i;
                 item.innerHTML = `
                     <span class="search-item-emoji">${p.emoji || '📦'}</span>
-                    <div class="search-item-info">
+                    <div class="search-item-text">
                         <span class="search-item-name">${i18n.getLocalized(p, 'name') || p.name}</span>
                         <span class="search-item-prog">${p.prog || ''} · ${p.trl || ''}</span>
                     </div>
@@ -1740,7 +2090,7 @@
             });
         }
 
-        /* ── Fetch & GPS Logic ── */
+        /* ── Fetch & GPS Proximity Verification ── */
         async function fetchLocationData() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -1767,7 +2117,6 @@
                 document.getElementById('loading-title').textContent = 'Prototypes 2026';
                 await verifyGpsLocation();
             }
-            buildDots();
             updateCard();
             renderSearchList('');
         }
@@ -1786,29 +2135,52 @@
         function updatePreviewWatermark() {
             const watermark = document.getElementById('preview-watermark-hud');
             if (watermark && isRemotePreviewActive) {
-                const distText = detectedDistanceStr || 'REMOTE';
-                watermark.innerHTML = `<span>⚡</span> ${i18n.t('gps_preview_active_banner', { dist: distText })}`;
+                watermark.style.display = 'inline-flex';
+                let isLv = false;
+                try { isLv = i18n.getLanguage() === 'lv'; } catch (e) {}
+                const hasRealDist = detectedDistanceStr && detectedDistanceStr !== 'PREVIEW' && detectedDistanceStr !== 'REMOTE';
+                if (hasRealDist) {
+                    watermark.innerHTML = isLv
+                        ? `<span>⚡</span> PRIEKŠSKATĪJUMS · ${detectedDistanceStr}`
+                        : `<span>⚡</span> PREVIEW · ${detectedDistanceStr} AWAY`;
+                } else {
+                    watermark.innerHTML = isLv
+                        ? `<span>⚡</span> ATTĀLINĀTS PRIEKŠSKATĪJUMS`
+                        : `<span>⚡</span> REMOTE PREVIEW MODE`;
+                }
+            } else if (watermark) {
+                watermark.style.display = 'none';
             }
         }
 
         function renderGpsLockedCard() {
-            if (!lastGpsState) return;
-            const sc = document.getElementById('gps-status-container'), aa = document.getElementById('gps-action-area');
-            let card = document.getElementById('gps-locked-card');
+            const sc = document.getElementById('gps-status-container');
+            const aa = document.getElementById('gps-action-area');
             const startBtn = document.getElementById('start-btn');
+            let card = document.getElementById('gps-locked-card');
+
+            if (!lastGpsState) {
+                if (card) card.remove();
+                if (sc) sc.innerHTML = '';
+                if (startBtn) startBtn.style.display = 'inline-block';
+                return;
+            }
+
+            if (lastGpsState.type === 'preview_badge') {
+                sc.innerHTML = `<div class="gps-status-pill">⚡ ${i18n.t('gps_preview_badge')}</div>`;
+                if (card) card.remove();
+                if (startBtn) startBtn.style.display = 'inline-block';
+                updatePreviewWatermark();
+                return;
+            }
 
             if (lastGpsState.type === 'verified') {
-                sc.innerHTML = `<div class="gps-status-pill is-verified">${i18n.t('gps_verified')} (${lastGpsState.distFormatted})</div>`;
-                if (startBtn) startBtn.style.display = 'inline-block';
+                sc.innerHTML = `<div class="gps-status-pill" style="color:#30d158; border-color:rgba(48,209,88,.4);">📍 ${i18n.t('gps_verified')}</div>`;
                 if (card) card.remove();
+                if (startBtn) startBtn.style.display = 'inline-block';
                 return;
             }
-            if (lastGpsState.type === 'preview_badge') {
-                sc.innerHTML = `<div class="gps-status-pill is-verified">${i18n.t('gps_preview_badge')}</div>`;
-                if (startBtn) startBtn.style.display = 'inline-block';
-                if (card) card.remove();
-                return;
-            }
+
             if (lastGpsState.type === 'locked' || lastGpsState.type === 'denied') {
                 const isDenied = lastGpsState.type === 'denied';
                 sc.innerHTML = `<div class="gps-status-pill is-locked">📍 ${lastGpsState.distFormatted || 'REMOTE'}</div>`;
@@ -1821,15 +2193,12 @@
                 card.innerHTML = `
                     <div class="gps-status-pill is-locked" style="margin-bottom:8px;">📍 ${i18n.t(isDenied ? 'gps_required_title' : 'gps_not_at_location_title')}</div>
                     <p class="gps-distance-text">${isDenied ? i18n.t('gps_permission_denied') : i18n.t('gps_distance_away_msg', { dist: `<strong>${lastGpsState.distFormatted}</strong>` })}</p>
-                    <p style="font-size:12px;color:rgba(255,255,255,.72);">${i18n.t('gps_preview_prompt')}</p>
+                    <p style="font-size:12.5px;color:rgba(255,255,255,.75);margin-bottom:6px;">${i18n.t('gps_preview_prompt')}</p>
                     <button class="gps-preview-cta" onclick="enterPreviewMode()">${i18n.t('gps_enter_preview_btn')}</button>
                     <div><button class="gps-retry-btn" onclick="verifyGpsLocation()">${i18n.t('gps_retry_btn')}</button></div>
                 `;
             }
         }
-
-        window.enterPreviewMode = function() { startExperience(true); };
-        window.verifyGpsLocation = verifyGpsLocation;
 
         async function verifyGpsLocation() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -1903,17 +2272,7 @@
         async function startExperience(remote) {
             sound.init();
             if (remote) isRemotePreviewActive = true;
-            if (isRemotePreviewActive) {
-                let w = document.getElementById('preview-watermark-hud');
-                if (!w) {
-                    w = document.createElement('div');
-                    w.id = 'preview-watermark-hud';
-                    w.className = 'preview-watermark-hud';
-                    document.body.appendChild(w);
-                }
-                const distText = detectedDistanceStr || 'REMOTE';
-                w.innerHTML = `<span>⚡</span> ${i18n.t('gps_preview_active_banner', { dist: distText })}`;
-            }
+            updatePreviewWatermark();
 
             const videoEl = document.getElementById('camera-feed');
             const permScreen = document.getElementById('permission-screen');
@@ -1948,8 +2307,68 @@
         window.enterPreviewMode = function() { startExperience(true); };
         window.verifyGpsLocation = verifyGpsLocation;
 
-        document.getElementById('start-btn').addEventListener('click', () => startExperience(isRemotePreviewActive));
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn) startBtn.addEventListener('click', () => startExperience(isRemotePreviewActive));
 
+        const resetBtn = document.getElementById('reset-angle-btn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                sound.playClick();
+                targetQuat.copy(defaultQuat);
+                camDistTarget = 4.2;
+                autoSpin = false;
+                setTimeout(() => { if (!dragging) autoSpin = true; }, 4000);
+            });
+        }
+
+        let isCameraActive = false;
+        const camBtn = document.getElementById('cam-toggle-btn');
+        if (camBtn) {
+            camBtn.addEventListener('click', async () => {
+                sound.playClick();
+                const videoEl = document.getElementById('camera-feed');
+                const backdrop = document.getElementById('stage-backdrop');
+                if (isCameraActive) {
+                    if (videoEl && videoEl.srcObject) {
+                        videoEl.srcObject.getTracks().forEach(t => t.stop());
+                        videoEl.srcObject = null;
+                        videoEl.classList.remove('is-ready');
+                    }
+                    if (backdrop) backdrop.style.opacity = '1';
+                    isCameraActive = false;
+                    camBtn.classList.remove('active');
+                    camBtn.textContent = '📷 AR';
+                } else {
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                        try {
+                            const stream = await navigator.mediaDevices.getUserMedia({
+                                video: { facingMode: { ideal: 'environment' } },
+                                audio: false
+                            });
+                            if (videoEl) {
+                                videoEl.srcObject = stream;
+                                videoEl.onloadedmetadata = () => {
+                                    videoEl.play().catch(() => {});
+                                    videoEl.classList.add('is-ready');
+                                };
+                                videoEl.play().catch(() => {});
+                            }
+                            if (backdrop) backdrop.style.opacity = '0.35';
+                            isCameraActive = true;
+                            camBtn.classList.add('active');
+                            camBtn.textContent = '🌐 Studio';
+                        } catch(err) {
+                            alert('Camera access unavailable. Continuing in 3D Studio mode.');
+                        }
+                    }
+                }
+            });
+        }
+
+        // Start 3D showroom stage immediately
+        ensureThree();
+        updateCard();
+        renderSearchList('');
         fetchLocationData();
     </script>
 </body>

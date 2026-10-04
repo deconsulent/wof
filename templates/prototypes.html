@@ -122,7 +122,7 @@ button{font:inherit;}
     <h1 id="loading-title">Loading prototypes…</h1>
     <p class="permission-copy" data-i18n="proto_perm_hint">Enable your camera to place each prototype hologram in your room. Drag the 3D view to rotate, use arrows to browse.</p>
     <p id="permission-error" class="permission-error"></p>
-    <div id="gps-action-area"><button id="start-btn" class="glass-button" style="display:none;">Enable camera ↗</button></div>
+    <div id="gps-action-area"><button id="start-btn" class="glass-button" style="display:inline-block;">Enter 3D Showcase ↗</button></div>
   </div>
 </div>
 <div id="ar-stage" class="ar-stage" style="display:none;">
@@ -159,6 +159,14 @@ button{font:inherit;}
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+window.enterPreviewMode = function() { startExperience(true); };
+window.startExperience = function(remote) { startExperience(remote); };
+document.addEventListener('click', e => {
+  const b = e.target && e.target.closest('.gps-preview-cta');
+  if (b) { e.preventDefault(); startExperience(true); }
+});
+
 /* ============ SEED: 34 prototypes 2026, fully bilingual EN+LV (used if API has no data) ============ */
 const SEED = [
 {id:"uav-3d",name:"3D UAV",name_lv:"3D UAV",prog:"SIG FBVV",desc:"Prototype of a 3D-printed unmanned aerial vehicle body.",desc_lv:"3D printēts bezpilota gaisa kuģa korpusa prototips.",kind:"uav3d",accent:"#7cf0b0",emoji:"🛸"},

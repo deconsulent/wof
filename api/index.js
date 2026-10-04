@@ -105,16 +105,24 @@ app.post('/api/auth', async (req, res) => {
     }
 });
 
+// Fast timeout helper so offline or unreachable Supabase instances do not stall API responses
+const withTimeout = (promise, ms = 500) => {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase request timed out')), ms))
+    ]);
+};
+
 // 1. Get all screens (locations)
 app.get('/api/locations', async (req, res) => {
     try {
-        const { data, error } = await supabase.from('locations').select('*');
+        const { data, error } = await withTimeout(supabase.from('locations').select('*'), 500);
         if (error) throw error;
         if (data && data.length > 0) {
             return res.json(data);
         }
     } catch (err) {
-        console.warn('Supabase fetch failed or paused, falling back to database.json:', err.message || err);
+        console.warn('Supabase fetch failed or timed out, falling back to database.json:', err.message || err);
     }
     const db = readDB();
     res.json(db.locations || []);
@@ -123,11 +131,11 @@ app.get('/api/locations', async (req, res) => {
 // 2. Get specific screen
 app.get('/api/locations/:id', async (req, res) => {
     try {
-        const { data, error } = await supabase.from('locations').select('*').eq('id', req.params.id).single();
+        const { data, error } = await withTimeout(supabase.from('locations').select('*').eq('id', req.params.id).single(), 500);
         if (error) throw error;
         if (data) return res.json(data);
     } catch (err) {
-        console.warn('Supabase single fetch failed, falling back to database.json:', err.message || err);
+        console.warn('Supabase single fetch failed or timed out, falling back to database.json:', err.message || err);
     }
     const db = readDB();
     const found = (db.locations || []).find(l => l.id === req.params.id);

@@ -564,6 +564,11 @@
             color: #A78BFA; 
             border: 1px solid var(--status-violet-border); 
         }
+        .screen-item-tag.proto { 
+            background: rgba(255, 176, 32, 0.15); 
+            color: #FBBF24; 
+            border: 1px solid rgba(255, 176, 32, 0.35); 
+        }
 
         .dash-card-meta {
             display: flex;
@@ -1978,7 +1983,13 @@
                         <option value="vr">vr — Xrmed</option>
                         <option value="aidrone">aidrone — UAV Robotics</option>
                         <option value="lunar">lunar — Lunar Energy</option>
-                        <option value="dance">dance — iCoDaCo</option>
+                        <option value="dance">dance — iCoDaCo (Legacy)</option>
+                        <option value="dance_kinetic">dance_kinetic — AB iCoDaCo Kinetic Sculpture</option>
+                        <option value="dance_spatial">dance_spatial — PD iCoDaCo Spatial Staging</option>
+                        <option value="dance_prism">dance_prism — RJ iCoDaCo Choreographic Prism</option>
+                        <option value="dance_tempo">dance_tempo — SD iCoDaCo Harmonic Metronome</option>
+                        <option value="icesense_beacon">icesense_beacon — IceSense BCI Telemetry Mast</option>
+                        <option value="hearme_mobile">hearme_mobile — HearMe FVL Dual-Screen</option>
                         <option value="window">window — Fake Window</option>
                         <option value="bench">bench — LG Repair</option>
                     </select>
@@ -2157,8 +2168,8 @@
             locations.forEach(loc => {
                 const displayName = i18n.getLocalized(loc, 'title') || loc.name || loc.id;
                 const tmpl = loc.template || 'designfactory';
-                const tagLabel = tmpl === 'swup' ? '⚡ SWUP' : tmpl === 'prototypes' ? '🧪 Proto' : '🌿 Tree';
-                const tagClass = tmpl === 'swup' ? 'team' : 'tree';
+                const tagLabel = tmpl.startsWith('swup') ? '⚡ SWUP' : tmpl.startsWith('proto') ? (tmpl === 'prototypes-v2' ? '✨ Proto V2' : '🧪 Proto') : (tmpl.includes('v2') ? '🌿 Tree V2' : '🌿 Tree');
+                const tagClass = tmpl.startsWith('swup') ? 'team' : tmpl.startsWith('proto') ? 'proto' : 'tree';
                 let peopleCount = 0;
                 if (loc.data) {
                     if (loc.data.inductees) peopleCount = loc.data.inductees.length;
@@ -2217,8 +2228,8 @@
             locations.forEach(loc => {
                 const displayName = i18n.getLocalized(loc, 'title') || loc.name || loc.id;
                 const tmpl = loc.template || 'designfactory';
-                const tagLabel = tmpl === 'swup' ? '⚡ SWUP' : tmpl === 'prototypes' ? '🧪 Proto' : '🌿 Tree';
-                const tagClass = tmpl === 'swup' ? 'team' : 'tree';
+                const tagLabel = tmpl.startsWith('swup') ? '⚡ SWUP' : tmpl.startsWith('proto') ? (tmpl === 'prototypes-v2' ? '✨ Proto V2' : '🧪 Proto') : (tmpl.includes('v2') ? '🌿 Tree V2' : '🌿 Tree');
+                const tagClass = tmpl.startsWith('swup') ? 'team' : tmpl.startsWith('proto') ? 'proto' : 'tree';
                 let peopleCount = 0;
                 if (loc.data) {
                     if (loc.data.inductees) peopleCount = loc.data.inductees.length;
@@ -3227,7 +3238,7 @@
             locations.forEach(loc => {
                 const displayName = i18n.getLocalized(loc, 'title') || loc.name || loc.id;
                 const tmpl = loc.template || 'designfactory';
-                const tagLabel = tmpl === 'swup' ? '⚡' : tmpl === 'prototypes' ? '🧪' : '🌿';
+                const tagLabel = tmpl.startsWith('swup') ? '⚡' : tmpl.startsWith('proto') ? '🧪' : '🌿';
 
                 const item = document.createElement('div');
                 item.className = 'qr-screen-item';
