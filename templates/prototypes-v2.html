@@ -977,7 +977,10 @@
             {id:"xrmed",name:"Xrmed",name_lv:"Xrmed",prog:"VIP",trl:"TRL 7 · Clinical VR",desc:"Spatial VR exploration app for pediatric patients to reduce preoperative anxiety.",desc_lv:"VR lietotne bērniem slimnīcas vides iepazīšanai pirms ārstēšanas.",kind:"vr",accent:"#fde68a",emoji:"🥽"},
             {id:"uav-robotics",name:"UAV Robotics",name_lv:"UAV Robotics",prog:"VIP",trl:"TRL 6 · Vision Nav",desc:"Autonomous UAV with embedded edge AI vision for GPS-denied navigation.",desc_lv:"Autonoms bezpilota lidaparāts ar MI datorredzi darbībai bez GPS.",kind:"aidrone",accent:"#fde68a",emoji:"🤖"},
             {id:"lunar",name:"Lunar Energy Payload Club",name_lv:"Mēness enerģijas klubs",prog:"VIP",trl:"TRL 4 · Thermoacoustic",desc:"Reduced-scale lunar rover energy system using thermoacoustic conversion.",desc_lv:"Mēness rovera termoakustiskā energosistēma samazinātā mērogā.",kind:"lunar",accent:"#fde68a",emoji:"🌙"},
-            {id:"ab",name:"AB – iCoDaCo",name_lv:"AB – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform for European contemporary dance notation.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#93c5fd",emoji:"💃"},
+            {id:"ab",name:"AB – iCoDaCo",name_lv:"AB – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform prototype for European contemporary dance notation.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#93c5fd",emoji:"💃"},
+            {id:"pd",name:"PD – iCoDaCo",name_lv:"PD – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform prototype for European contemporary dance community.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#c4b5fd",emoji:"🕺"},
+            {id:"rj",name:"RJ – iCoDaCo",name_lv:"RJ – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform prototype for European contemporary dance community.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#f9a8d4",emoji:"🎭"},
+            {id:"sd",name:"SD – iCoDaCo",name_lv:"SD – iCoDaCo",prog:"iCoDaCo",trl:"TRL 6 · Choreography",desc:"Digital spatial platform prototype for European contemporary dance community.",desc_lv:"Digitālās platformas prototips Eiropas laikmetīgās dejas kopienai.",kind:"dance",accent:"#67e8f3",emoji:"🎶"},
             {id:"fake-window",name:"Fake Window",name_lv:"Viltus logs",prog:"LG",trl:"TRL 6 · Circadian Rig",desc:"Circadian daylight simulator crafted from recycled display panels.",desc_lv:"Izgatavots no pārstrādātiem ekrāniem; imitē logu ar dabisku dienasgaismu.",kind:"window",accent:"#fca5a5",emoji:"🪟"},
             {id:"lg-repair",name:"LG Repair Workshops",name_lv:"LG remonta darbnīcas",prog:"LG",trl:"TRL 7 · Community Rig",desc:"Diagnostic bench for circular appliance repair & electronics sustainability.",desc_lv:"Atvērtas darbnīcas un diagnostikas stends sadzīves tehnikas labošanai.",kind:"bench",accent:"#fca5a5",emoji:"🔧"}
         ];
@@ -1025,7 +1028,8 @@
 
         const PAPER = '#f0f4f8', INK = '#151922';
 
-        function createMat(color, emissiveColor = 0x000000, emissivePower = 0.2) {
+        function createMat(color, emissiveColor = 0x000000, emissivePower = 0.2, opacity = 1) {
+            const isTrans = opacity < 1;
             if (currentRenderMode === 'wireframe') {
                 return new THREE.MeshBasicMaterial({ color: color || '#ffb020', wireframe: true });
             }
@@ -1035,7 +1039,7 @@
                     emissive: new THREE.Color(color || '#64d2ff'),
                     emissiveIntensity: 0.65,
                     transparent: true,
-                    opacity: 0.82,
+                    opacity: isTrans ? opacity * 0.8 : 0.82,
                     wireframe: false
                 });
             }
@@ -1045,7 +1049,7 @@
                     roughness: 0.2,
                     metalness: 0.8,
                     transparent: true,
-                    opacity: 0.88
+                    opacity: isTrans ? opacity * 0.7 : 0.88
                 });
             }
             // Studio PBR default
@@ -1054,34 +1058,36 @@
                 roughness: 0.45,
                 metalness: 0.25,
                 emissive: emissiveColor,
-                emissiveIntensity: emissivePower
+                emissiveIntensity: emissivePower,
+                transparent: isTrans,
+                opacity: opacity
             });
         }
 
-        const B = (w,h,d,c,x,y,z) => {
+        const B = (w,h,d,c,x,y,z,opacity) => {
             const r = Math.max(Math.min(0.05, Math.min(w,h,d)*0.3), 0.004);
-            const m = new THREE.Mesh(new RoundedBoxGeometry(w,h,d,2,r), createMat(c));
+            const m = new THREE.Mesh(new RoundedBoxGeometry(w,h,d,2,r), createMat(c, 0x000000, 0.2, opacity || 1));
             m.position.set(x||0, y||0, z||0);
             return m;
         };
-        const CY = (rt,rb,h,c,x,y,z,seg) => {
-            const m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||24), createMat(c));
+        const CY = (rt,rb,h,c,x,y,z,seg,opacity) => {
+            const m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||24), createMat(c, 0x000000, 0.2, opacity || 1));
             m.position.set(x||0, y||0, z||0);
             return m;
         };
-        const SP = (r,c,x,y,z) => {
-            const m = new THREE.Mesh(new THREE.SphereGeometry(r,20,16), createMat(c));
+        const SP = (r,c,x,y,z,opacity) => {
+            const m = new THREE.Mesh(new THREE.SphereGeometry(r,20,16), createMat(c, 0x000000, 0.2, opacity || 1));
             m.position.set(x||0, y||0, z||0);
             return m;
         };
-        const TO = (r,t,c,x,y,z,rx) => {
-            const m = new THREE.Mesh(new THREE.TorusGeometry(r,t,14,28), createMat(c));
+        const TO = (r,t,c,x,y,z,rx,opacity) => {
+            const m = new THREE.Mesh(new THREE.TorusGeometry(r,t,14,28), createMat(c, 0x000000, 0.2, opacity || 1));
             m.position.set(x||0, y||0, z||0);
             if (rx) m.rotation.x = rx;
             return m;
         };
-        const CO = (r,h,c,x,y,z) => {
-            const m = new THREE.Mesh(new THREE.ConeGeometry(r,h,20), createMat(c));
+        const CO = (r,h,c,x,y,z,opacity) => {
+            const m = new THREE.Mesh(new THREE.ConeGeometry(r,h,20), createMat(c, 0x000000, 0.2, opacity || 1));
             m.position.set(x||0, y||0, z||0);
             return m;
         };
@@ -1089,9 +1095,7 @@
         function makePropeller(x,z,y,accent) {
             const g = new THREE.Group();
             g.add(CY(0.09, 0.09, 0.22, INK, x, y, z));
-            const disc = CY(0.55, 0.55, 0.02, '#ffffff', x, y+0.16, z, 20);
-            disc.material.transparent = true;
-            disc.material.opacity = 0.25;
+            const disc = CY(0.55, 0.55, 0.02, '#ffffff', x, y+0.16, z, 20, 0.25);
             g.add(disc);
             return g;
         }
@@ -1112,6 +1116,12 @@
                 const g = new THREE.Group();
                 g.add(CY(0.5, 0.6, 0.15, INK, 0, -1.2, 0));
                 g.add(CY(0.06, 0.06, 2.4, PAPER, 0, 0, 0));
+                [0, 2.1, 4.2].forEach(r => {
+                    const l = CY(0.03, 0.03, 1.1, '#8b93a7', Math.cos(r)*0.45, -0.9, Math.sin(r)*0.45);
+                    l.rotation.z = Math.cos(r) * 0.5;
+                    l.rotation.x = -Math.sin(r) * 0.5;
+                    g.add(l);
+                });
                 const d1 = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 12, 0, Math.PI*2, 0, 1.1), createMat(PAPER));
                 d1.position.set(-0.7, 0.7, 0);
                 d1.rotation.z = 1.1;
@@ -1121,6 +1131,7 @@
                 d2.rotation.z = -1.1;
                 g.add(d2);
                 g.add(SP(0.1, a, 0, 1.35, 0));
+                g.add(TO(0.2, 0.02, a, 0, 1.35, 0, Math.PI/2));
                 return g;
             },
             iot(a) {
@@ -1152,10 +1163,8 @@
                 g.add(B(2.2, 0.5, 1.6, '#cfe0ea', 0, -1, 0));
                 g.add(CY(0.3, 0.35, 0.3, a, 0, -0.3, 0));
                 g.add(CY(0.05, 0.05, 0.9, INK, 0, 0.3, 0));
-                const beam = CO(0.5, 1.2, a, 0, -0.7, 0);
-                beam.material.transparent = true;
-                beam.material.opacity = 0.35;
-                g.add(beam);
+                g.add(CO(0.5, 1.2, a, 0, -0.7, 0, 0.35));
+                g.add(TO(0.55, 0.03, a, 0, -0.95, 0, Math.PI/2));
                 return g;
             },
             boat(a) {
@@ -1164,14 +1173,29 @@
                 g.add(B(0.7, 0.5, 0.6, PAPER, -0.1, 0.05, 0));
                 g.add(CY(0.04, 0.04, 1.1, INK, 0.5, 0.6, 0));
                 g.add(B(0.5, 0.3, 0.05, a, 0.5, 1, 0));
+                g.add(TO(1.3, 0.03, a, 0, -0.75, 0, Math.PI/2));
+                return g;
+            },
+            locker(a) {
+                const g = new THREE.Group();
+                g.add(B(1.6, 1.8, 0.7, PAPER, 0, 0, 0));
+                [-0.55, 0, 0.55].forEach(x => {
+                    g.add(B(0.42, 1.5, 0.06, INK, x, 0, 0.36));
+                });
+                g.add(TO(0.25, 0.05, INK, 0, 0.5, 0.4));
+                [0, 1, 2].forEach(i => {
+                    const b = B(0.3, 0.03, 0.02, a, 0, 0.5 - Math.cos(i * 2) * 0.18, 0.42 + Math.sin(i * 2) * 0.18);
+                    b.rotation.x = i * 1.1;
+                    g.add(b);
+                });
                 return g;
             },
             rover(a) {
                 const g = new THREE.Group();
                 g.add(B(1.2, 0.45, 0.8, PAPER, 0, 0, 0));
-                [[-0.45,0.45],[0.45,0.45],[-0.45,-0.45],[0.45,-0.45]].forEach(([x,z]) => {
+                [[-0.45, 0.45], [0.45, 0.45], [-0.45, -0.45], [0.45, -0.45]].forEach(([x, z]) => {
                     const w = CY(0.28, 0.28, 0.2, INK, x, -0.35, z);
-                    w.rotation.x = Math.PI/2;
+                    w.rotation.x = Math.PI / 2;
                     g.add(w);
                 });
                 g.add(CY(0.05, 0.05, 0.8, PAPER, 0.4, 0.5, 0));
@@ -1184,18 +1208,240 @@
                 g.add(B(1.3, 0.3, 1.1, INK, 0, -0.3, 0));
                 [-0.5, 0.5].forEach(x => {
                     const w = CY(0.3, 0.3, 0.2, '#111111', x, -0.3, 0.55);
-                    w.rotation.z = Math.PI/2;
+                    w.rotation.z = Math.PI / 2;
                     g.add(w);
                 });
                 g.add(B(1.5, 0.07, 0.12, a, 0, 0.15, 0));
+                g.add(SP(0.12, PAPER, 0, 0.35, 0));
+                return g;
+            },
+            snow(a) {
+                const g = new THREE.Group();
+                g.add(B(1.4, 0.5, 1, '#8a6f4d', 0, -0.8, 0));
+                const heap = SP(0.7, '#ffffff', 0, -0.35, 0);
+                heap.scale.y = 0.55;
+                g.add(heap);
+                const f1 = B(0.7, 0.07, 0.07, a, 0, 0.7, 0);
+                const f2 = B(0.7, 0.07, 0.07, a, 0, 0.7, 0);
+                const f3 = B(0.7, 0.07, 0.07, a, 0, 0.7, 0);
+                f2.rotation.z = 1.05;
+                f3.rotation.z = -1.05;
+                g.add(f1, f2, f3);
                 return g;
             },
             hearme(a) {
                 const g = new THREE.Group();
                 g.add(B(1.5, 1, 0.08, '#101623', 0, 0.35, -0.55));
-                for(let i=0; i<3; i++) g.add(B(1.1-i*0.15, 0.07, 0.02, i===2?a:PAPER, -0.05, 0.55-i*0.2, -0.49));
+                for (let i = 0; i < 3; i++) {
+                    g.add(B(1.1 - i * 0.15, 0.07, 0.02, i === 2 ? a : PAPER, -0.05, 0.55 - i * 0.2, -0.49));
+                }
                 g.add(CY(0.14, 0.16, 0.6, PAPER, -0.75, -0.35, 0.25, 12));
                 g.add(SP(0.13, PAPER, -0.75, 0.1, 0.25));
+                const ha1 = CY(0.045, 0.045, 0.5, PAPER, -0.95, 0.15, 0.3);
+                ha1.rotation.z = 0.7;
+                g.add(ha1);
+                const ha2 = CY(0.045, 0.045, 0.5, PAPER, -0.55, 0.15, 0.3);
+                ha2.rotation.z = -0.7;
+                g.add(ha2);
+                [[PAPER, -0.4], [a, 0], [PAPER, 0.4]].forEach(rc => {
+                    g.add(B(0.32, 0.14, 0.1, rc[0], rc[1], -0.78, 0.35));
+                });
+                g.add(B(0.5, 0.35, 0.05, '#0e2a38', 0.78, -0.12, -0.2));
+                g.add(B(0.5, 0.35, 0.05, '#0e2a38', 0.78, 0.35, -0.2));
+                g.add(SP(0.09, a, 0.78, 0.12, -0.13));
+                g.add(TO(0.6, 0.025, a, 0, 1.2, -0.5));
+                return g;
+            },
+            laptop(a) {
+                const g = new THREE.Group();
+                g.add(B(1.4, 0.08, 1, PAPER, 0, -0.6, 0));
+                const s = B(1.4, 1, 0.07, INK, 0, 0, -0.5);
+                s.rotation.x = -0.25;
+                g.add(s);
+                for (let i = 0; i < 4; i++) {
+                    g.add(B(0.9, 0.05, 0.02, i === 3 ? a : PAPER, 0, -0.2 + i * 0.2, -0.42 + i * 0.05));
+                }
+                return g;
+            },
+            cargodrone(a) {
+                const g = new THREE.Group();
+                g.add(B(1.6, 0.12, 1.6, INK, 0, 0.6, 0));
+                [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => g.add(makePropeller(sx * 0.9, sz * 0.9, 0.6, a)));
+                g.add(CY(0.03, 0.03, 0.7, PAPER, 0.5, 0.2, 0.5));
+                g.add(CY(0.03, 0.03, 0.7, PAPER, -0.5, 0.2, -0.5));
+                g.add(B(0.8, 0.5, 0.8, PAPER, 0, -0.35, 0));
+                g.add(B(0.84, 0.1, 0.84, INK, 0, -0.05, 0));
+                return g;
+            },
+            urbn(a) {
+                const g = new THREE.Group();
+                g.add(B(1.8, 0.14, 0.9, '#5b3a1e', 0, -0.75, 0));
+                g.add(CY(0.05, 0.05, 0.7, '#8b93a7', -0.55, -0.3, -0.2));
+                const utab = B(0.6, 0.45, 0.05, '#101623', -0.55, 0.15, -0.2);
+                utab.rotation.x = -0.2;
+                g.add(utab);
+                g.add(B(0.45, 0.06, 0.02, PAPER, -0.55, 0.24, -0.15));
+                g.add(B(0.3, 0.06, 0.02, a, -0.62, 0.1, -0.15));
+                g.add(B(1.2, 0.05, 0.05, INK, 0.2, 0.78, -0.3));
+                [0, 1, 2].forEach(i => {
+                    g.add(B(0.22, 0.3, 0.02, '#ffffff', -0.15 + i * 0.3, 0.58, -0.3));
+                });
+                const ucl = SP(0.28, PAPER, 0.55, -0.35, 0.25);
+                ucl.scale.y = 0.6;
+                g.add(ucl);
+                g.add(CY(0.34, 0.34, 0.05, a, 0.55, -0.55, 0.25, 18));
+                g.add(B(0.34, 0.3, 0.34, '#1FEB9B', -0.15, -0.4, 0.45));
+                g.add(B(0.34, 0.3, 0.34, '#00C2E8', 0.25, -0.4, 0.45));
+                const urp = B(0.16, 0.4, 0.02, '#ffffff', 0.88, -0.2, -0.15);
+                urp.rotation.z = 0.15;
+                g.add(urp);
+                return g;
+            },
+            notebook(a) {
+                const g = new THREE.Group();
+                g.add(B(1.1, 1.4, 0.12, INK, 0, 0, 0));
+                g.add(B(0.95, 1.25, 0.02, '#ffffff', 0, 0, 0.07));
+                g.add(B(0.6, 0.06, 0.02, PAPER, -0.05, 0.3, 0.09));
+                g.add(B(0.4, 0.06, 0.02, a, -0.15, 0.1, 0.09));
+                g.add(TO(0.18, 0.05, a, 0.25, -0.3, 0.1));
+                const p = CY(0.05, 0.05, 1.1, PAPER, 0.8, -0.2, 0);
+                p.rotation.z = 1.2;
+                g.add(p);
+                return g;
+            },
+            patch(a) {
+                const g = new THREE.Group();
+                g.add(B(1.2, 0.9, 0.08, PAPER, 0, 0, 0));
+                g.add(B(0.9, 0.6, 0.1, a, 0, 0, 0.01));
+                g.add(SP(0.12, a, 0.2, 0.1, 0.12));
+                g.add(SP(0.07, PAPER, -0.2, -0.1, 0.12));
+                return g;
+            },
+            shelf(a) {
+                const g = new THREE.Group();
+                [[-0.7], [0.7]].forEach(([x]) => {
+                    g.add(B(0.07, 1.9, 0.6, INK, x, 0, 0));
+                });
+                [-0.6, 0, 0.6].forEach(y => {
+                    g.add(B(1.5, 0.06, 0.6, PAPER, 0, y, 0));
+                    [0, 1, 2].forEach(i => g.add(B(0.3, 0.35, 0.3, i === 1 ? INK : PAPER, -0.45 + i * 0.45, y + 0.22, 0)));
+                });
+                return g;
+            },
+            lab(a) {
+                const g = new THREE.Group();
+                g.add(B(1.4, 0.12, 0.6, INK, 0, -0.7, 0));
+                [0, 1, 2].forEach(i => {
+                    const x = -0.45 + i * 0.45;
+                    g.add(CY(0.11, 0.11, 0.8, '#cfe0ea', x, -0.1, 0, 14));
+                    g.add(CY(0.09, 0.09, 0.3, i === 1 ? a : PAPER, x, -0.28, 0, 14));
+                });
+                g.add(B(0.9, 0.5, 0.05, INK, 0, 0.6, -0.4));
+                g.add(B(0.6, 0.06, 0.02, a, 0, 0.6, -0.36));
+                return g;
+            },
+            cabinet(a) {
+                const g = new THREE.Group();
+                g.add(B(1.2, 1.8, 0.7, PAPER, 0, 0, 0));
+                g.add(B(0.9, 1.5, 0.04, '#cfe0ea', 0, 0, 0.36));
+                [0, 1].forEach(i => {
+                    const y = -0.4 + i * 0.7;
+                    g.add(B(0.9, 0.05, 0.4, PAPER, 0, y, 0.1));
+                    g.add(CY(0.09, 0.09, 0.3, INK, -0.25, y + 0.2, 0.1, 12));
+                    g.add(CY(0.09, 0.09, 0.3, a, 0.25, y + 0.2, 0.1, 12));
+                });
+                return g;
+            },
+            vita(a) {
+                const g = new THREE.Group();
+                g.add(CY(0.3, 0.25, 0.8, PAPER, 0, -0.2, 0, 18));
+                g.add(CY(0.32, 0.32, 0.12, PAPER, 0, 0.25, 0, 18));
+                const st = CY(0.03, 0.03, 0.9, a, 0.15, 0.4, 0);
+                st.rotation.z = -0.3;
+                g.add(st);
+                g.add(CY(0.16, 0.16, 0.05, '#e8a13c', -0.3, 0.35, 0, 14));
+                return g;
+            },
+            bin(a) {
+                const g = new THREE.Group();
+                g.add(CY(0.5, 0.42, 1, '#5b6472', 0, -0.3, 0, 18));
+                g.add(TO(0.5, 0.05, a, 0, 0.25, 0, Math.PI / 2));
+                g.add(B(0.3, 0.3, 0.3, PAPER, -0.7, 0.5, 0));
+                g.add(B(0.3, 0.3, 0.3, INK, 0, 0.7, 0));
+                g.add(B(0.3, 0.3, 0.3, PAPER, 0.7, 0.5, 0));
+                return g;
+            },
+            floatbot(a) {
+                const g = new THREE.Group();
+                const w = CY(0.9, 0.9, 0.06, '#33505c', 0, -0.9, 0, 26);
+                g.add(w);
+                [-0.55, 0.55].forEach(x => {
+                    const p = CY(0.18, 0.18, 1, PAPER, x, -0.6, 0, 14);
+                    p.rotation.z = Math.PI / 2;
+                    g.add(p);
+                });
+                g.add(B(1, 0.3, 0.7, PAPER, 0, -0.2, 0));
+                const arm = B(0.12, 1, 0.12, INK, 0.3, 0.4, 0);
+                arm.rotation.z = -0.5;
+                g.add(arm);
+                g.add(SP(0.12, a, 0.62, 0.8, 0));
+                return g;
+            },
+            haps(a) {
+                const g = new THREE.Group();
+                g.add(B(3, 0.07, 0.7, PAPER, 0, 0.3, 0));
+                for (let i = 0; i < 4; i++) {
+                    g.add(B(0.4, 0.02, 0.5, '#2b3a4d', -1 + i * 0.65, 0.35, 0));
+                }
+                g.add(B(0.25, 0.25, 1.4, PAPER, 0, 0.2, 0));
+                g.add(B(0.7, 0.5, 0.06, PAPER, 0, 0.2, -0.8));
+                return g;
+            },
+            vr(a) {
+                const g = new THREE.Group();
+                g.add(B(1.1, 0.55, 0.5, '#1b2230', 0, 0, 0));
+                g.add(TO(0.55, 0.09, INK, 0, 0, -0.3));
+                g.add(CY(0.16, 0.16, 0.1, PAPER, -0.25, 0, 0.28, 16));
+                g.add(CY(0.16, 0.16, 0.1, PAPER, 0.25, 0, 0.28, 16));
+                g.add(B(0.5, 0.08, 0.02, a, 0, 0.32, 0.1));
+                return g;
+            },
+            aidrone(a) {
+                const g = new THREE.Group();
+                g.add(B(1, 0.3, 1, PAPER, 0, 0, 0));
+                [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => g.add(makePropeller(sx * 0.75, sz * 0.75, 0, a)));
+                g.add(SP(0.3, INK, 0, -0.1, 0.55));
+                g.add(SP(0.17, a, 0, -0.08, 0.78));
+                g.add(TO(0.45, 0.04, PAPER, 0, -0.1, 0.55));
+                return g;
+            },
+            lunar(a) {
+                const g = new THREE.Group();
+                g.add(B(1.1, 0.4, 0.7, PAPER, 0, 0.1, 0));
+                [-0.5, 0, 0.5].forEach(x => {
+                    [-0.45, 0.45].forEach(z => {
+                        const w = CY(0.2, 0.2, 0.14, INK, x, -0.3, z);
+                        w.rotation.x = Math.PI / 2;
+                        g.add(w);
+                    });
+                });
+                g.add(CY(0.04, 0.04, 0.7, PAPER, 0.4, 0.6, 0));
+                g.add(B(0.3, 0.18, 0.18, INK, 0.4, 1, 0));
+                for (let i = 0; i < 3; i++) {
+                    g.add(TO(0.16, 0.03, a, -0.3, 0.2 + i * 0.14, 0, Math.PI / 2));
+                }
+                g.add(CY(1.1, 1.1, 0.05, '#8b93a7', 0, -0.62, 0, 30));
+                return g;
+            },
+            dance(a) {
+                const g = new THREE.Group();
+                g.add(CY(0.9, 0.9, 0.12, INK, 0, -0.8, 0, 26));
+                [[-0.4, 0], [0, 0.3], [0.4, 0]].forEach(([x, z], i) => {
+                    g.add(CY(0.1, 0.1, 0.55, PAPER, x, -0.35, z, 10));
+                    g.add(SP(0.13, i === 1 ? a : INK, x, 0, z));
+                });
+                g.add(CO(0.5, 1.4, PAPER, -0.6, 0.4, -0.6, 0.25));
+                g.add(CO(0.5, 1.4, PAPER, 0.6, 0.4, -0.6, 0.25));
                 return g;
             },
             window(a) {
@@ -1203,7 +1449,40 @@
                 g.add(B(1.6, 1.2, 0.1, '#5b3a1e', 0, 0, 0));
                 g.add(B(1.35, 0.95, 0.05, '#9fd8ff', 0, 0, 0.03));
                 g.add(SP(0.18, '#ffe27a', 0.35, 0.25, 0.1));
+                g.add(SP(0.14, '#fff', -0.35, 0.2, 0.08));
+                g.add(SP(0.1, '#fff', -0.15, 0.3, 0.08));
+                g.add(B(1.35, 0.06, 0.06, '#5b3a1e', 0, 0, 0.06));
+                g.add(B(0.06, 0.95, 0.06, '#5b3a1e', 0, 0, 0.06));
                 return g;
+            },
+            bench(a) {
+                const g = new THREE.Group();
+                g.add(B(1.7, 0.12, 0.8, '#8a6f4d', 0, -0.1, 0));
+                [[-0.7], [0.7]].forEach(([x]) => {
+                    g.add(B(0.1, 0.9, 0.7, '#5b6472', x, -0.6, 0));
+                });
+                g.add(B(0.5, 0.35, 0.4, PAPER, -0.3, 0.15, 0));
+                g.add(B(0.4, 0.08, 0.3, a, 0.45, 0.1, 0));
+                const h = B(0.08, 0.5, 0.08, '#8a5a2b', 0.2, 0.45, 0);
+                h.rotation.z = 0.6;
+                g.add(h);
+                g.add(SP(0.09, a, -0.3, 0.45, 0));
+                return g;
+            },
+            hands(a) {
+                const g = new THREE.Group();
+                g.add(B(1.5, 1, 0.08, INK, 0, 0.2, -0.5));
+                const sc = B(1.2, 0.7, 0.02, a, 0, 0.25, -0.44);
+                g.add(sc);
+                [[-0.4], [0.4]].forEach(([x]) => {
+                    g.add(SP(0.16, PAPER, x, -0.6, 0.3));
+                    for (let i = 0; i < 3; i++) g.add(CY(0.045, 0.045, 0.4, PAPER, x - 0.12 + i * 0.12, -0.3, 0.3));
+                });
+                g.add(TO(0.7, 0.03, a, 0, -0.2, 0));
+                return g;
+            },
+            food(a) {
+                return (BUILDERS.urbn || BUILDERS.iot)(a);
             }
         };
 

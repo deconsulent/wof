@@ -90,21 +90,38 @@
     }
 
     async function loadLocalLocations() {
-        var local = localStorage.getItem('wof_locations_cache');
-        if (local) {
-            try { return JSON.parse(local); } catch(e) {}
-        }
+        var dbLocations = [];
         try {
-            var r = await _fetch(APP_ROOT + 'database.json');
+            var r = await _fetch(APP_ROOT + 'database.json?t=' + Date.now());
             if (r.ok) {
                 var j = await r.json();
                 if (j && Array.isArray(j.locations)) {
-                    localStorage.setItem('wof_locations_cache', JSON.stringify(j.locations));
-                    return j.locations;
+                    dbLocations = j.locations;
                 }
             }
         } catch(e) {}
-        return [];
+
+        var local = localStorage.getItem('wof_locations_cache');
+        var cachedLocations = [];
+        if (local) {
+            try { cachedLocations = JSON.parse(local) || []; } catch(e) {}
+        }
+
+        if (dbLocations.length > 0) {
+            var merged = dbLocations.map(function(dbl) {
+                var c = cachedLocations.find(function(cl) { return cl.id === dbl.id; });
+                return c || dbl;
+            });
+            cachedLocations.forEach(function(cl) {
+                if (!merged.find(function(m) { return m.id === cl.id; })) {
+                    merged.push(cl);
+                }
+            });
+            saveLocalLocations(merged);
+            return merged;
+        }
+
+        return cachedLocations;
     }
 
     function saveLocalLocations(list) {
