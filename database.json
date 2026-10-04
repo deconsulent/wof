@@ -19,7 +19,8 @@
             "initials": "EL",
             "level": "root",
             "accent": "#e386c7",
-            "photo": "/uploads/1787635254640-355043750.jpg"
+            "photo": "/uploads/1791090687362-868512172.jpg",
+            "role_lv": "Nodaļas vadītāja"
           },
           {
             "id": "daniela-hrap-ne",
@@ -28,7 +29,8 @@
             "initials": "DA",
             "level": "lead",
             "accent": "#0069d1",
-            "photo": "/uploads/1787635246661-892771639.jpg"
+            "photo": "/uploads/1787635246661-892771639.jpg",
+            "role_lv": "SkyLab vadītāja"
           },
           {
             "id": "gavriils-kniga",
@@ -37,7 +39,8 @@
             "initials": "GA",
             "level": "lead",
             "accent": "#e3e3e3",
-            "photo": "/uploads/1787634932296-409002653.jpg"
+            "photo": "/uploads/1787634932296-409002653.jpg",
+            "role_lv": "IdeaBox koordinators"
           },
           {
             "id": "shiv",
@@ -46,10 +49,14 @@
             "initials": "SH",
             "level": "lead",
             "accent": "#000000",
-            "photo": "/uploads/1787639291355-385884177.jpg"
+            "photo": "/uploads/1787639291355-385884177.jpg",
+            "role_lv": "Projektu vadītāja asistents"
           }
         ]
-      }
+      },
+      "title_lv": "Dizaina fabrika",
+      "subtitle_lv": "Kur radošums satiekas ar inženieriju",
+      "description_lv": "Dizaina fabrikas ģimene"
     },
     {
       "id": "team-swup",

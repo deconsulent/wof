@@ -147,22 +147,20 @@ app.get('/api/locations/:id', async (req, res) => {
 app.post('/api/locations', async (req, res) => {
     try {
         const translatedPayload = await autoTranslateScreenPayload(req.body);
-        let created = translatedPayload;
-        try {
-            const { data, error } = await supabase.from('locations').insert([translatedPayload]).select();
-            if (!error && data && data[0]) created = data[0];
-        } catch (e) {
-            console.warn('Supabase insert skipped (offline):', e.message || e);
-        }
-        // Always persist to local DB
+        
+        // 1. Always persist to local DB immediately
         const db = readDB();
         db.locations = db.locations || [];
-        const idx = db.locations.findIndex(l => l.id === created.id);
-        if (idx >= 0) db.locations[idx] = created;
-        else db.locations.push(created);
+        const idx = db.locations.findIndex(l => l.id === translatedPayload.id);
+        if (idx >= 0) db.locations[idx] = translatedPayload;
+        else db.locations.push(translatedPayload);
         writeDB(db);
 
-        res.json({ success: true, location: created });
+        // 2. Non-blocking Supabase insert with fast timeout
+        withTimeout(supabase.from('locations').insert([translatedPayload]).select(), 800)
+            .catch(e => console.warn('Supabase insert skipped (offline):', e.message || e));
+
+        res.json({ success: true, location: translatedPayload });
     } catch (err) {
         console.error("Error creating location:", err);
         res.status(500).json({ error: err.message });
@@ -173,24 +171,23 @@ app.post('/api/locations', async (req, res) => {
 app.put('/api/locations/:id', async (req, res) => {
     try {
         const translatedPayload = await autoTranslateScreenPayload(req.body);
-        let updated = translatedPayload;
-        try {
-            const { data, error } = await supabase.from('locations').update(translatedPayload).eq('id', req.params.id).select();
-            if (!error && data && data[0]) updated = data[0];
-        } catch (e) {
-            console.warn('Supabase update skipped (offline):', e.message || e);
-        }
-        // Always persist to local DB
+        
+        // 1. Always persist to local DB immediately
         const db = readDB();
         db.locations = db.locations || [];
         const idx = db.locations.findIndex(l => l.id === req.params.id);
         if (idx >= 0) {
-            db.locations[idx] = { ...db.locations[idx], ...updated };
-            updated = db.locations[idx];
+            db.locations[idx] = { ...db.locations[idx], ...translatedPayload };
         } else {
-            db.locations.push(updated);
+            db.locations.push(translatedPayload);
         }
         writeDB(db);
+
+        const updated = idx >= 0 ? db.locations[idx] : db.locations[db.locations.length - 1];
+
+        // 2. Non-blocking Supabase update with fast timeout
+        withTimeout(supabase.from('locations').update(translatedPayload).eq('id', req.params.id).select(), 800)
+            .catch(e => console.warn('Supabase update skipped (offline):', e.message || e));
 
         res.json({ success: true, location: updated });
     } catch (err) {
@@ -202,7 +199,8 @@ app.put('/api/locations/:id', async (req, res) => {
 // 5. Delete specific screen
 app.delete('/api/locations/:id', async (req, res) => {
     try {
-        await supabase.from('locations').delete().eq('id', req.params.id);
+        withTimeout(supabase.from('locations').delete().eq('id', req.params.id), 800)
+            .catch(() => {});
     } catch (e) {}
     const db = readDB();
     db.locations = (db.locations || []).filter(l => l.id !== req.params.id);
@@ -228,7 +226,7 @@ app.post('/api/translate', async (req, res) => {
     }
 });
 
-// 6. Upload image (Local Disk + Supabase Storage Sync)
+// 6. Upload image (Local Disk Instant + Background Supabase Storage Sync)
 app.post('/api/upload', upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
@@ -237,7 +235,7 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
         const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileExt}`;
         const filePath = `uploads/${fileName}`;
 
-        // 1. Save to local disk in /uploads folder
+        // 1. Save to local disk in /uploads folder (instant, ~1ms)
         const uploadsDir = path.join(__dirname, '../uploads');
         if (!fs.existsSync(uploadsDir)) {
             fs.mkdirSync(uploadsDir, { recursive: true });
@@ -245,33 +243,24 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
         const localFilePath = path.join(uploadsDir, fileName);
         fs.writeFileSync(localFilePath, req.file.buffer);
 
-        let finalUrl = `/uploads/${fileName}`;
+        const localUrl = `/uploads/${fileName}`;
 
-        // 2. Attempt remote Supabase Storage upload
-        try {
-            const { data, error } = await supabase.storage
+        // 2. Non-blocking background Supabase Storage upload
+        withTimeout(
+            supabase.storage
                 .from('images')
                 .upload(filePath, req.file.buffer, {
                     contentType: req.file.mimetype || 'image/jpeg',
                     cacheControl: '3600',
-                    upsert: false
-                });
+                    upsert: true
+                }),
+            3000
+        ).catch(sbErr => {
+            console.warn("Supabase background storage sync skipped:", sbErr.message || sbErr);
+        });
 
-            if (!error) {
-                const { data: publicUrlData } = supabase.storage
-                    .from('images')
-                    .getPublicUrl(filePath);
-                if (publicUrlData && publicUrlData.publicUrl) {
-                    finalUrl = publicUrlData.publicUrl;
-                }
-            } else {
-                console.warn("Supabase storage sync skipped:", error.message);
-            }
-        } catch (sbErr) {
-            console.warn("Supabase storage connection skipped:", sbErr.message);
-        }
-
-        res.json({ url: finalUrl, localUrl: `/uploads/${fileName}`, fileName });
+        // 3. Respond immediately so admin UI gets the file path in <10ms
+        res.json({ url: localUrl, localUrl: localUrl, fileName });
 
     } catch (err) {
         console.error("Upload exception:", err);
@@ -284,7 +273,7 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
 app.get('/view/:id', async (req, res) => {
     let location = null;
     try {
-        const { data, error } = await supabase.from('locations').select('*').eq('id', req.params.id).single();
+        const { data, error } = await withTimeout(supabase.from('locations').select('*').eq('id', req.params.id).single(), 500);
         if (!error && data) location = data;
     } catch (e) {}
 

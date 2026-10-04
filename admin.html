@@ -1819,7 +1819,7 @@
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="autoTranslateField('v4-role', 'v4-role-lv')" style="margin-right:auto;" data-i18n="translate_lv_btn">✨ Translate LV</button>
                 <button type="button" class="btn btn-secondary" onclick="document.getElementById('v4-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn" onclick="saveV4Person()" data-i18n="save_inductee">Save Inductee</button>
+                <button type="button" id="v4-save-btn" class="btn" onclick="saveV4Person()" data-i18n="save_inductee">Save Inductee</button>
             </div>
         </div>
     </div>
@@ -1927,7 +1927,7 @@
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" onclick="autoTranslateV5ModalFields()" style="margin-right:auto;" data-i18n="translate_lv_btn">✨ Translate LV</button>
                 <button type="button" class="btn btn-secondary" onclick="document.getElementById('v5-modal').classList.remove('visible')" data-i18n="cancel">Cancel</button>
-                <button type="button" class="btn" onclick="saveV5Member()" data-i18n="save_member">Save Member</button>
+                <button type="button" id="v5-save-btn" class="btn" onclick="saveV5Member()" data-i18n="save_member">Save Member</button>
             </div>
         </div>
     </div>
@@ -2755,6 +2755,11 @@
         }
 
         async function saveV4Person() {
+            if (window.pendingUploads && window.pendingUploads['v4-photo']) {
+                showToast('Waiting for photo upload to finish...', 'info');
+                await window.pendingUploads['v4-photo'];
+            }
+
             const index = parseInt(document.getElementById('v4-index').value);
             const roleEn = document.getElementById('v4-role').value.trim();
             let roleLv = document.getElementById('v4-role-lv').value.trim();
@@ -2849,6 +2854,11 @@
         }
 
         async function saveV5Member() {
+            if (window.pendingUploads && window.pendingUploads['v5-photo']) {
+                showToast('Waiting for photo upload to finish...', 'info');
+                await window.pendingUploads['v5-photo'];
+            }
+
             const index = parseInt(document.getElementById('v5-index').value);
             const roleEn = document.getElementById('v5-role').value.trim();
             let roleLv = document.getElementById('v5-role-lv').value.trim();
@@ -3017,6 +3027,14 @@
            SAVE / DELETE LOGIC (Enhanced with full auto-translate)
            ═══════════════════════════════════════════════════ */
         async function saveLocation() {
+            if (window.pendingUploads) {
+                const activeUploadList = Object.values(window.pendingUploads);
+                if (activeUploadList.length > 0) {
+                    showToast('Waiting for photo uploads to finish...', 'info');
+                    await Promise.all(activeUploadList);
+                }
+            }
+
             const saveBtn = document.getElementById('btn-save');
             const originalText = saveBtn.textContent;
             saveBtn.textContent = i18n.t('saving');
@@ -3149,78 +3167,116 @@
             }
         }
 
+        window.pendingUploads = window.pendingUploads || {};
+
         async function uploadImage(input, hiddenId) {
             const file = input.files && input.files[0];
             if (!file) return;
-            
-            const fileExt = file.name.split('.').pop() || 'jpg';
-            const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}.${fileExt}`;
-            const filePath = `uploads/${fileName}`;
+
+            // Determine modal save button to lock during upload
+            let targetSaveBtn = null;
+            if (hiddenId === 'v4-photo') targetSaveBtn = document.getElementById('v4-save-btn');
+            else if (hiddenId === 'v5-photo') targetSaveBtn = document.getElementById('v5-save-btn');
+            else if (hiddenId === 'v5-teamPhoto') targetSaveBtn = document.getElementById('btn-save');
+
+            const prevBtnText = targetSaveBtn ? targetSaveBtn.textContent : '';
+            if (targetSaveBtn) {
+                targetSaveBtn.disabled = true;
+                targetSaveBtn.textContent = '⏳ ' + (i18n.t('uploading') || 'Uploading photo...');
+            }
 
             const preview = document.getElementById(hiddenId + '-preview');
             const localBlobUrl = URL.createObjectURL(file);
             if (preview) {
                 preview.src = localBlobUrl;
                 preview.style.display = 'block';
+                preview.style.opacity = '0.5';
             }
             
-            showToast('Uploading image...', 'success');
+            showToast('Uploading photo...', 'info');
 
-            // 1. Try local Express API upload (/api/upload)
-            try {
-                const formData = new FormData();
-                formData.append('image', file);
-                const res = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                if (res.ok) {
-                    const json = await res.json();
-                    if (json && (json.url || json.localUrl)) {
-                        const finalUrl = json.localUrl || json.url;
-                        document.getElementById(hiddenId).value = finalUrl;
-                        if (preview) preview.src = resolvePhotoUrl(finalUrl);
-                        showToast('Image uploaded successfully', 'success');
-                        return;
-                    }
-                }
-            } catch (apiErr) {
-                console.warn('/api/upload endpoint skipped:', apiErr);
-            }
+            const uploadPromise = (async () => {
+                let finalUrl = null;
 
-            // 2. Try direct Supabase storage upload if available
-            try {
-                if (supabaseClient && supabaseClient.storage) {
-                    const { data, error } = await supabaseClient.storage
-                        .from('images')
-                        .upload(filePath, file, { cacheControl: '3600', upsert: false });
-
-                    if (!error) {
-                        const { data: publicUrlData } = supabaseClient.storage.from('images').getPublicUrl(filePath);
-                        if (publicUrlData && publicUrlData.publicUrl) {
-                            document.getElementById(hiddenId).value = publicUrlData.publicUrl;
-                            if (preview) preview.src = publicUrlData.publicUrl;
-                            showToast('Image uploaded to cloud storage', 'success');
-                            return;
+                // 1. Primary: Local Express API upload (/api/upload)
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    const res = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (res.ok) {
+                        const json = await res.json();
+                        if (json && (json.localUrl || json.url)) {
+                            finalUrl = json.localUrl || json.url;
                         }
                     }
+                } catch (apiErr) {
+                    console.warn('/api/upload endpoint skipped:', apiErr);
                 }
-            } catch (sbErr) {
-                console.warn('Direct Supabase upload error:', sbErr);
-            }
 
-            // 3. Fallback: Base64 data URL (works 100% offline & without backend)
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64Url = e.target.result;
-                document.getElementById(hiddenId).value = base64Url;
-                if (preview) preview.src = base64Url;
-                showToast('Image saved locally', 'success');
-            };
-            reader.onerror = function() {
-                showToast('Could not read image file', 'error');
-            };
-            reader.readAsDataURL(file);
+                // 2. Fallback: Base64 data URL (works 100% offline & without backend)
+                if (!finalUrl) {
+                    try {
+                        finalUrl = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result);
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                        });
+                    } catch (readErr) {
+                        console.error('FileReader fallback error:', readErr);
+                    }
+                }
+
+                if (finalUrl) {
+                    // Update hidden input immediately
+                    const hiddenInput = document.getElementById(hiddenId);
+                    if (hiddenInput) hiddenInput.value = finalUrl;
+
+                    if (preview) {
+                        preview.src = resolvePhotoUrl(finalUrl);
+                        preview.style.opacity = '1';
+                    }
+
+                    // Proactively sync in-memory data for open modal so saving never misses the new photo
+                    if (hiddenId === 'v4-photo' && currentLocation && currentLocation.data && Array.isArray(currentLocation.data.inductees)) {
+                        const idx = parseInt(document.getElementById('v4-index').value);
+                        if (!isNaN(idx) && idx >= 0 && currentLocation.data.inductees[idx]) {
+                            currentLocation.data.inductees[idx].photo = finalUrl;
+                        }
+                    } else if (hiddenId === 'v5-photo' && currentLocation && currentLocation.data && Array.isArray(currentLocation.data.members)) {
+                        const idx = parseInt(document.getElementById('v5-index').value);
+                        if (!isNaN(idx) && idx >= 0 && currentLocation.data.members[idx]) {
+                            currentLocation.data.members[idx].photo = finalUrl;
+                        }
+                    } else if (hiddenId === 'v5-teamPhoto' && currentLocation && currentLocation.data) {
+                        currentLocation.data.teamPhoto = finalUrl;
+                    }
+
+                    showToast('Photo uploaded successfully', 'success');
+                    return finalUrl;
+                } else {
+                    showToast('Photo upload failed. Please try again.', 'error');
+                    throw new Error('Upload failed');
+                }
+            })();
+
+            window.pendingUploads[hiddenId] = uploadPromise;
+
+            try {
+                await uploadPromise;
+            } catch (err) {
+                console.error('Upload error:', err);
+            } finally {
+                delete window.pendingUploads[hiddenId];
+                if (targetSaveBtn) {
+                    targetSaveBtn.disabled = false;
+                    targetSaveBtn.textContent = prevBtnText;
+                }
+                if (preview) preview.style.opacity = '1';
+            }
         }
 
         /* ═══════════════════════════════════════════════════
