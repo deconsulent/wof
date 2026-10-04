@@ -2040,6 +2040,34 @@
         let isEditing = false;
 
         /* ═══════════════════════════════════════════════════
+           RESILIENT API PIPELINE (Auto-directs to port 3001)
+           ═══════════════════════════════════════════════════ */
+        function getApiBase() {
+            if (window.location.protocol === 'file:') return 'http://localhost:3001';
+            if (window.location.port && window.location.port !== '3001') {
+                return `http://${window.location.hostname || 'localhost'}:3001`;
+            }
+            return '';
+        }
+
+        async function apiFetch(endpoint, options = {}) {
+            const base = getApiBase();
+            const fullUrl = endpoint.startsWith('http') ? endpoint : (base + endpoint);
+            return fetch(fullUrl, options);
+        }
+
+        async function safeParseJson(res) {
+            const text = await res.text();
+            try {
+                return JSON.parse(text);
+            } catch (err) {
+                console.error("Non-JSON server response:", res.status, text);
+                const clean = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                throw new Error(clean.length > 0 ? clean.substring(0, 120) : `HTTP ${res.status} ${res.statusText}`);
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════
            VIEW NAVIGATION SYSTEM (NEW)
            ═══════════════════════════════════════════════════ */
         function switchView(viewName) {
@@ -2110,8 +2138,8 @@
            ═══════════════════════════════════════════════════ */
         async function fetchLocations() {
             try {
-                const res = await fetch('/api/locations');
-                const data = await res.json();
+                const res = await apiFetch('/api/locations');
+                const data = await safeParseJson(res);
                 if (Array.isArray(data)) {
                     locations = data;
                 } else {
@@ -2282,8 +2310,8 @@
            ═══════════════════════════════════════════════════ */
         async function selectLocation(id) {
             try {
-                const res = await fetch(`/api/locations/${id}`);
-                let data = await res.json();
+                const res = await apiFetch(`/api/locations/${encodeURIComponent(id)}`);
+                let data = await safeParseJson(res);
                 
                 if (!res.ok) {
                     showToast(i18n.t('network_error', { error: data.error || "Screen not found" }), 'error');
@@ -2326,13 +2354,13 @@
 
             // 1. First try backend translation endpoint
             try {
-                const res = await fetch('/api/translate', {
+                const res = await apiFetch('/api/translate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: clean, from, to })
                 });
                 if (res.ok) {
-                    const data = await res.json();
+                    const data = await safeParseJson(res);
                     if (data.translated && typeof data.translated === 'string' && data.translated.trim()) {
                         return data.translated.trim();
                     }
@@ -3089,16 +3117,35 @@
                 currentLocation.data.teamPhoto = document.getElementById('v5-teamPhoto').value;
             }
 
+            // Normalize slashes in image paths
+            if (currentLocation.data && Array.isArray(currentLocation.data.inductees)) {
+                currentLocation.data.inductees.forEach(ind => {
+                    if (ind.photo) ind.photo = ind.photo.replace(/\\/g, '/');
+                });
+            }
+            if (currentLocation.data && Array.isArray(currentLocation.data.members)) {
+                currentLocation.data.members.forEach(m => {
+                    if (m.photo) m.photo = m.photo.replace(/\\/g, '/');
+                });
+            }
+            if (currentLocation.data && currentLocation.data.teamPhoto) {
+                currentLocation.data.teamPhoto = currentLocation.data.teamPhoto.replace(/\\/g, '/');
+            }
+
+            if (!currentLocation.id || !currentLocation.id.trim()) {
+                currentLocation.id = (currentLocation.name || 'screen').toLowerCase().replace(/[^a-z0-9]/g, '-') || ('screen-' + Date.now());
+            }
+
             const method = isEditing ? 'PUT' : 'POST';
-            const url = isEditing ? `/api/locations/${currentLocation.id}` : `/api/locations`;
+            const endpoint = isEditing ? `/api/locations/${encodeURIComponent(currentLocation.id)}` : `/api/locations`;
             
             try {
-                const res = await fetch(url, { 
+                const res = await apiFetch(endpoint, { 
                     method, 
                     headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify(currentLocation) 
                 });
-                const data = await res.json();
+                const data = await safeParseJson(res);
                 
                 if (res.ok) {
                     showToast(i18n.t('saved_successfully'), 'success');
@@ -3121,7 +3168,9 @@
 
         async function deleteLocation() {
             if (!confirm(i18n.t('confirm_delete_screen'))) return;
-            await fetch(`/api/locations/${currentLocation.id}`, { method: 'DELETE' });
+            try {
+                await apiFetch(`/api/locations/${encodeURIComponent(currentLocation.id)}`, { method: 'DELETE' });
+            } catch (e) {}
             currentLocation = null;
             fetchLocations();
             switchView('dashboard');
@@ -3140,7 +3189,7 @@
             if (photoPath.startsWith('data:') || photoPath.startsWith('blob:') || photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
                 return photoPath;
             }
-            const cleanPath = photoPath.replace(/^\/?(uploads\/)?/, '');
+            const cleanPath = photoPath.replace(/\\/g, '/').replace(/^\/?(uploads\/)?/, '');
             if (window.location.protocol === 'file:') {
                 return `uploads/${cleanPath}`;
             }
@@ -3149,7 +3198,7 @@
 
         function handlePhotoError(img, fallbackText) {
             const raw = img.getAttribute('data-raw-src') || img.src || '';
-            const clean = raw.replace(/^.*\/uploads\//, '').replace(/^.*[\\\/]/, '');
+            const clean = raw.replace(/\\/g, '/').replace(/^.*\/uploads\//, '').replace(/^.*[\\\/]/, '');
             if (!img.dataset.triedRel && clean) {
                 img.dataset.triedRel = '1';
                 img.src = `uploads/${clean}`;
@@ -3202,12 +3251,12 @@
                 try {
                     const formData = new FormData();
                     formData.append('image', file);
-                    const res = await fetch('/api/upload', {
+                    const res = await apiFetch('/api/upload', {
                         method: 'POST',
                         body: formData
                     });
                     if (res.ok) {
-                        const json = await res.json();
+                        const json = await safeParseJson(res);
                         if (json && (json.localUrl || json.url)) {
                             finalUrl = json.localUrl || json.url;
                         }
@@ -3415,12 +3464,12 @@
                 }
 
                 // Call /api/auth endpoint
-                const res = await fetch('/api/auth', {
+                const res = await apiFetch('/api/auth', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: trimmedUser, password: trimmedPass })
                 });
-                const data = await res.json();
+                const data = await safeParseJson(res);
 
                 if (res.ok && data.success) {
                     const session = {

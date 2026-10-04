@@ -1133,10 +1133,55 @@
         const defaultQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.2, 0.45, 0));
         targetQuat.copy(defaultQuat);
 
-        const PAPER = '#f0f4f8', INK = '#151922';
+        /* ═══════════════════════════════════════════════════
+           AUTHENTIC PBR MATERIAL ENGINE & COMPONENT BUILDERS
+           ═══════════════════════════════════════════════════ */
+        const PAPER = '#dbeafe', INK = '#11151c';
 
-        function createMat(color, emissiveColor = 0x000000, emissivePower = 0.2, opacity = 1) {
-            const isTrans = opacity < 1;
+        const PBR_PRESETS = {
+            alum: { metalness: 0.92, roughness: 0.22, color: '#d5dce8' },
+            darkAlum: { metalness: 0.88, roughness: 0.28, color: '#374151' },
+            titan: { metalness: 0.85, roughness: 0.34, color: '#242b35' },
+            carbon: { metalness: 0.16, roughness: 0.65, color: '#13161c' },
+            gold: { metalness: 0.95, roughness: 0.22, color: '#d97706' },
+            chrome: { metalness: 0.98, roughness: 0.08, color: '#f8fafc' },
+            copper: { metalness: 0.92, roughness: 0.26, color: '#b45309' },
+            rubber: { metalness: 0.04, roughness: 0.94, color: '#181a20' },
+            pcb: { metalness: 0.35, roughness: 0.42, color: '#0f3822' },
+            glass: { metalness: 0.1, roughness: 0.04, transparent: true, opacity: 0.52, color: '#7dd3fc' },
+            screen: { metalness: 0.2, roughness: 0.12, color: '#080c14', emissive: 0x0f172a, emissiveIntensity: 0.4 }
+        };
+
+        function createPBRMat(cfg, emissiveColor = 0x000000, emissivePower = 0) {
+            let color = '#ffb020', metalness = 0.75, roughness = 0.28, opacity = 1, transparent = false;
+            let emissive = emissiveColor, emissiveIntensity = emissivePower;
+
+            if (typeof cfg === 'string') {
+                if (PBR_PRESETS[cfg]) {
+                    const p = PBR_PRESETS[cfg];
+                    color = p.color; metalness = p.metalness; roughness = p.roughness;
+                    if (p.transparent) { transparent = true; opacity = p.opacity; }
+                    if (p.emissive) { emissive = p.emissive; emissiveIntensity = p.emissiveIntensity; }
+                } else {
+                    color = cfg;
+                    if (cfg === INK || cfg === '#111111' || cfg === '#0e1420' || cfg === '#101623' || cfg === '#14171d') {
+                        metalness = 0.25; roughness = 0.62;
+                    } else if (cfg === PAPER || cfg === '#ffffff' || cfg === '#f0f4f8' || cfg === '#d0d7e2') {
+                        metalness = 0.88; roughness = 0.22;
+                    } else {
+                        metalness = 0.78; roughness = 0.26;
+                    }
+                }
+            } else if (cfg && typeof cfg === 'object') {
+                color = cfg.color || color;
+                metalness = cfg.metalness !== undefined ? cfg.metalness : metalness;
+                roughness = cfg.roughness !== undefined ? cfg.roughness : roughness;
+                opacity = cfg.opacity !== undefined ? cfg.opacity : opacity;
+                transparent = cfg.transparent || (opacity < 1);
+                if (cfg.emissive) emissive = cfg.emissive;
+                if (cfg.emissiveIntensity !== undefined) emissiveIntensity = cfg.emissiveIntensity;
+            }
+
             if (currentRenderMode === 'wireframe') {
                 return new THREE.MeshBasicMaterial({ color: color || '#ffb020', wireframe: true });
             }
@@ -1144,549 +1189,1018 @@
                 return new THREE.MeshStandardMaterial({
                     color: color || '#64d2ff',
                     emissive: new THREE.Color(color || '#64d2ff'),
-                    emissiveIntensity: 0.68,
+                    emissiveIntensity: 0.72,
                     transparent: true,
-                    opacity: isTrans ? opacity * 0.8 : 0.84,
-                    wireframe: false
+                    opacity: transparent ? opacity * 0.75 : 0.82
                 });
             }
             if (currentRenderMode === 'exploded') {
                 return new THREE.MeshStandardMaterial({
                     color: color || '#ffffff',
                     roughness: 0.2,
-                    metalness: 0.8,
+                    metalness: 0.85,
                     transparent: true,
-                    opacity: isTrans ? opacity * 0.7 : 0.88
+                    opacity: transparent ? opacity * 0.7 : 0.88
                 });
             }
-            // Studio PBR default
+
             return new THREE.MeshStandardMaterial({
-                color: color || '#ffb020',
-                roughness: 0.42,
-                metalness: 0.28,
-                emissive: emissiveColor,
-                emissiveIntensity: emissivePower,
-                transparent: isTrans,
+                color: color,
+                roughness: roughness,
+                metalness: metalness,
+                emissive: emissive,
+                emissiveIntensity: emissiveIntensity,
+                transparent: transparent,
                 opacity: opacity
             });
         }
 
-        const B = (w,h,d,c,x,y,z,opacity) => {
-            const r = Math.max(Math.min(0.05, Math.min(w,h,d)*0.3), 0.004);
-            const m = new THREE.Mesh(new RoundedBoxGeometry(w,h,d,2,r), createMat(c, 0x000000, 0.2, opacity || 1));
-            m.position.set(x||0, y||0, z||0);
+        function createMat(color, emissiveColor = 0x000000, emissivePower = 0.2, opacity = 1) {
+            return createPBRMat({
+                color: color,
+                emissive: emissiveColor,
+                emissiveIntensity: emissivePower,
+                opacity: opacity,
+                transparent: opacity < 1
+            });
+        }
+
+        function createLedMat(color, power = 2.5) {
+            if (currentRenderMode === 'wireframe') return new THREE.MeshBasicMaterial({ color: color, wireframe: true });
+            return new THREE.MeshStandardMaterial({
+                color: color,
+                emissive: new THREE.Color(color),
+                emissiveIntensity: currentRenderMode === 'hologram' ? 1.5 : power,
+                roughness: 0.15,
+                metalness: 0.1
+            });
+        }
+
+        function createLedMesh(r, color, x=0, y=0, z=0) {
+            const m = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), createLedMat(color, 2.8));
+            m.position.set(x, y, z);
             return m;
-        };
-        const CY = (rt,rb,h,c,x,y,z,seg,opacity) => {
-            const m = new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||24), createMat(c, 0x000000, 0.2, opacity || 1));
-            m.position.set(x||0, y||0, z||0);
-            return m;
-        };
-        const SP = (r,c,x,y,z,opacity) => {
-            const m = new THREE.Mesh(new THREE.SphereGeometry(r,20,16), createMat(c, 0x000000, 0.2, opacity || 1));
-            m.position.set(x||0, y||0, z||0);
-            return m;
-        };
-        const TO = (r,t,c,x,y,z,rx,opacity) => {
-            const m = new THREE.Mesh(new THREE.TorusGeometry(r,t,14,28), createMat(c, 0x000000, 0.2, opacity || 1));
-            m.position.set(x||0, y||0, z||0);
+        }
+
+        const B = (w, h, d, c, x=0, y=0, z=0, rx=0, ry=0, rz=0, opacity=1) => {
+            const r = Math.max(Math.min(0.045, Math.min(w,h,d)*0.25), 0.003);
+            const mat = (c && c.isMaterial) ? c : createPBRMat(c, 0, 0);
+            const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, d, 2, r), mat);
+            m.position.set(x, y, z);
             if (rx) m.rotation.x = rx;
-            return m;
-        };
-        const CO = (r,h,c,x,y,z,opacity) => {
-            const m = new THREE.Mesh(new THREE.ConeGeometry(r,h,20), createMat(c, 0x000000, 0.2, opacity || 1));
-            m.position.set(x||0, y||0, z||0);
+            if (ry) m.rotation.y = ry;
+            if (rz) m.rotation.z = rz;
+            m.castShadow = true;
+            m.receiveShadow = true;
             return m;
         };
 
-        function makePropeller(x,z,y,accent) {
+        const CY = (rt, rb, h, c, x=0, y=0, z=0, rx=0, ry=0, rz=0, seg=24) => {
+            const mat = (c && c.isMaterial) ? c : createPBRMat(c, 0, 0);
+            const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+            m.position.set(x, y, z);
+            if (rx) m.rotation.x = rx;
+            if (ry) m.rotation.y = ry;
+            if (rz) m.rotation.z = rz;
+            m.castShadow = true;
+            m.receiveShadow = true;
+            return m;
+        };
+
+        const SP = (r, c, x=0, y=0, z=0, rx=0, ry=0, rz=0, seg=20) => {
+            const mat = (c && c.isMaterial) ? c : createPBRMat(c, 0, 0);
+            const m = new THREE.Mesh(new THREE.SphereGeometry(r, seg, Math.round(seg*0.8)), mat);
+            m.position.set(x, y, z);
+            m.castShadow = true;
+            m.receiveShadow = true;
+            return m;
+        };
+
+        const TO = (r, t, c, x=0, y=0, z=0, rx=0, ry=0, rz=0) => {
+            const mat = (c && c.isMaterial) ? c : createPBRMat(c, 0, 0);
+            const m = new THREE.Mesh(new THREE.TorusGeometry(r, t, 16, 32), mat);
+            m.position.set(x, y, z);
+            if (rx) m.rotation.x = rx;
+            if (ry) m.rotation.y = ry;
+            if (rz) m.rotation.z = rz;
+            m.castShadow = true;
+            m.receiveShadow = true;
+            return m;
+        };
+
+        const CO = (r, h, c, x=0, y=0, z=0, rx=0, ry=0, rz=0, seg=20) => {
+            const mat = (c && c.isMaterial) ? c : createPBRMat(c, 0, 0);
+            const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, seg), mat);
+            m.position.set(x, y, z);
+            if (rx) m.rotation.x = rx;
+            if (ry) m.rotation.y = ry;
+            if (rz) m.rotation.z = rz;
+            m.castShadow = true;
+            m.receiveShadow = true;
+            return m;
+        };
+
+        function makeDetailedPropeller(x, z, y, accent, count = 3) {
             const g = new THREE.Group();
-            g.add(CY(0.09, 0.09, 0.22, INK, x, y, z));
-            const disc = CY(0.55, 0.55, 0.02, '#ffffff', x, y+0.16, z, 20, 0.25);
-            g.add(disc);
+            g.position.set(x, y, z);
+
+            // Stator base & copper windings
+            g.add(CY(0.12, 0.13, 0.16, 'titan', 0, 0, 0));
+            g.add(CY(0.09, 0.09, 0.08, 'copper', 0, 0.04, 0));
+            // CNC Motor bell cap with vents
+            g.add(CY(0.135, 0.12, 0.1, 'alum', 0, 0.1, 0));
+            g.add(CO(0.065, 0.12, 'chrome', 0, 0.2, 0)); // Nose spinner
+
+            // Aerodynamic carbon propeller blades with pitch twist
+            const bladeAngleStep = (Math.PI * 2) / count;
+            for (let i = 0; i < count; i++) {
+                const ang = i * bladeAngleStep;
+                const bx = Math.cos(ang) * 0.26;
+                const bz = Math.sin(ang) * 0.26;
+                const blade = B(0.48, 0.016, 0.075, 'carbon', bx, 0.15, bz, 0.14, -ang, 0);
+                g.add(blade);
+                // Colored high-vis blade tip
+                const tx = Math.cos(ang) * 0.48;
+                const tz = Math.sin(ang) * 0.48;
+                const tip = B(0.08, 0.018, 0.076, accent, tx, 0.15, tz, 0.14, -ang, 0);
+                g.add(tip);
+            }
             return g;
         }
 
-        /* ── All 34 Bespoke 3D Model Builders ── */
+        /* ── All 34 Bespoke Realistic 3D Model Builders ── */
         const BUILDERS = {
             uav3d(a) {
                 const g = new THREE.Group();
-                g.add(B(1.2, 0.35, 1.2, PAPER, 0, 0, 0));
-                g.add(B(0.5, 0.22, 0.9, INK, 0, 0.25, 0));
-                g.add(SP(0.16, a, 0, 0.3, 0.5));
-                [[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([sx,sz]) => {
-                    g.add(B(0.9, 0.08, 0.12, PAPER, sx*0.7, 0, sz*0.7));
-                    g.add(makePropeller(sx*1.1, sz*1.1, 0, a));
-                });
-                return g;
-            },
-            antenna(a) {
-                const g = new THREE.Group();
-                g.add(CY(0.5, 0.6, 0.15, INK, 0, -1.2, 0));
-                g.add(CY(0.06, 0.06, 2.4, PAPER, 0, 0, 0));
-                [0, 2.1, 4.2].forEach(r => {
-                    const l = CY(0.03, 0.03, 1.1, '#8b93a7', Math.cos(r)*0.45, -0.9, Math.sin(r)*0.45);
-                    l.rotation.z = Math.cos(r) * 0.5;
-                    l.rotation.x = -Math.sin(r) * 0.5;
-                    g.add(l);
-                });
-                const d1 = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 12, 0, Math.PI*2, 0, 1.1), createMat(PAPER));
-                d1.position.set(-0.7, 0.7, 0);
-                d1.rotation.z = 1.1;
-                g.add(d1);
-                const d2 = d1.clone();
-                d2.position.x = 0.7;
-                d2.rotation.z = -1.1;
-                g.add(d2);
-                g.add(SP(0.1, a, 0, 1.35, 0));
-                g.add(TO(0.2, 0.02, a, 0, 1.35, 0, Math.PI/2));
-                return g;
-            },
-            iot(a) {
-                const g = new THREE.Group();
-                g.add(B(1.1, 0.8, 0.7, PAPER, 0, -0.3, 0));
-                g.add(CY(0.03, 0.03, 1, INK, 0.4, 0.6, 0));
-                g.add(SP(0.08, a, 0.4, 1.15, 0));
-                [[-0.9,0],[0,0.4],[0.9,0]].forEach(([x,z],i) => {
-                    g.add(CY(0.12, 0.12, 0.5, PAPER, x, -0.9, z));
-                    g.add(SP(0.14, i ? INK : a, x, -0.55, z));
-                });
-                g.add(TO(0.9, 0.03, a, 0, 0.6, 0, Math.PI/2));
-                return g;
-            },
-            pen(a) {
-                const g = new THREE.Group();
-                const b = CY(0.09, 0.09, 2.2, PAPER, 0, 0, 0);
-                b.rotation.z = Math.PI/2;
-                g.add(b);
-                const t = CO(0.09, 0.4, INK, 1.3, 0, 0);
-                t.rotation.z = -Math.PI/2;
-                g.add(t);
-                g.add(B(0.5, 0.05, 0.06, PAPER, -0.4, 0.12, 0));
-                g.add(TO(0.12, 0.02, a, -0.9, 0, 0, Math.PI/2));
-                return g;
-            },
-            ice(a) {
-                const g = new THREE.Group();
-                g.add(B(2.2, 0.5, 1.6, '#cfe0ea', 0, -1, 0));
-                g.add(CY(0.3, 0.35, 0.3, a, 0, -0.3, 0));
-                g.add(CY(0.05, 0.05, 0.9, INK, 0, 0.3, 0));
-                g.add(CO(0.5, 1.2, a, 0, -0.7, 0, 0.35));
-                g.add(TO(0.55, 0.03, a, 0, -0.95, 0, Math.PI/2));
-                return g;
-            },
-            icesense_beacon(a) {
-                const g = new THREE.Group();
-                g.add(B(2.2, 0.4, 1.6, '#cfe0ea', 0, -1.0, 0));
-                g.add(CY(0.45, 0.5, 0.25, INK, 0, -0.7, 0, 18));
-                g.add(CY(0.05, 0.05, 1.6, PAPER, 0, 0.2, 0));
-                const solar = B(0.7, 0.45, 0.04, '#152538', 0, 0.65, -0.2);
-                solar.rotation.x = -0.55;
-                g.add(solar);
-                g.add(CY(0.06, 0.06, 1.0, a, 0, -0.9, 0));
-                g.add(B(0.38, 0.35, 0.32, INK, 0, 0.15, 0));
-                g.add(SP(0.16, a, 0, 1.05, 0));
-                g.add(TO(0.45, 0.03, a, 0, 1.05, 0, Math.PI / 2));
-                return g;
-            },
-            boat(a) {
-                const g = new THREE.Group();
-                g.add(B(1.8, 0.4, 0.7, PAPER, 0, -0.4, 0));
-                g.add(B(0.7, 0.5, 0.6, PAPER, -0.1, 0.05, 0));
-                g.add(CY(0.04, 0.04, 1.1, INK, 0.5, 0.6, 0));
-                g.add(B(0.5, 0.3, 0.05, a, 0.5, 1, 0));
-                g.add(TO(1.3, 0.03, a, 0, -0.75, 0, Math.PI/2));
-                return g;
-            },
-            locker(a) {
-                const g = new THREE.Group();
-                g.add(B(1.6, 1.8, 0.7, PAPER, 0, 0, 0));
-                [-0.55, 0, 0.55].forEach(x => {
-                    g.add(B(0.42, 1.5, 0.06, INK, x, 0, 0.36));
-                });
-                g.add(TO(0.25, 0.05, INK, 0, 0.5, 0.4));
-                [0, 1, 2].forEach(i => {
-                    const b = B(0.3, 0.03, 0.02, a, 0, 0.5 - Math.cos(i * 2) * 0.18, 0.42 + Math.sin(i * 2) * 0.18);
-                    b.rotation.x = i * 1.1;
-                    g.add(b);
-                });
-                return g;
-            },
-            rover(a) {
-                const g = new THREE.Group();
-                g.add(B(1.2, 0.45, 0.8, PAPER, 0, 0, 0));
-                [[-0.45, 0.45], [0.45, 0.45], [-0.45, -0.45], [0.45, -0.45]].forEach(([x, z]) => {
-                    const w = CY(0.28, 0.28, 0.2, INK, x, -0.35, z);
-                    w.rotation.x = Math.PI / 2;
-                    g.add(w);
-                });
-                g.add(CY(0.05, 0.05, 0.8, PAPER, 0.4, 0.5, 0));
-                g.add(B(0.35, 0.2, 0.2, INK, 0.4, 0.95, 0));
-                g.add(SP(0.06, a, 0.4, 0.95, 0.12));
-                return g;
-            },
-            battlebot(a) {
-                const g = new THREE.Group();
-                g.add(B(1.3, 0.3, 1.1, INK, 0, -0.3, 0));
-                [-0.5, 0.5].forEach(x => {
-                    const w = CY(0.3, 0.3, 0.2, '#111111', x, -0.3, 0.55);
-                    w.rotation.z = Math.PI / 2;
-                    g.add(w);
-                });
-                g.add(B(1.5, 0.07, 0.12, a, 0, 0.15, 0));
-                g.add(SP(0.12, PAPER, 0, 0.35, 0));
-                return g;
-            },
-            snow(a) {
-                const g = new THREE.Group();
-                g.add(B(1.4, 0.5, 1, '#8a6f4d', 0, -0.8, 0));
-                const heap = SP(0.7, '#ffffff', 0, -0.35, 0);
-                heap.scale.y = 0.55;
-                g.add(heap);
-                const f1 = B(0.7, 0.07, 0.07, a, 0, 0.7, 0);
-                const f2 = B(0.7, 0.07, 0.07, a, 0, 0.7, 0);
-                const f3 = B(0.7, 0.07, 0.07, a, 0, 0.7, 0);
-                f2.rotation.z = 1.05;
-                f3.rotation.z = -1.05;
-                g.add(f1, f2, f3);
-                return g;
-            },
-            hearme(a) {
-                const g = new THREE.Group();
-                g.add(B(1.5, 1, 0.08, '#101623', 0, 0.35, -0.55));
-                for (let i = 0; i < 3; i++) {
-                    g.add(B(1.1 - i * 0.15, 0.07, 0.02, i === 2 ? a : PAPER, -0.05, 0.55 - i * 0.2, -0.49));
+                // 1. Center Carbon Fiber Fuselage
+                g.add(B(0.85, 0.22, 0.75, 'carbon', 0, 0, 0));
+                // Machined top avionics cover with heat sink ribs
+                g.add(B(0.55, 0.08, 0.55, 'alum', 0, 0.14, 0));
+                for (let i = -2; i <= 2; i++) {
+                    g.add(B(0.48, 0.03, 0.04, 'titan', 0, 0.19, i * 0.08));
                 }
-                g.add(CY(0.14, 0.16, 0.6, PAPER, -0.75, -0.35, 0.25, 12));
-                g.add(SP(0.13, PAPER, -0.75, 0.1, 0.25));
-                const ha1 = CY(0.045, 0.045, 0.5, PAPER, -0.95, 0.15, 0.3);
-                ha1.rotation.z = 0.7;
-                g.add(ha1);
-                const ha2 = CY(0.045, 0.045, 0.5, PAPER, -0.55, 0.15, 0.3);
-                ha2.rotation.z = -0.7;
-                g.add(ha2);
-                [[PAPER, -0.4], [a, 0], [PAPER, 0.4]].forEach(rc => {
-                    g.add(B(0.32, 0.14, 0.1, rc[0], rc[1], -0.78, 0.35));
+                // GPS/GNSS receiver dome
+                g.add(CY(0.09, 0.09, 0.04, 'carbon', 0, 0.21, -0.16));
+                g.add(SP(0.06, a, 0, 0.24, -0.16));
+
+                // 2. Gimbal Camera Turret (3-axis)
+                g.add(CY(0.06, 0.06, 0.14, 'titan', 0, -0.15, 0.32));
+                g.add(SP(0.14, 'titan', 0, -0.26, 0.34));
+                g.add(CY(0.085, 0.085, 0.08, 'alum', 0, -0.26, 0.44, Math.PI / 2, 0, 0));
+                g.add(CY(0.065, 0.065, 0.02, 'glass', 0, -0.26, 0.485, Math.PI / 2, 0, 0));
+                g.add(createLedMesh(0.02, a, 0.08, -0.2, 0.42));
+
+                // 3. Carbon Spar Booms & Brushless Motors
+                [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => {
+                    const ang = Math.atan2(sz, sx);
+                    const dist = 0.88;
+                    const arm = CY(0.035, 0.035, dist, 'carbon', sx * dist * 0.45, 0, sz * dist * 0.45, 0, -ang + Math.PI / 2, Math.PI / 2);
+                    g.add(arm);
+                    g.add(B(0.16, 0.08, 0.16, 'titan', sx * dist * 0.9, 0, sz * dist * 0.9));
+                    g.add(makeDetailedPropeller(sx * dist * 0.9, sz * dist * 0.9, 0.05, a, 3));
+                    const ledColor = sx < 0 ? '#ef4444' : '#22c55e';
+                    g.add(createLedMesh(0.03, ledColor, sx * dist * 0.9, -0.05, sz * dist * 0.9));
                 });
-                g.add(B(0.5, 0.35, 0.05, '#0e2a38', 0.78, -0.12, -0.2));
-                g.add(B(0.5, 0.35, 0.05, '#0e2a38', 0.78, 0.35, -0.2));
-                g.add(SP(0.09, a, 0.78, 0.12, -0.13));
-                g.add(TO(0.6, 0.025, a, 0, 1.2, -0.5));
-                return g;
-            },
-            hearme_mobile(a) {
-                const g = new THREE.Group();
-                g.add(CY(0.5, 0.55, 0.08, INK, 0, -0.85, 0, 24));
-                g.add(CY(0.04, 0.04, 0.6, '#8b93a7', 0, -0.55, 0));
-                const tab = B(1.5, 1.0, 0.07, '#0e1420', 0, 0.1, 0);
-                tab.rotation.x = -0.2;
-                g.add(tab);
-                const scr = B(1.35, 0.85, 0.02, '#182234', 0, 0.12, 0.04);
-                scr.rotation.x = -0.2;
-                g.add(scr);
-                const leftPane = B(0.58, 0.72, 0.02, INK, -0.32, 0.12, 0.05);
-                leftPane.rotation.x = -0.2;
-                g.add(leftPane);
-                const rightPane = B(0.58, 0.72, 0.02, a, 0.32, 0.12, 0.05);
-                rightPane.rotation.x = -0.2;
-                g.add(rightPane);
-                g.add(SP(0.04, a, 0, 0.58, 0.08));
-                g.add(TO(0.85, 0.025, a, 0, 0.1, 0, Math.PI / 2));
-                return g;
-            },
-            laptop(a) {
-                const g = new THREE.Group();
-                g.add(B(1.4, 0.08, 1, PAPER, 0, -0.6, 0));
-                const s = B(1.4, 1, 0.07, INK, 0, 0, -0.5);
-                s.rotation.x = -0.25;
-                g.add(s);
-                for (let i = 0; i < 4; i++) {
-                    g.add(B(0.9, 0.05, 0.02, i === 3 ? a : PAPER, 0, -0.2 + i * 0.2, -0.42 + i * 0.05));
-                }
-                return g;
-            },
-            cargodrone(a) {
-                const g = new THREE.Group();
-                g.add(B(1.6, 0.12, 1.6, INK, 0, 0.6, 0));
-                [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => g.add(makePropeller(sx * 0.9, sz * 0.9, 0.6, a)));
-                g.add(CY(0.03, 0.03, 0.7, PAPER, 0.5, 0.2, 0.5));
-                g.add(CY(0.03, 0.03, 0.7, PAPER, -0.5, 0.2, -0.5));
-                g.add(B(0.8, 0.5, 0.8, PAPER, 0, -0.35, 0));
-                g.add(B(0.84, 0.1, 0.84, INK, 0, -0.05, 0));
-                return g;
-            },
-            urbn(a) {
-                const g = new THREE.Group();
-                g.add(B(1.8, 0.14, 0.9, '#5b3a1e', 0, -0.75, 0));
-                g.add(CY(0.05, 0.05, 0.7, '#8b93a7', -0.55, -0.3, -0.2));
-                const utab = B(0.6, 0.45, 0.05, '#101623', -0.55, 0.15, -0.2);
-                utab.rotation.x = -0.2;
-                g.add(utab);
-                g.add(B(0.45, 0.06, 0.02, PAPER, -0.55, 0.24, -0.15));
-                g.add(B(0.3, 0.06, 0.02, a, -0.62, 0.1, -0.15));
-                g.add(B(1.2, 0.05, 0.05, INK, 0.2, 0.78, -0.3));
-                [0, 1, 2].forEach(i => {
-                    g.add(B(0.22, 0.3, 0.02, '#ffffff', -0.15 + i * 0.3, 0.58, -0.3));
-                });
-                const ucl = SP(0.28, PAPER, 0.55, -0.35, 0.25);
-                ucl.scale.y = 0.6;
-                g.add(ucl);
-                g.add(CY(0.34, 0.34, 0.05, a, 0.55, -0.55, 0.25, 18));
-                g.add(B(0.34, 0.3, 0.34, '#1FEB9B', -0.15, -0.4, 0.45));
-                g.add(B(0.34, 0.3, 0.34, '#00C2E8', 0.25, -0.4, 0.45));
-                const urp = B(0.16, 0.4, 0.02, '#ffffff', 0.88, -0.2, -0.15);
-                urp.rotation.z = 0.15;
-                g.add(urp);
-                return g;
-            },
-            notebook(a) {
-                const g = new THREE.Group();
-                g.add(B(1.1, 1.4, 0.12, INK, 0, 0, 0));
-                g.add(B(0.95, 1.25, 0.02, '#ffffff', 0, 0, 0.07));
-                g.add(B(0.6, 0.06, 0.02, PAPER, -0.05, 0.3, 0.09));
-                g.add(B(0.4, 0.06, 0.02, a, -0.15, 0.1, 0.09));
-                g.add(TO(0.18, 0.05, a, 0.25, -0.3, 0.1));
-                const p = CY(0.05, 0.05, 1.1, PAPER, 0.8, -0.2, 0);
-                p.rotation.z = 1.2;
-                g.add(p);
-                return g;
-            },
-            patch(a) {
-                const g = new THREE.Group();
-                g.add(B(1.2, 0.9, 0.08, PAPER, 0, 0, 0));
-                g.add(B(0.9, 0.6, 0.1, a, 0, 0, 0.01));
-                g.add(SP(0.12, a, 0.2, 0.1, 0.12));
-                g.add(SP(0.07, PAPER, -0.2, -0.1, 0.12));
-                return g;
-            },
-            shelf(a) {
-                const g = new THREE.Group();
-                [[-0.7], [0.7]].forEach(([x]) => {
-                    g.add(B(0.07, 1.9, 0.6, INK, x, 0, 0));
-                });
-                [-0.6, 0, 0.6].forEach(y => {
-                    g.add(B(1.5, 0.06, 0.6, PAPER, 0, y, 0));
-                    [0, 1, 2].forEach(i => g.add(B(0.3, 0.35, 0.3, i === 1 ? INK : PAPER, -0.45 + i * 0.45, y + 0.22, 0)));
-                });
-                return g;
-            },
-            lab(a) {
-                const g = new THREE.Group();
-                g.add(B(1.4, 0.12, 0.6, INK, 0, -0.7, 0));
-                [0, 1, 2].forEach(i => {
-                    const x = -0.45 + i * 0.45;
-                    g.add(CY(0.11, 0.11, 0.8, '#cfe0ea', x, -0.1, 0, 14));
-                    g.add(CY(0.09, 0.09, 0.3, i === 1 ? a : PAPER, x, -0.28, 0, 14));
-                });
-                g.add(B(0.9, 0.5, 0.05, INK, 0, 0.6, -0.4));
-                g.add(B(0.6, 0.06, 0.02, a, 0, 0.6, -0.36));
-                return g;
-            },
-            cabinet(a) {
-                const g = new THREE.Group();
-                g.add(B(1.2, 1.8, 0.7, PAPER, 0, 0, 0));
-                g.add(B(0.9, 1.5, 0.04, '#cfe0ea', 0, 0, 0.36));
-                [0, 1].forEach(i => {
-                    const y = -0.4 + i * 0.7;
-                    g.add(B(0.9, 0.05, 0.4, PAPER, 0, y, 0.1));
-                    g.add(CY(0.09, 0.09, 0.3, INK, -0.25, y + 0.2, 0.1, 12));
-                    g.add(CY(0.09, 0.09, 0.3, a, 0.25, y + 0.2, 0.1, 12));
-                });
-                return g;
-            },
-            vita(a) {
-                const g = new THREE.Group();
-                g.add(CY(0.3, 0.25, 0.8, PAPER, 0, -0.2, 0, 18));
-                g.add(CY(0.32, 0.32, 0.12, PAPER, 0, 0.25, 0, 18));
-                const st = CY(0.03, 0.03, 0.9, a, 0.15, 0.4, 0);
-                st.rotation.z = -0.3;
-                g.add(st);
-                g.add(CY(0.16, 0.16, 0.05, '#e8a13c', -0.3, 0.35, 0, 14));
-                return g;
-            },
-            bin(a) {
-                const g = new THREE.Group();
-                g.add(CY(0.5, 0.42, 1, '#5b6472', 0, -0.3, 0, 18));
-                g.add(TO(0.5, 0.05, a, 0, 0.25, 0, Math.PI / 2));
-                g.add(B(0.3, 0.3, 0.3, PAPER, -0.7, 0.5, 0));
-                g.add(B(0.3, 0.3, 0.3, INK, 0, 0.7, 0));
-                g.add(B(0.3, 0.3, 0.3, PAPER, 0.7, 0.5, 0));
-                return g;
-            },
-            floatbot(a) {
-                const g = new THREE.Group();
-                const w = CY(0.9, 0.9, 0.06, '#33505c', 0, -0.9, 0, 26);
-                g.add(w);
-                [-0.55, 0.55].forEach(x => {
-                    const p = CY(0.18, 0.18, 1, PAPER, x, -0.6, 0, 14);
-                    p.rotation.z = Math.PI / 2;
-                    g.add(p);
-                });
-                g.add(B(1, 0.3, 0.7, PAPER, 0, -0.2, 0));
-                const arm = B(0.12, 1, 0.12, INK, 0.3, 0.4, 0);
-                arm.rotation.z = -0.5;
-                g.add(arm);
-                g.add(SP(0.12, a, 0.62, 0.8, 0));
-                return g;
-            },
-            haps(a) {
-                const g = new THREE.Group();
-                g.add(B(3, 0.07, 0.7, PAPER, 0, 0.3, 0));
-                for (let i = 0; i < 4; i++) {
-                    g.add(B(0.4, 0.02, 0.5, '#2b3a4d', -1 + i * 0.65, 0.35, 0));
-                }
-                g.add(B(0.25, 0.25, 1.4, PAPER, 0, 0.2, 0));
-                g.add(B(0.7, 0.5, 0.06, PAPER, 0, 0.2, -0.8));
-                return g;
-            },
-            vr(a) {
-                const g = new THREE.Group();
-                g.add(B(1.1, 0.55, 0.5, '#1b2230', 0, 0, 0));
-                g.add(TO(0.55, 0.09, INK, 0, 0, -0.3));
-                g.add(CY(0.16, 0.16, 0.1, PAPER, -0.25, 0, 0.28, 16));
-                g.add(CY(0.16, 0.16, 0.1, PAPER, 0.25, 0, 0.28, 16));
-                g.add(B(0.5, 0.08, 0.02, a, 0, 0.32, 0.1));
-                return g;
-            },
-            aidrone(a) {
-                const g = new THREE.Group();
-                g.add(B(1, 0.3, 1, PAPER, 0, 0, 0));
-                [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => g.add(makePropeller(sx * 0.75, sz * 0.75, 0, a)));
-                g.add(SP(0.3, INK, 0, -0.1, 0.55));
-                g.add(SP(0.17, a, 0, -0.08, 0.78));
-                g.add(TO(0.45, 0.04, PAPER, 0, -0.1, 0.55));
-                return g;
-            },
-            lunar(a) {
-                const g = new THREE.Group();
-                g.add(B(1.1, 0.4, 0.7, PAPER, 0, 0.1, 0));
-                [-0.5, 0, 0.5].forEach(x => {
-                    [-0.45, 0.45].forEach(z => {
-                        const w = CY(0.2, 0.2, 0.14, INK, x, -0.3, z);
-                        w.rotation.x = Math.PI / 2;
-                        g.add(w);
+
+                // 4. Tubular Carbon Landing Skids
+                [-0.42, 0.42].forEach(sx => {
+                    g.add(CY(0.025, 0.025, 1.25, 'carbon', sx, -0.38, 0, Math.PI / 2, 0, 0));
+                    g.add(SP(0.03, 'alum', sx, -0.38, 0.62));
+                    g.add(SP(0.03, 'alum', sx, -0.38, -0.62));
+                    [-0.32, 0.32].forEach(sz => {
+                        const strut = CY(0.022, 0.022, 0.32, 'titan', sx * 0.85, -0.2, sz, 0, 0, sx > 0 ? 0.35 : -0.35);
+                        g.add(strut);
                     });
                 });
-                g.add(CY(0.04, 0.04, 0.7, PAPER, 0.4, 0.6, 0));
-                g.add(B(0.3, 0.18, 0.18, INK, 0.4, 1, 0));
-                for (let i = 0; i < 3; i++) {
-                    g.add(TO(0.16, 0.03, a, -0.3, 0.2 + i * 0.14, 0, Math.PI / 2));
-                }
-                g.add(CY(1.1, 1.1, 0.05, '#8b93a7', 0, -0.62, 0, 30));
                 return g;
             },
+
+            antenna(a) {
+                const g = new THREE.Group();
+                // Pedestal & Azimuth Motor Yoke
+                g.add(CY(0.65, 0.75, 0.22, 'titan', 0, -1.2, 0, 0, 0, 0, 28));
+                g.add(CY(0.42, 0.42, 0.35, 'alum', 0, -0.95, 0));
+                g.add(CY(0.08, 0.08, 0.4, 'gold', 0.28, -0.95, 0, 0, 0, Math.PI / 2)); // Motor shaft
+
+                // Truss Lattice Mast
+                g.add(CY(0.12, 0.16, 1.6, 'titan', 0, 0.1, 0, 0, 0, 0, 16));
+                for (let i = 0; i < 4; i++) {
+                    const y = -0.5 + i * 0.42;
+                    g.add(TO(0.16, 0.02, 'alum', 0, y, 0, Math.PI / 2));
+                }
+
+                // Parabolic Main Dish
+                const dishGeo = new THREE.SphereGeometry(1.05, 32, 16, 0, Math.PI * 2, 0, 0.95);
+                const dishMesh = new THREE.Mesh(dishGeo, createPBRMat('alum'));
+                dishMesh.position.set(0, 0.65, 0.35);
+                dishMesh.rotation.x = 1.35;
+                dishMesh.castShadow = true;
+                dishMesh.receiveShadow = true;
+                g.add(dishMesh);
+
+                // Dish Rear Reinforcing Ring
+                g.add(TO(0.68, 0.04, 'titan', 0, 0.65, 0.25, 1.35));
+
+                // Quad-Strut Focal Feed Horn
+                [[-0.32, -0.32], [0.32, -0.32], [-0.32, 0.32], [0.32, 0.32]].forEach(([sx, sy]) => {
+                    const strut = CY(0.016, 0.016, 0.88, 'alum', sx * 0.6, 0.65 + sy * 0.6, 0.72, -sy * 0.5, sx * 0.5, 0);
+                    g.add(strut);
+                });
+                // Sub-reflector & Gold Dipole Feed
+                g.add(CY(0.08, 0.12, 0.15, 'titan', 0, 0.65, 1.15, Math.PI / 2));
+                g.add(SP(0.07, 'gold', 0, 0.65, 1.25));
+                g.add(createLedMesh(0.03, a, 0, 0.65, 1.32));
+
+                // Top Optical Lightning Arrestor
+                g.add(CY(0.02, 0.03, 0.7, 'chrome', 0, 1.6, 0));
+                g.add(createLedMesh(0.04, a, 0, 1.95, 0));
+                return g;
+            },
+
+            iot(a) {
+                const g = new THREE.Group();
+                // Extruded Aluminum Chassis
+                g.add(B(1.25, 0.82, 0.75, 'titan', 0, 0, 0));
+                // Cooling Heatsink Fins (Extruded Sides)
+                [-0.64, 0.64].forEach(x => {
+                    for (let i = -3; i <= 3; i++) {
+                        g.add(B(0.035, 0.75, 0.05, 'alum', x, 0, i * 0.09));
+                    }
+                });
+
+                // Front High-Contrast Interface Panel
+                g.add(B(1.05, 0.65, 0.04, 'screen', 0, 0, 0.39));
+                // OLED Telemetry Display
+                g.add(B(0.55, 0.26, 0.02, { color: '#030712', emissive: '#0284c7', emissiveIntensity: 0.35 }, -0.18, 0.1, 0.415));
+                // Status Indicator LED Cluster
+                ['#22c55e', '#38bdf8', a].forEach((col, i) => {
+                    g.add(createLedMesh(0.025, col, 0.32, 0.18 - i * 0.08, 0.42));
+                });
+
+                // Recessed I/O Ports: RJ45 + Dual USB-C
+                g.add(B(0.24, 0.18, 0.08, 'darkAlum', -0.25, -0.18, 0.39));
+                g.add(B(0.18, 0.12, 0.02, 'chrome', -0.25, -0.18, 0.42)); // RJ45
+                g.add(B(0.12, 0.04, 0.02, 'gold', 0.15, -0.18, 0.42)); // USB-C
+
+                // Dual High-Gain Articulated Antennas
+                [-0.42, 0.42].forEach((x, i) => {
+                    // Brass SMA bulkhead connector
+                    g.add(CY(0.05, 0.05, 0.12, 'gold', x, 0.46, -0.1));
+                    g.add(CY(0.038, 0.038, 0.1, 'titan', x, 0.54, -0.1));
+                    // Tilt knuckle & whip antenna
+                    const whip = CY(0.024, 0.016, 1.1, 'rubber', x + (i ? 0.08 : -0.08), 1.08, -0.1, 0, 0, i ? -0.14 : 0.14);
+                    g.add(whip);
+                    g.add(createLedMesh(0.028, a, x + (i ? 0.15 : -0.15), 1.62, -0.1));
+                });
+
+                // Wall Mounting Flanges with Hex Fasteners
+                [-0.68, 0.68].forEach(x => {
+                    g.add(B(0.08, 0.4, 0.55, 'alum', x, 0, -0.2));
+                    [-0.15, 0.15].forEach(z => {
+                        g.add(CY(0.025, 0.025, 0.1, 'chrome', x, 0.12, z, Math.PI / 2));
+                    });
+                });
+                return g;
+            },
+
+            pen(a) {
+                const g = new THREE.Group();
+                // Ergonomic Contoured Grip & Barrel
+                g.add(CY(0.11, 0.11, 1.5, 'titan', 0, 0, 0, 0, 0, Math.PI / 2));
+                // Knurled Aluminum Grip Ring
+                g.add(CY(0.125, 0.125, 0.45, 'alum', 0.45, 0, 0, 0, 0, Math.PI / 2, 32));
+                for (let i = -3; i <= 3; i++) {
+                    g.add(TO(0.124, 0.008, 'darkAlum', 0.45 + i * 0.05, 0, 0, 0, Math.PI / 2, 0));
+                }
+
+                // Laser-Etched Measurement Scale & OLED Window
+                g.add(B(0.55, 0.08, 0.04, 'screen', -0.25, 0.1, 0));
+                g.add(B(0.38, 0.04, 0.02, { color: '#030712', emissive: a, emissiveIntensity: 0.65 }, -0.25, 0.12, 0));
+
+                // Precision Optical Sensor Tip Aperture
+                g.add(CY(0.11, 0.05, 0.4, 'alum', 0.95, 0, 0, 0, 0, Math.PI / 2));
+                g.add(CY(0.05, 0.02, 0.2, 'titan', 1.2, 0, 0, 0, 0, Math.PI / 2));
+                g.add(CY(0.02, 0.02, 0.04, 'glass', 1.31, 0, 0, 0, 0, Math.PI / 2));
+                g.add(createLedMesh(0.025, a, 1.33, 0, 0)); // Laser focus dot
+
+                // Inductive Charging End Cap
+                g.add(CY(0.11, 0.08, 0.25, 'titan', -0.85, 0, 0, 0, 0, Math.PI / 2));
+                g.add(TO(0.09, 0.016, 'gold', -0.96, 0, 0, 0, Math.PI / 2, 0));
+                g.add(createLedMesh(0.035, a, -1.0, 0, 0)); // Halo status indicator
+                return g;
+            },
+
+            ice(a) {
+                const g = new THREE.Group();
+                // Marine Buoy Flotation Torus Collar
+                g.add(TO(0.85, 0.28, 'rubber', 0, -0.65, 0, Math.PI / 2));
+                // Central Waterproof Instrument Drum
+                g.add(CY(0.52, 0.52, 1.25, 'titan', 0, -0.3, 0));
+                g.add(CY(0.48, 0.48, 0.12, 'alum', 0, 0.35, 0));
+
+                // Solar PV Array (4-Quadrant Wrap)
+                for (let i = 0; i < 4; i++) {
+                    const ang = i * (Math.PI / 2);
+                    const panel = B(0.38, 0.52, 0.02, { color: '#0f172a', roughness: 0.1 }, Math.cos(ang) * 0.53, -0.3, Math.sin(ang) * 0.53, 0, -ang + Math.PI / 2, 0);
+                    g.add(panel);
+                }
+
+                // Submerged Ballast Keel & Deep Ice Sensor Probe
+                g.add(CY(0.18, 0.08, 0.9, 'darkAlum', 0, -1.2, 0));
+                g.add(SP(0.24, 'copper', 0, -1.65, 0)); // Bronze ballast bulb
+                g.add(CY(0.03, 0.03, 0.8, 'titan', 0, -2.1, 0)); // Acoustic depth transducer
+
+                // Upper Instrument Mast with Rotating Anemometer & Flash Beacon
+                g.add(CY(0.05, 0.05, 1.1, 'alum', 0, 0.9, 0));
+                // Cross arm
+                g.add(CY(0.025, 0.025, 0.55, 'alum', 0, 1.25, 0, 0, 0, Math.PI / 2));
+                g.add(SP(0.05, 'alum', -0.28, 1.25, 0));
+                g.add(SP(0.05, 'alum', 0.28, 1.25, 0));
+                // High-Intensity Fresnel Navigation Beacon
+                g.add(CY(0.1, 0.1, 0.18, 'glass', 0, 1.5, 0));
+                g.add(createLedMesh(0.08, a, 0, 1.5, 0));
+                return g;
+            },
+
+            icesense_beacon(a) {
+                return (BUILDERS.ice)(a);
+            },
+
+            boat(a) {
+                const g = new THREE.Group();
+                // Hydrocontest Dual-Stepped Catamaran Wave-Piercing Hull
+                [-0.45, 0.45].forEach(sx => {
+                    // Main sponson
+                    g.add(CY(0.16, 0.12, 2.4, 'carbon', sx, -0.5, 0, Math.PI / 2));
+                    // Wave-piercing bow cone
+                    g.add(CO(0.16, 0.65, 'titan', sx, -0.5, 1.45, -Math.PI / 2));
+                    // Stern electric pod thruster
+                    g.add(CY(0.07, 0.07, 0.25, 'alum', sx, -0.62, -1.2, Math.PI / 2));
+                    g.add(makeDetailedPropeller(sx, -1.35, -0.62, a, 3));
+                });
+
+                // Aerodynamic Bridge Deck & Cockpit Canopy
+                g.add(B(0.85, 0.18, 1.5, 'carbon', 0, -0.32, -0.1));
+                g.add(B(0.55, 0.22, 0.75, 'glass', 0, -0.16, 0.25, -0.25, 0, 0)); // Windscreen
+                // Monocrystalline Solar Array Deck
+                g.add(B(0.72, 0.02, 0.85, { color: '#0284c7', metalness: 0.8, roughness: 0.15 }, 0, -0.22, -0.4));
+
+                // Carbon Fiber Telemetry Mast & Pitot Tube
+                g.add(CY(0.025, 0.035, 1.1, 'carbon', 0, 0.35, -0.2));
+                g.add(CY(0.01, 0.01, 0.3, 'chrome', 0, 0.85, 0.1, Math.PI / 2)); // Pitot
+                g.add(createLedMesh(0.04, a, 0, 0.95, -0.2));
+                return g;
+            },
+
+            locker(a) {
+                const g = new THREE.Group();
+                // Heavy-Gauge Steel Locker Matrix (Velotraks)
+                g.add(B(1.6, 1.85, 0.85, 'darkAlum', 0, 0, 0));
+                // Recessed Individual Compartment Doors
+                [-0.45, 0.45].forEach((x, col) => {
+                    [-0.55, 0.05, 0.65].forEach((y, row) => {
+                        // Powder coated door
+                        g.add(B(0.38, 0.48, 0.04, 'titan', x, y, 0.44));
+                        // Electronic solenoid lock status LED
+                        g.add(createLedMesh(0.02, col === 0 && row === 1 ? '#22c55e' : a, x + 0.14, y, 0.47));
+                        // Recessed pull handle
+                        g.add(B(0.03, 0.16, 0.02, 'alum', x - 0.14, y, 0.47));
+                    });
+                });
+
+                // Central Touchscreen Kiosk Terminal
+                g.add(B(0.26, 1.8, 0.06, 'carbon', 0, 0, 0.44));
+                g.add(B(0.2, 0.35, 0.02, 'screen', 0, 0.25, 0.48)); // Screen
+                g.add(B(0.12, 0.1, 0.02, 'gold', 0, -0.05, 0.48)); // NFC Card Tap Reader
+                g.add(createLedMesh(0.025, a, 0, 0.52, 0.48));
+
+                // Angled Solar Canopy Roof
+                const roof = B(1.75, 0.08, 1.05, 'alum', 0, 1.02, 0.08, -0.15, 0, 0);
+                g.add(roof);
+                g.add(B(1.6, 0.02, 0.9, { color: '#0369a1', metalness: 0.85, roughness: 0.18 }, 0, 1.08, 0.08, -0.15, 0, 0));
+                return g;
+            },
+
+            rover(a) {
+                const g = new THREE.Group();
+                // Bruntor Autonomous Delivery Rover Chassis
+                g.add(B(1.3, 0.42, 0.88, 'titan', 0, -0.1, 0));
+                g.add(B(1.05, 0.28, 0.75, 'carbon', 0, 0.22, 0));
+
+                // 4 All-Terrain Wheels with Deep Directional Rubber Treads
+                [[-0.62, 0.52], [0.62, 0.52], [-0.62, -0.52], [0.62, -0.52]].forEach(([x, z]) => {
+                    // Deep tread rubber tire
+                    const tire = CY(0.32, 0.32, 0.22, 'rubber', x, -0.32, z, 0, 0, Math.PI / 2, 28);
+                    g.add(tire);
+                    // Alloy spoke wheel rim
+                    g.add(CY(0.22, 0.22, 0.23, 'alum', x, -0.32, z, 0, 0, Math.PI / 2, 18));
+                    // Center axle hub with lug nuts
+                    g.add(CY(0.08, 0.08, 0.25, 'gold', x, -0.32, z, 0, 0, Math.PI / 2));
+
+                    // Double-Wishbone Suspension & Coilover Shock Spring
+                    const arm = CY(0.025, 0.025, 0.32, 'titan', x * 0.75, -0.22, z, 0, 0, x > 0 ? 0.4 : -0.4);
+                    g.add(arm);
+                    g.add(CY(0.04, 0.04, 0.25, 'chrome', x * 0.78, -0.18, z)); // Damper shaft
+                });
+
+                // Front Stereoscopic Obstacle Avoidance Cameras & LED Headlight Bar
+                g.add(B(0.75, 0.08, 0.06, 'chrome', 0, -0.1, 0.46));
+                [-0.28, 0.28].forEach(x => {
+                    g.add(createLedMesh(0.04, '#ffffff', x, -0.1, 0.5));
+                });
+                g.add(createLedMesh(0.025, '#38bdf8', 0, 0.05, 0.46)); // Stereo sensor
+
+                // Roof 360° Spinning LiDAR Sensor Turret
+                g.add(CY(0.12, 0.12, 0.14, 'darkAlum', 0, 0.42, 0));
+                g.add(CY(0.14, 0.14, 0.16, 'glass', 0, 0.56, 0));
+                g.add(createLedMesh(0.035, a, 0, 0.56, 0.12));
+                return g;
+            },
+
+            battlebot(a) {
+                const g = new THREE.Group();
+                // Combat Robot BBK Sloped Hardened Armor Wedge
+                g.add(B(1.4, 0.25, 1.15, 'darkAlum', 0, -0.28, 0));
+                // Sloped front plow wedge
+                const wedge = B(1.35, 0.14, 0.65, 'titan', 0, -0.3, 0.62, -0.35, 0, 0);
+                g.add(wedge);
+
+                // High-Speed Spinning Kinetic Flywheel Weapon
+                g.add(CY(0.42, 0.42, 0.12, 'chrome', 0, -0.18, 0.72, 0, 0, Math.PI / 2, 28));
+                // Hardened tungsten impact teeth
+                [0, Math.PI].forEach(ang => {
+                    g.add(B(0.14, 0.16, 0.08, 'gold', Math.cos(ang) * 0.42, -0.18, 0.72 + Math.sin(ang) * 0.42));
+                });
+
+                // Wide Heavy-Duty Foam Tires & Titanium Wheel Guards
+                [-0.68, 0.68].forEach(x => {
+                    g.add(CY(0.3, 0.3, 0.26, 'rubber', x, -0.28, -0.15, 0, 0, Math.PI / 2, 24));
+                    g.add(B(0.06, 0.35, 0.65, 'titan', x * 1.08, -0.26, -0.15)); // Armor guard
+                });
+
+                // Master Power Disconnect & Safety LED
+                g.add(CY(0.05, 0.05, 0.08, 'gold', 0.42, -0.12, -0.35));
+                g.add(createLedMesh(0.035, a, -0.42, -0.12, -0.35));
+                return g;
+            },
+
+            snow(a) {
+                const g = new THREE.Group();
+                // Baltic Snow Autonomous Grooming Rover
+                g.add(B(1.35, 0.52, 1.1, 'titan', 0, -0.15, 0));
+
+                // Continuous Track Drive Assemblies (Left & Right)
+                [-0.65, 0.65].forEach(x => {
+                    // Front idler & rear drive sprocket
+                    g.add(CY(0.24, 0.24, 0.18, 'alum', x, -0.42, 0.45, 0, 0, Math.PI / 2, 18));
+                    g.add(CY(0.24, 0.24, 0.18, 'alum', x, -0.42, -0.45, 0, 0, Math.PI / 2, 18));
+                    // Middle road wheels
+                    for (let i = -1; i <= 1; i++) {
+                        g.add(CY(0.18, 0.18, 0.16, 'darkAlum', x, -0.48, i * 0.3, 0, 0, Math.PI / 2, 16));
+                    }
+                    // Rubber track belt with cleats
+                    g.add(B(0.2, 0.44, 1.25, 'rubber', x, -0.45, 0));
+                });
+
+                // Hydraulic Front Snowplow Blade with Angle Rams
+                const plow = B(1.65, 0.48, 0.08, 'alum', 0, -0.38, 0.85, 0.25, 0, 0);
+                g.add(plow);
+                g.add(CY(0.04, 0.04, 0.45, 'chrome', -0.45, -0.28, 0.65, -0.45, 0, 0)); // Ram
+                g.add(CY(0.04, 0.04, 0.45, 'chrome', 0.45, -0.28, 0.65, -0.45, 0, 0));
+
+                // High-Intensity Work Lights & Beacon
+                g.add(createLedMesh(0.05, '#ffffff', -0.42, 0.18, 0.56));
+                g.add(createLedMesh(0.05, '#ffffff', 0.42, 0.18, 0.56));
+                g.add(createLedMesh(0.06, a, 0, 0.42, 0));
+                return g;
+            },
+
+            hearme(a) {
+                const g = new THREE.Group();
+                // Acoustic Beamforming Array Module
+                g.add(B(1.5, 0.95, 0.14, 'darkAlum', 0, 0.25, -0.2));
+                // Micro-Perforated Aluminum Acoustic Grille
+                g.add(B(1.35, 0.8, 0.02, 'titan', 0, 0.25, -0.12));
+                for (let row = -2; row <= 2; row++) {
+                    for (let col = -4; col <= 4; col++) {
+                        g.add(SP(0.02, 'alum', col * 0.14, 0.25 + row * 0.14, -0.1));
+                    }
+                }
+
+                // High-Contrast LED Visual Speech Ring
+                g.add(TO(0.42, 0.035, 'alum', 0, 0.25, -0.08));
+                for (let i = 0; i < 12; i++) {
+                    const ang = i * (Math.PI * 2 / 12);
+                    g.add(createLedMesh(0.025, i % 3 === 0 ? a : '#38bdf8', Math.cos(ang) * 0.42, 0.25 + Math.sin(ang) * 0.42, -0.06));
+                }
+
+                // Base with Audio Processor & Haptic Dial
+                g.add(CY(0.55, 0.65, 0.15, 'carbon', 0, -0.55, 0, 0, 0, 0, 24));
+                g.add(CY(0.24, 0.24, 0.08, 'alum', 0, -0.45, 0.15)); // Dial
+                g.add(TO(0.24, 0.015, a, 0, -0.45, 0.15, Math.PI / 2));
+                return g;
+            },
+
+            hearme_mobile(a) {
+                const g = new THREE.Group();
+                // Precision Machined Tablet Body
+                g.add(B(1.55, 1.05, 0.07, 'alum', 0, 0.1, 0, -0.18, 0, 0));
+                // Smoked Glass Screen Surface
+                g.add(B(1.42, 0.92, 0.02, 'screen', 0, 0.11, 0.04, -0.18, 0, 0));
+                // Bilingual Split Screen Interface
+                g.add(B(0.62, 0.78, 0.01, { color: '#0f172a', emissive: '#0284c7', emissiveIntensity: 0.3 }, -0.34, 0.11, 0.05, -0.18, 0, 0));
+                g.add(B(0.62, 0.78, 0.01, { color: '#0f172a', emissive: a, emissiveIntensity: 0.3 }, 0.34, 0.11, 0.05, -0.18, 0, 0));
+
+                // Ergonomic Desktop Stand
+                g.add(CY(0.48, 0.52, 0.08, 'darkAlum', 0, -0.75, -0.15, 0, 0, 0, 24));
+                g.add(CY(0.04, 0.04, 0.65, 'chrome', 0, -0.45, -0.15));
+                g.add(createLedMesh(0.03, a, 0, 0.62, 0.05));
+                return g;
+            },
+
+            laptop(a) {
+                const g = new THREE.Group();
+                // Priede Eco-Modular Laptop
+                // Base Unibody with Baltic Birch Wood Accent
+                g.add(B(1.55, 0.07, 1.05, 'alum', 0, -0.45, 0));
+                g.add(B(1.42, 0.02, 0.92, '#8a5a2b', 0, -0.41, 0)); // Wood veneer top deck
+                // Chiclet Keyboard & Glass Trackpad
+                g.add(B(1.15, 0.01, 0.42, 'titan', 0, -0.4, -0.18));
+                g.add(B(0.42, 0.01, 0.28, 'chrome', 0, -0.4, 0.24));
+
+                // Display Lid with Ultra-Thin Bezel
+                const lid = B(1.55, 1.05, 0.05, 'alum', 0, 0.15, -0.5, -0.32, 0, 0);
+                g.add(lid);
+                // IPS Matte Antireflective Display Panel
+                g.add(B(1.45, 0.95, 0.015, 'screen', 0, 0.16, -0.47, -0.32, 0, 0));
+                g.add(B(1.35, 0.85, 0.01, { color: '#030712', emissive: a, emissiveIntensity: 0.35 }, 0, 0.16, -0.46, -0.32, 0, 0));
+                // Web camera dot
+                g.add(createLedMesh(0.016, '#38bdf8', 0, 0.66, -0.63));
+                return g;
+            },
+
+            cargodrone(a) {
+                const g = new THREE.Group();
+                // Spoks Heavy-Lift Octocopter (8 Motors)
+                g.add(B(1.2, 0.28, 1.2, 'titan', 0, 0.2, 0));
+                g.add(B(0.85, 0.12, 0.85, 'carbon', 0, 0.36, 0));
+
+                // 4 Dual-Coaxial Motor Booms (8 Propellers Total)
+                [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([sx, sz]) => {
+                    const dist = 0.95;
+                    g.add(CY(0.045, 0.045, dist, 'carbon', sx * dist * 0.45, 0.2, sz * dist * 0.45, 0, -Math.atan2(sz, sx) + Math.PI / 2, Math.PI / 2));
+                    // Upper and Lower Coaxial Propellers
+                    g.add(makeDetailedPropeller(sx * dist * 0.9, sz * dist * 0.9, 0.32, a, 3));
+                    g.add(makeDetailedPropeller(sx * dist * 0.9, sz * dist * 0.9, 0.08, 'chrome', 3));
+                });
+
+                // Central Motorized Cargo Payload Bay & Container
+                g.add(B(0.85, 0.65, 0.85, 'alum', 0, -0.32, 0));
+                g.add(B(0.92, 0.08, 0.92, 'gold', 0, -0.05, 0)); // Heavy payload latch
+                // Dual Quick-Swap High-Capacity Battery Packs
+                [-0.48, 0.48].forEach(x => {
+                    g.add(B(0.18, 0.35, 0.55, 'darkAlum', x, 0.18, 0));
+                });
+
+                // High-Clearance Carbon Skid Legs
+                [-0.55, 0.55].forEach(x => {
+                    g.add(CY(0.03, 0.03, 1.4, 'carbon', x, -0.72, 0, Math.PI / 2));
+                    [-0.45, 0.45].forEach(z => {
+                        g.add(CY(0.025, 0.025, 0.55, 'titan', x * 0.85, -0.45, z, 0, 0, x > 0 ? 0.35 : -0.35));
+                    });
+                });
+                return g;
+            },
+
+            urbn(a) {
+                const g = new THREE.Group();
+                // UrbnDINE Food Automation Hub & Service Locker
+                g.add(B(1.6, 1.7, 0.9, 'darkAlum', 0, 0, 0));
+                // Illuminated Glass Food Pickup Compartment
+                g.add(B(1.3, 0.65, 0.04, 'glass', 0, 0.15, 0.46));
+                g.add(B(1.25, 0.04, 0.65, 'chrome', 0, -0.18, 0.1)); // Heated stainless shelf
+                // Multi-Nozzle Precision Dispensing Carousel
+                g.add(CY(0.35, 0.35, 0.08, 'alum', 0, 0.42, 0.15));
+                for (let i = 0; i < 6; i++) {
+                    const ang = i * (Math.PI * 2 / 6);
+                    g.add(CY(0.03, 0.02, 0.18, 'gold', Math.cos(ang) * 0.24, 0.32, 0.15 + Math.sin(ang) * 0.24));
+                }
+
+                // Interactive Order Kiosk & Receipt Printer
+                g.add(B(0.35, 0.55, 0.04, 'screen', -0.55, 0.2, 0.46));
+                g.add(B(0.25, 0.04, 0.02, 'chrome', -0.55, -0.15, 0.48)); // Receipt slot
+                g.add(createLedMesh(0.04, a, 0, 0.72, 0.46));
+                return g;
+            },
+
+            food(a) {
+                return (BUILDERS.urbn)(a);
+            },
+
+            notebook(a) {
+                const g = new THREE.Group();
+                // Plusma Smart Lab Digitizer Notebook
+                // Anodized Aluminum Binder Spine & Cover
+                g.add(B(1.25, 1.6, 0.14, 'darkAlum', 0, 0, 0));
+                g.add(B(1.12, 1.45, 0.02, { color: '#f8fafc', roughness: 0.9 }, 0, 0, 0.08)); // Paper texture
+                // Digital Ink Graph Matrix
+                for (let i = -3; i <= 3; i++) {
+                    g.add(B(0.9, 0.015, 0.005, 'alum', 0, i * 0.18, 0.095));
+                }
+
+                // Magnetic Inductive Stylus Dock & Active Stylus
+                g.add(CY(0.06, 0.06, 1.35, 'titan', 0.68, 0, 0.05));
+                g.add(CY(0.045, 0.045, 1.25, 'chrome', 0.68, 0, 0.08)); // Stylus
+                g.add(CO(0.045, 0.12, a, 0.68, 0.68, 0.08)); // Tip
+                g.add(createLedMesh(0.03, a, -0.45, 0.68, 0.09));
+                return g;
+            },
+
+            patch(a) {
+                const g = new THREE.Group();
+                // Pink Patch Flexible Wearable Biosensor
+                // Biocompatible Medical Silicone Substrate
+                g.add(B(1.3, 0.95, 0.06, { color: '#fbcfe8', roughness: 0.85, opacity: 0.88, transparent: true }, 0, 0, 0));
+                // Microfluidic Capillary Sweat Channels (Laser Engraved)
+                for (let i = 0; i < 4; i++) {
+                    const wave = TO(0.25 + i * 0.08, 0.012, a, 0, 0, 0.035, 0, 0, i * 0.5);
+                    g.add(wave);
+                }
+
+                // Flexible Circuit Island with Gold NFC Induction Antenna Coil
+                g.add(CY(0.28, 0.28, 0.02, 'gold', 0, 0, 0.04));
+                g.add(B(0.18, 0.18, 0.04, 'titan', 0, 0, 0.06)); // ASIC Sensor chip
+                g.add(createLedMesh(0.028, a, 0.38, 0.22, 0.045));
+                return g;
+            },
+
+            shelf(a) {
+                const g = new THREE.Group();
+                // Smart Store Autonomous Inventory Matrix
+                // Industrial Extruded Aluminum Frame
+                [[-0.75], [0.75]].forEach(([x]) => {
+                    g.add(B(0.08, 2.1, 0.75, 'titan', x, 0, 0));
+                });
+                // Weight-Sensing Load Cell Shelf Tiers
+                [-0.65, 0, 0.65].forEach((y, tier) => {
+                    g.add(B(1.55, 0.06, 0.72, 'alum', 0, y, 0));
+                    // Electronic Shelf Labels (ESL E-Paper Strips)
+                    g.add(B(1.4, 0.04, 0.02, 'screen', 0, y, 0.37));
+                    // Products on shelf
+                    [-0.45, 0, 0.45].forEach(x => {
+                        g.add(B(0.24, 0.32, 0.24, tier === 1 ? a : 'chrome', x, y + 0.18, 0));
+                    });
+                });
+
+                // Overhead Time-of-Flight Depth Camera Sensors
+                g.add(B(1.5, 0.06, 0.1, 'titan', 0, 1.05, 0.25));
+                [-0.4, 0.4].forEach(x => {
+                    g.add(SP(0.05, 'glass', x, 1.02, 0.25));
+                    g.add(createLedMesh(0.02, a, x, 1.02, 0.28));
+                });
+                return g;
+            },
+
+            lab(a) {
+                const g = new THREE.Group();
+                // C.O.R.E. Automated Analytical Lab Robot
+                // Solid Cast Granite Vibration Isolation Bed
+                g.add(B(1.6, 0.16, 1.05, 'darkAlum', 0, -0.65, 0));
+
+                // Dual Precision Linear Ball-Screw Gantry Rails
+                [-0.45, 0.45].forEach(z => {
+                    g.add(CY(0.025, 0.025, 1.5, 'chrome', 0, -0.52, z, 0, 0, Math.PI / 2));
+                });
+
+                // Automated Multi-Channel Pipette Toolhead Carriage
+                g.add(B(0.38, 0.55, 0.42, 'alum', 0.15, -0.15, 0));
+                for (let i = -3; i <= 3; i++) {
+                    g.add(CY(0.012, 0.006, 0.32, 'gold', 0.15, -0.48, i * 0.05));
+                }
+
+                // 96-Well Microplate Diagnostic Decks
+                [-0.45, -0.15].forEach(x => {
+                    g.add(B(0.28, 0.06, 0.42, 'glass', x, -0.52, 0));
+                });
+
+                // UV Sterilization Lamp Fixture
+                g.add(CY(0.03, 0.03, 1.2, { color: '#818cf8', emissive: '#6366f1', emissiveIntensity: 2.2 }, 0, 0.45, -0.4, 0, 0, Math.PI / 2));
+                g.add(createLedMesh(0.04, a, 0.35, 0.1, 0.2));
+                return g;
+            },
+
+            cabinet(a) {
+                const g = new THREE.Group();
+                // Smart Reagent Storage Cabinet (Hermetic)
+                g.add(B(1.35, 1.9, 0.8, 'darkAlum', 0, 0, 0));
+                // Tempered Heated Glass Door
+                g.add(B(1.15, 1.65, 0.04, 'glass', 0, 0, 0.41));
+                // Internal Stainless Shelves with Reagent Vials
+                [-0.45, 0.15].forEach((y, sIdx) => {
+                    g.add(B(1.18, 0.04, 0.65, 'alum', 0, y, 0));
+                    for (let i = -2; i <= 2; i++) {
+                        g.add(CY(0.065, 0.065, 0.28, sIdx === 0 ? 'copper' : a, i * 0.22, y + 0.16, 0.05));
+                    }
+                });
+
+                // Biometric Fingerprint & Digital Temp/Humidity Display
+                g.add(B(0.25, 0.35, 0.04, 'screen', 0.55, 0.25, 0.42));
+                g.add(B(0.18, 0.14, 0.02, { color: '#030712', emissive: '#22c55e', emissiveIntensity: 0.5 }, 0.55, 0.32, 0.45)); // Green Temp
+                g.add(createLedMesh(0.03, a, 0.55, 0.15, 0.45));
+                return g;
+            },
+
+            vita(a) {
+                const g = new THREE.Group();
+                // VitaMatch Biomarker Disc Centrifuge Analyzer
+                g.add(CY(0.72, 0.85, 0.55, 'titan', 0, -0.35, 0, 0, 0, 0, 32));
+                g.add(CY(0.68, 0.68, 0.08, 'alum', 0, -0.05, 0));
+
+                // Transparent Inspection Rotor Window
+                g.add(CY(0.42, 0.42, 0.02, 'glass', 0, -0.04, 0));
+                // High-Speed Microfluidic Test Disc
+                g.add(CY(0.38, 0.38, 0.015, a, 0, -0.03, 0));
+
+                // Ergonomic Tilted Touchscreen Console
+                const con = B(0.65, 0.48, 0.08, 'darkAlum', 0, 0.28, -0.15, -0.42, 0, 0);
+                g.add(con);
+                g.add(B(0.55, 0.38, 0.02, 'screen', 0, 0.3, -0.13, -0.42, 0, 0));
+                g.add(createLedMesh(0.04, a, -0.42, -0.05, 0.35));
+                return g;
+            },
+
+            bin(a) {
+                const g = new THREE.Group();
+                // MedBin Autonomous Medical Waste Sentry
+                g.add(CY(0.58, 0.48, 1.25, 'titan', 0, -0.25, 0, 0, 0, 0, 28));
+                // Antimicrobial White Polymer Upper Cowling
+                g.add(CY(0.58, 0.58, 0.22, 'alum', 0, 0.42, 0));
+
+                // Touchless Hands-Free Ultrasonic Aperture Lid
+                g.add(TO(0.48, 0.04, 'alum', 0, 0.52, 0, Math.PI / 2));
+                g.add(CY(0.38, 0.38, 0.04, 'glass', 0, 0.52, 0));
+                g.add(createLedMesh(0.025, '#38bdf8', 0, 0.52, 0.42)); // Motion sensor
+
+                // Biohazard Status Glowing Light Ring
+                g.add(TO(0.59, 0.03, a, 0, 0.32, 0, Math.PI / 2));
+                return g;
+            },
+
+            floatbot(a) {
+                const g = new THREE.Group();
+                // Bioremediation Water Drone Catamaran
+                [-0.55, 0.55].forEach(x => {
+                    g.add(CY(0.18, 0.14, 1.8, 'darkAlum', x, -0.5, 0, Math.PI / 2));
+                    g.add(CO(0.18, 0.45, 'alum', x, -0.5, 1.05, -Math.PI / 2));
+                    // Steerable Waterjet Thruster
+                    g.add(CY(0.09, 0.09, 0.22, 'chrome', x, -0.5, -1.0, Math.PI / 2));
+                });
+
+                // Central Filtration Chamber & Sorbent Mesh
+                g.add(B(0.85, 0.32, 1.05, 'carbon', 0, -0.28, 0));
+                g.add(B(0.72, 0.04, 0.85, 'glass', 0, -0.45, 0)); // Filter bed
+
+                // Solar Canopy Roof & Multiparameter Probe Arm
+                const canopy = B(1.15, 0.04, 1.2, { color: '#0369a1', metalness: 0.9, roughness: 0.15 }, 0, 0.25, 0);
+                g.add(canopy);
+                g.add(CY(0.035, 0.035, 0.7, 'titan', 0, 0.65, 0));
+                g.add(createLedMesh(0.05, a, 0, 1.05, 0));
+                return g;
+            },
+
+            haps(a) {
+                const g = new THREE.Group();
+                // se-HAPS High-Altitude Pseudo-Satellite (Ultra High-Aspect Wing)
+                // Center Fuselage Pod
+                g.add(CY(0.16, 0.12, 1.8, 'carbon', 0, 0, 0, Math.PI / 2));
+                g.add(CO(0.16, 0.42, 'alum', 0, 0, 1.05, -Math.PI / 2));
+
+                // 3.6-Meter Wide Ultra-Lightweight Carbon Wing
+                const wing = B(3.8, 0.045, 0.52, 'carbon', 0, 0.12, 0.1);
+                g.add(wing);
+                // Integrated Solar Cell Skin (Full Span)
+                for (let i = -5; i <= 5; i++) {
+                    g.add(B(0.3, 0.015, 0.46, { color: '#0f172a', metalness: 0.8, roughness: 0.2 }, i * 0.34, 0.15, 0.1));
+                }
+
+                // Twin High-Efficiency Electric Pusher Motors & Folding Propellers
+                [-0.85, 0.85].forEach(x => {
+                    g.add(CY(0.075, 0.075, 0.28, 'titan', x, 0.12, -0.25, Math.PI / 2));
+                    g.add(makeDetailedPropeller(x, -0.42, 0.12, a, 2));
+                });
+
+                // Twin Boom V-Tail Assembly
+                [-0.45, 0.45].forEach(x => {
+                    g.add(CY(0.025, 0.025, 0.85, 'carbon', x, 0.08, -0.75, Math.PI / 2));
+                });
+                g.add(B(0.95, 0.03, 0.25, 'carbon', 0, 0.15, -1.15));
+                g.add(createLedMesh(0.04, a, 0, 0.18, 1.28));
+                return g;
+            },
+
+            vr(a) {
+                const g = new THREE.Group();
+                // Xrmed Surgical XR Headset
+                // Curved Smoked Visor with Sensor Cutouts
+                g.add(B(1.25, 0.65, 0.48, 'titan', 0, 0.05, 0));
+                g.add(B(1.15, 0.55, 0.05, 'glass', 0, 0.05, 0.26));
+                // 4 Optical 6DoF Tracking Cameras
+                [[-0.45, -0.15], [0.45, -0.15], [-0.45, 0.2], [0.45, 0.2]].forEach(([x, y]) => {
+                    g.add(CY(0.035, 0.035, 0.04, 'chrome', x, y + 0.05, 0.28, Math.PI / 2));
+                    g.add(SP(0.025, 'glass', x, y + 0.05, 0.3));
+                });
+
+                // Dual Precision Micro-OLED Optical Lenses
+                [-0.24, 0.24].forEach(x => {
+                    g.add(CY(0.18, 0.18, 0.1, 'darkAlum', x, 0.05, -0.24, Math.PI / 2));
+                    g.add(CY(0.15, 0.15, 0.02, { color: '#0369a1', emissive: '#38bdf8', emissiveIntensity: 0.6 }, x, 0.05, -0.28, Math.PI / 2));
+                });
+
+                // Ergonomic Rigid Halo Headband & Rear Battery Counterweight
+                g.add(TO(0.72, 0.07, 'carbon', 0, 0.15, -0.32, Math.PI / 2));
+                g.add(B(0.55, 0.32, 0.22, 'darkAlum', 0, 0.15, -1.02)); // Rear battery
+                g.add(createLedMesh(0.035, a, 0, 0.15, -1.14));
+                return g;
+            },
+
+            aidrone(a) {
+                const g = new THREE.Group();
+                // Ducted Safe-Inspection Drone
+                // 4 Impact-Resistant Protective Ducts
+                [[0.52, 0.52], [-0.52, 0.52], [0.52, -0.52], [-0.52, -0.52]].forEach(([x, z]) => {
+                    // Aerodynamic duct ring
+                    g.add(CY(0.42, 0.38, 0.22, 'titan', x, 0, z, 0, 0, 0, 28));
+                    g.add(TO(0.42, 0.03, 'alum', x, 0.11, z, Math.PI / 2));
+                    g.add(makeDetailedPropeller(x, z, 0, a, 4));
+                });
+
+                // Central Spherical Avionics Shell
+                g.add(SP(0.32, 'carbon', 0, 0, 0));
+                // High-Intensity Forward Searchlight
+                g.add(CY(0.12, 0.12, 0.1, 'alum', 0, 0, 0.34, Math.PI / 2));
+                g.add(createLedMesh(0.09, '#ffffff', 0, 0, 0.39));
+                // Autonomous Optical Flow Sensor
+                g.add(CY(0.06, 0.06, 0.08, 'glass', 0, -0.32, 0));
+                return g;
+            },
+
+            lunar(a) {
+                const g = new THREE.Group();
+                // Lunar Regenerative Fuel Cell Power Plant
+                // High-Pressure Cryo Spherical Tanks (Gold Foil MLI)
+                [-0.45, 0.45].forEach(x => {
+                    g.add(SP(0.38, 'gold', x, 0.12, -0.15, 0, 0, 0, 24));
+                    g.add(TO(0.4, 0.03, 'titan', x, 0.12, -0.15));
+                });
+
+                // Proton Exchange Membrane (PEM) Core Stack
+                g.add(B(0.75, 0.55, 0.65, 'darkAlum', 0, 0, 0.25));
+                // Stack Bipolar Plates & Cooling Fins
+                for (let i = -4; i <= 4; i++) {
+                    g.add(B(0.68, 0.025, 0.58, 'alum', 0, i * 0.05, 0.25));
+                }
+
+                // Titanium Fluid Manifold & High-Pressure Valves
+                g.add(CY(0.04, 0.04, 0.85, 'titan', 0, -0.22, -0.15, 0, 0, Math.PI / 2));
+                g.add(createLedMesh(0.04, a, 0, 0.32, 0.58));
+                return g;
+            },
+
             dance_kinetic(a) {
                 const g = new THREE.Group();
-                g.add(CY(0.9, 0.9, 0.08, INK, 0, -0.85, 0, 32));
-                g.add(TO(0.92, 0.03, a, 0, -0.85, 0, Math.PI / 2));
-                for (let i = 0; i < 4; i++) {
-                    const angle = i * (Math.PI / 2);
-                    const arc = TO(0.55 + i * 0.12, 0.04, i % 2 === 0 ? a : PAPER, Math.cos(angle) * 0.2, -0.4 + i * 0.35, Math.sin(angle) * 0.2, 0.8 + i * 0.4);
-                    arc.rotation.y = angle;
-                    g.add(arc);
-                    g.add(SP(0.08, i % 2 === 0 ? '#ffffff' : a, Math.cos(angle + 0.8) * 0.5, -0.3 + i * 0.35, Math.sin(angle + 0.8) * 0.5));
-                }
-                g.add(CY(0.04, 0.04, 1.6, '#8b93a7', 0, 0, 0));
-                g.add(SP(0.14, a, 0, 0.9, 0));
+                // Multi-Tier Gimbal Kinetic Sculpture (iCoDaCo)
+                g.add(CY(0.85, 0.95, 0.15, 'darkAlum', 0, -0.85, 0, 0, 0, 0, 32));
+                g.add(TO(0.85, 0.03, 'gold', 0, -0.78, 0, Math.PI / 2));
+
+                // 3 Concentric Gimbal Rings Rotating at Harmonic Angles
+                g.add(TO(0.75, 0.04, 'alum', 0, 0, 0, 0.4, 0, 0));
+                g.add(TO(0.55, 0.035, 'titan', 0, 0, 0, -0.3, 0.8, 0));
+                g.add(TO(0.38, 0.03, a, 0, 0, 0, 0.9, -0.5, 0));
+
+                // Jeweled Pivot Bearings & Brass Counterweights
+                g.add(SP(0.12, 'gold', 0, 0, 0));
+                g.add(CY(0.025, 0.025, 1.8, 'chrome', 0, 0, 0));
+                g.add(createLedMesh(0.05, a, 0, 0.92, 0));
                 return g;
             },
+
             dance_spatial(a) {
                 const g = new THREE.Group();
-                g.add(B(1.6, 0.1, 1.6, INK, 0, -0.85, 0));
-                g.add(B(1.4, 0.02, 1.4, '#1b2234', 0, -0.79, 0));
-                [[-0.65, -0.65], [0.65, -0.65], [-0.65, 0.65], [0.65, 0.65]].forEach(([mx, mz]) => {
-                    g.add(CY(0.025, 0.025, 1.4, PAPER, mx, -0.15, mz));
-                    g.add(SP(0.07, a, mx, 0.55, mz));
-                    g.add(TO(0.12, 0.02, a, mx, 0.55, mz, Math.PI / 2));
+                // Acoustic Resonator Chime Array & Staging
+                g.add(B(1.65, 0.14, 1.65, 'darkAlum', 0, -0.85, 0));
+                g.add(B(1.45, 0.03, 1.45, '#1e2430', 0, -0.77, 0));
+
+                // 4 Spatial Sound Columns with Laser Grid Emitters
+                [[-0.62, -0.62], [0.62, -0.62], [-0.62, 0.62], [0.62, 0.62]].forEach(([mx, mz]) => {
+                    g.add(CY(0.045, 0.045, 1.55, 'alum', mx, -0.05, mz));
+                    g.add(CY(0.07, 0.07, 0.18, 'titan', mx, 0.65, mz));
+                    g.add(createLedMesh(0.045, a, mx, 0.76, mz));
                 });
-                [0.35, 0.65].forEach((rad, idx) => {
-                    const ring = TO(rad, 0.035, idx === 0 ? a : PAPER, 0, -0.4 + idx * 0.3, 0, Math.PI / 2);
-                    g.add(ring);
-                });
-                g.add(CY(0.09, 0.06, 0.9, PAPER, 0, -0.2, 0));
-                g.add(SP(0.12, a, 0, 0.35, 0));
+
+                // Tuned Center Bell Core
+                g.add(CY(0.24, 0.18, 0.85, 'gold', 0, -0.15, 0, 0, 0, 0, 24));
+                g.add(TO(0.38, 0.03, 'alum', 0, 0.28, 0, Math.PI / 2));
                 return g;
             },
+
             dance_prism(a) {
                 const g = new THREE.Group();
-                g.add(CY(0.85, 0.85, 0.08, INK, 0, -0.85, 0, 28));
-                const prism = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 1.3, 3), createMat(PAPER, 0x000000, 0.2, 0.85));
-                prism.position.set(0, 0, 0);
-                prism.rotation.y = 0.5;
-                g.add(prism);
+                // Rotating Dichroic Optical Prism
+                g.add(CY(0.85, 0.95, 0.15, 'darkAlum', 0, -0.85, 0, 0, 0, 0, 32));
+                // Indexing Turntable with Laser Diodes
+                g.add(CY(0.68, 0.68, 0.08, 'alum', 0, -0.74, 0));
+
+                // Trihedral Optical Glass Prism
+                const prismGeo = new THREE.CylinderGeometry(0.55, 0.55, 1.35, 3);
+                const prismMesh = new THREE.Mesh(prismGeo, createPBRMat('glass'));
+                prismMesh.position.set(0, 0.02, 0);
+                prismMesh.rotation.y = 0.55;
+                prismMesh.castShadow = true;
+                g.add(prismMesh);
+
+                // Laser Collimators & Optical Splitters
                 for (let i = 0; i < 3; i++) {
-                    const rot = i * (Math.PI * 2 / 3);
-                    const blade = B(0.7, 0.04, 0.35, a, Math.cos(rot) * 0.55, -0.1 + i * 0.25, Math.sin(rot) * 0.55);
-                    blade.rotation.y = rot + 0.4;
-                    blade.rotation.z = 0.3;
-                    g.add(blade);
-                    g.add(SP(0.08, '#ffffff', Math.cos(rot) * 0.85, 0.1 + i * 0.2, Math.sin(rot) * 0.85));
+                    const ang = i * (Math.PI * 2 / 3);
+                    g.add(CY(0.04, 0.04, 0.22, 'gold', Math.cos(ang) * 0.72, -0.2 + i * 0.2, Math.sin(ang) * 0.72, 0, -ang, Math.PI / 2));
+                    g.add(createLedMesh(0.03, a, Math.cos(ang) * 0.82, -0.2 + i * 0.2, Math.sin(ang) * 0.82));
                 }
-                g.add(TO(0.75, 0.03, a, 0, 0.75, 0, Math.PI / 2));
                 return g;
             },
+
             dance_tempo(a) {
                 const g = new THREE.Group();
-                g.add(B(1.2, 0.12, 0.9, INK, 0, -0.85, 0));
-                const frame1 = CY(0.03, 0.03, 1.6, PAPER, -0.3, 0, 0);
-                frame1.rotation.z = -0.25;
-                g.add(frame1);
-                const frame2 = CY(0.03, 0.03, 1.6, PAPER, 0.3, 0, 0);
-                frame2.rotation.z = 0.25;
-                g.add(frame2);
-                g.add(B(0.55, 0.06, 0.06, INK, 0, 0.75, 0));
-                const pendulum = CY(0.02, 0.02, 1.3, '#ffffff', 0, 0.1, 0);
-                pendulum.rotation.z = 0.35;
-                g.add(pendulum);
-                g.add(B(0.24, 0.24, 0.16, a, 0.25, 0.35, 0));
-                [0.2, 0.45, 0.7].forEach((r, i) => {
-                    const wave = TO(r, 0.025, i === 1 ? a : '#8b93a7', 0, -0.2, -0.3, 0);
-                    g.add(wave);
-                });
+                // Precision Harmonic Escapement Metronome
+                g.add(B(1.2, 0.16, 0.88, 'darkAlum', 0, -0.85, 0));
+                // Open A-Frame Chassis
+                g.add(CY(0.04, 0.04, 1.75, 'alum', -0.32, 0, 0, 0, 0, -0.22));
+                g.add(CY(0.04, 0.04, 1.75, 'alum', 0.32, 0, 0, 0, 0, 0.22));
+                g.add(B(0.65, 0.08, 0.08, 'titan', 0, 0.82, 0));
+
+                // Precision Pendulum with Brass Sliding Bob
+                g.add(CY(0.022, 0.022, 1.45, 'chrome', 0, 0.08, 0.08, 0, 0, 0.32));
+                g.add(B(0.24, 0.24, 0.16, 'gold', 0.24, 0.32, 0.08, 0, 0, 0.32));
+
+                // Rotary Dial & Beat LED Strip
+                g.add(CY(0.18, 0.18, 0.08, 'alum', 0, -0.22, 0.15, Math.PI / 2));
+                g.add(createLedMesh(0.04, a, 0, 0.88, 0));
                 return g;
             },
+
             dance(a) {
-                return (BUILDERS.dance_kinetic || BUILDERS.dance_spatial)(a);
+                return (BUILDERS.dance_kinetic)(a);
             },
+
             window(a) {
                 const g = new THREE.Group();
-                g.add(B(1.6, 1.2, 0.1, '#5b3a1e', 0, 0, 0));
-                g.add(B(1.35, 0.95, 0.05, '#9fd8ff', 0, 0, 0.03));
-                g.add(SP(0.18, '#ffe27a', 0.35, 0.25, 0.1));
-                g.add(SP(0.14, '#fff', -0.35, 0.2, 0.08));
-                g.add(SP(0.1, '#fff', -0.15, 0.3, 0.08));
-                g.add(B(1.35, 0.06, 0.06, '#5b3a1e', 0, 0, 0.06));
-                g.add(B(0.06, 0.95, 0.06, '#5b3a1e', 0, 0, 0.06));
+                // Smart Electrochromic Window
+                g.add(B(1.65, 1.35, 0.12, 'darkAlum', 0, 0, 0));
+                g.add(B(1.42, 1.12, 0.04, 'glass', 0, 0, 0.02));
+                // Integrated Solar Harvesting Bezel
+                g.add(B(1.42, 0.06, 0.03, 'gold', 0, 0.56, 0.05));
+                g.add(createLedMesh(0.035, a, 0.65, 0, 0.06));
                 return g;
             },
+
             bench(a) {
                 const g = new THREE.Group();
-                g.add(B(1.7, 0.12, 0.8, '#8a6f4d', 0, -0.1, 0));
-                [[-0.7], [0.7]].forEach(([x]) => {
-                    g.add(B(0.1, 0.9, 0.7, '#5b6472', x, -0.6, 0));
-                });
-                g.add(B(0.5, 0.35, 0.4, PAPER, -0.3, 0.15, 0));
-                g.add(B(0.4, 0.08, 0.3, a, 0.45, 0.1, 0));
-                const h = B(0.08, 0.5, 0.08, '#8a5a2b', 0.2, 0.45, 0);
-                h.rotation.z = 0.6;
-                g.add(h);
-                g.add(SP(0.09, a, -0.3, 0.45, 0));
+                // Smart Solar Campus Station
+                g.add(B(1.85, 0.14, 0.85, 'darkAlum', 0, -0.2, 0));
+                // Oiled Wood Slats
+                for (let i = -3; i <= 3; i++) {
+                    g.add(B(1.75, 0.04, 0.08, '#8a5a2b', 0, -0.11, i * 0.11));
+                }
+                // Solar Parasol Roof with USB-C Charging
+                g.add(CY(0.05, 0.05, 1.6, 'alum', 0, 0.65, -0.32));
+                const canopy = B(1.65, 0.05, 1.15, { color: '#0369a1', metalness: 0.9, roughness: 0.15 }, 0, 1.45, -0.32, -0.2, 0, 0);
+                g.add(canopy);
+                g.add(createLedMesh(0.04, a, 0, -0.08, 0.35));
                 return g;
             },
+
             hands(a) {
                 const g = new THREE.Group();
-                g.add(B(1.5, 1, 0.08, INK, 0, 0.2, -0.5));
-                const sc = B(1.2, 0.7, 0.02, a, 0, 0.25, -0.44);
-                g.add(sc);
-                [[-0.4], [0.4]].forEach(([x]) => {
-                    g.add(SP(0.16, PAPER, x, -0.6, 0.3));
-                    for (let i = 0; i < 3; i++) g.add(CY(0.045, 0.045, 0.4, PAPER, x - 0.12 + i * 0.12, -0.3, 0.3));
+                // Bionic Dexterous Prosthetic Hand
+                // Forearm Carbon Socket
+                g.add(CY(0.35, 0.28, 0.85, 'carbon', 0, -0.55, 0));
+                // Wrist Servo Gimbal
+                g.add(CY(0.28, 0.28, 0.16, 'alum', 0, -0.1, 0));
+                g.add(B(0.55, 0.35, 0.18, 'titan', 0, 0.16, 0));
+
+                // 5 Articulated Multi-Joint Fingers with Knuckle Pins
+                [-0.2, -0.07, 0.07, 0.2].forEach((x, i) => {
+                    const len = 0.52 + (i === 1 || i === 2 ? 0.08 : 0);
+                    // Proximal & Distal phalanges
+                    g.add(CY(0.038, 0.034, len * 0.55, 'titan', x, 0.45, 0));
+                    g.add(SP(0.042, 'alum', x, 0.45 + len * 0.28, 0)); // Knuckle pin
+                    g.add(CY(0.032, 0.026, len * 0.45, 'carbon', x, 0.45 + len * 0.55, 0));
+                    // Silicone touch sensor fingertip
+                    g.add(SP(0.032, 'rubber', x, 0.45 + len * 0.8, 0));
                 });
-                g.add(TO(0.7, 0.03, a, 0, -0.2, 0));
+                // Opposable Thumb
+                const thumb = CY(0.04, 0.032, 0.42, 'titan', -0.32, 0.22, 0.12, 0.45, 0, 0.55);
+                g.add(thumb);
+                g.add(createLedMesh(0.035, a, 0, 0.12, 0.1));
                 return g;
-            },
-            food(a) {
-                return (BUILDERS.urbn || BUILDERS.iot)(a);
             }
         };
 
@@ -1708,6 +2222,83 @@
             }
 
             scene = new THREE.Scene();
+
+            // Procedural High-Dynamic Studio Environment Map (so all metals & glass reflect studio softboxes!)
+            try {
+                const pmremGen = new THREE.PMREMGenerator(renderer);
+                pmremGen.compileEquirectangularShader();
+                
+                const envCanvas = document.createElement('canvas');
+                envCanvas.width = 512;
+                envCanvas.height = 256;
+                const ctx = envCanvas.getContext('2d');
+                const bgGrad = ctx.createLinearGradient(0, 0, 0, 256);
+                bgGrad.addColorStop(0, '#0a0d14');
+                bgGrad.addColorStop(0.5, '#1e2430');
+                bgGrad.addColorStop(1, '#05070a');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, 512, 256);
+
+                // Ceiling broad warm-white key softbox
+                const softbox1 = ctx.createRadialGradient(256, 35, 10, 256, 35, 130);
+                softbox1.addColorStop(0, '#ffffff');
+                softbox1.addColorStop(0.4, '#e2e8f0');
+                softbox1.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = softbox1;
+                ctx.fillRect(80, 0, 352, 110);
+
+                // Left cool cyan rim highlight
+                const softbox2 = ctx.createRadialGradient(70, 110, 5, 70, 110, 85);
+                softbox2.addColorStop(0, '#7dd3fc');
+                softbox2.addColorStop(0.5, '#38bdf8');
+                softbox2.addColorStop(1, 'rgba(56,189,248,0)');
+                ctx.fillStyle = softbox2;
+                ctx.fillRect(0, 40, 170, 140);
+
+                // Right warm gold rim highlight
+                const softbox3 = ctx.createRadialGradient(440, 110, 5, 440, 110, 85);
+                softbox3.addColorStop(0, '#fef08a');
+                softbox3.addColorStop(0.5, '#f59e0b');
+                softbox3.addColorStop(1, 'rgba(245,158,11,0)');
+                ctx.fillStyle = softbox3;
+                ctx.fillRect(340, 40, 172, 140);
+
+                const envTexture = new THREE.CanvasTexture(envCanvas);
+                envTexture.mapping = THREE.EquirectangularReflectionMapping;
+                const envMap = pmremGen.fromEquirectangular(envTexture).texture;
+                scene.environment = envMap;
+                envTexture.dispose();
+                pmremGen.dispose();
+            } catch(e) {
+                console.warn('Environment map generation skipped:', e);
+            }
+
+            // Photorealistic Soft Contact Shadow Plane under model
+            try {
+                const shadowCanvas = document.createElement('canvas');
+                shadowCanvas.width = 256;
+                shadowCanvas.height = 256;
+                const sCtx = shadowCanvas.getContext('2d');
+                const shadowGrad = sCtx.createRadialGradient(128, 128, 10, 128, 128, 120);
+                shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.72)');
+                shadowGrad.addColorStop(0.4, 'rgba(0, 0, 0, 0.38)');
+                shadowGrad.addColorStop(0.8, 'rgba(0, 0, 0, 0.08)');
+                shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                sCtx.fillStyle = shadowGrad;
+                sCtx.fillRect(0, 0, 256, 256);
+
+                const shadowTex = new THREE.CanvasTexture(shadowCanvas);
+                const shadowGeo = new THREE.PlaneGeometry(3.8, 3.8);
+                shadowGeo.rotateX(-Math.PI / 2);
+                const shadowPlane = new THREE.Mesh(shadowGeo, new THREE.MeshBasicMaterial({
+                    map: shadowTex,
+                    transparent: true,
+                    opacity: 0.85,
+                    depthWrite: false
+                }));
+                shadowPlane.position.y = -1.33;
+                scene.add(shadowPlane);
+            } catch(e) {}
             camera = new THREE.PerspectiveCamera(38, vp.clientWidth / vp.clientHeight, 0.1, 100);
             camera.position.set(0, 0.6, 4.2);
             camera.lookAt(0, -0.1, 0);
@@ -1914,6 +2505,12 @@
                         c.position.z *= 1.45;
                     });
                 }
+                model.traverse(child => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
                 spinGroup.add(model);
             } catch(e) {}
 

@@ -296,6 +296,27 @@ app.get('/view/:id', async (req, res) => {
     res.sendFile(templatePath);
 });
 
+// JSON error handler for body-parser syntax errors
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        console.error('JSON Parse Error:', err.message);
+        return res.status(400).json({ error: 'Malformed JSON payload: ' + err.message });
+    }
+    next(err);
+});
+
+// Catch-all 404 for API routes (always return JSON, never HTML)
+app.all('/api/*', (req, res) => {
+    res.status(404).json({ error: `API route ${req.method} ${req.originalUrl} not found` });
+});
+
+// Catch-all server error handler (always return JSON)
+app.use((err, req, res, next) => {
+    console.error('Unhandled server error:', err);
+    if (res.headersSent) return next(err);
+    res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+});
+
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => {
         console.log(`Portal Server is running on http://localhost:${PORT}`);
